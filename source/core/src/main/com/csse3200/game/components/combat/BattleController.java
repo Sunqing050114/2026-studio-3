@@ -9,6 +9,6 @@ public class BattleController {
     private BattlePhase phase = BattlePhase.SETUP;
     private int currentEnemyIndex = -1;
 
-    private void handle(BattleEvent event) {
-    }
+    // Will eventually handle each transition
+    private void handle(BattleEvent event) {}
 }
