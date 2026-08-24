@@ -55,7 +55,7 @@ public class MapGraph implements EncounterCallback {
   /**
    * Called after an encounter finishes.
    *
-   * @param nodeId  completed node id
+   * @param nodeId completed node id
    * @param success whether encounter completed successfully
    */
   public void completeNode(Integer nodeId, boolean success) {
