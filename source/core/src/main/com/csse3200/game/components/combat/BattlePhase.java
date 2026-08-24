@@ -28,5 +28,5 @@ public enum BattlePhase {
 
   // Terminal States
   VICTORY,
-  DEFEAT
+  DEFEAT;
 }
