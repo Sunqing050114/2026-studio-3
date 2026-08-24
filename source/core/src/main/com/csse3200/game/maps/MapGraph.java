@@ -1,6 +1,8 @@
 package com.csse3200.game.maps;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Represents the map graph containing all map nodes. */
@@ -38,7 +40,7 @@ public class MapGraph implements EncounterCallback {
    * @return current node or null if no current node is set
    */
   public MapNode getCurrentNode() {
-      return currentNode;
+    return currentNode;
   }
 
   /**
@@ -95,15 +97,15 @@ public class MapGraph implements EncounterCallback {
    * @return nodes with the specified state
    */
   public List<MapNode> getNodesByState(NodeState state) {
-      List<MapNode> result = new ArrayList<>();
+    List<MapNode> result = new ArrayList<>();
 
-      for (MapNode node : nodes.values()) {
-          if (node.getState() == state) {
-              result.add(node);
-          }
+    for (MapNode node : nodes.values()) {
+      if (node.getState() == state) {
+        result.add(node);
       }
+    }
 
-      return result;
+    return result;
   }
 
   /**
@@ -113,21 +115,21 @@ public class MapGraph implements EncounterCallback {
    * @return true if the move is valid, false otherwise
    */
   public boolean moveToNode(Integer nodeId) {
-      MapNode targetNode = nodes.get(nodeId);
+    MapNode targetNode = nodes.get(nodeId);
 
-      // targetNode must be connected to currentNode and must be available
-      // TODO: Handle case where currentNode is null
-      if (targetNode == null
-              || targetNode.getState() != NodeState.AVAILABLE
-              || !currentNode.getConnections().contains(targetNode)) {
-          return false;
-      }
+    // targetNode must be connected to currentNode and must be available
+    // TODO: Handle case where currentNode is null
+    if (targetNode == null
+        || targetNode.getState() != NodeState.AVAILABLE
+        || !currentNode.getConnections().contains(targetNode)) {
+      return false;
+    }
 
-      // state of previous currentNode should be updated when its encounter completes.
-      currentNode = targetNode;
-      targetNode.setState(NodeState.CURRENT);
+    // state of previous currentNode should be updated when its encounter completes.
+    currentNode = targetNode;
+    targetNode.setState(NodeState.CURRENT);
 
-      return true;
+    return true;
   }
 
   @Override
