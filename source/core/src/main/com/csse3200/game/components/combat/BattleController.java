@@ -105,9 +105,7 @@ public class BattleController {
    */
   private void validateEventTransition(BattleEvent event, BattlePhase nextPhase)
           throws IllegalStateException {
-    if (!Objects.isNull(nextPhase)) {
-      setCurrentPhase(nextPhase);
-    } else {
+    if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
               "Invalid battle transition: "
                       + this.currentPhase
