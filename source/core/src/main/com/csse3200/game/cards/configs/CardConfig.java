@@ -3,8 +3,6 @@ package com.csse3200.game.cards.configs;
 import com.csse3200.game.cards.CardType;
 import com.csse3200.game.cards.Rarity;
 import com.csse3200.game.cards.TargetType;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Configuration for a single card, loaded from {@code configs/cards.json}. A card's category is
@@ -13,10 +11,10 @@ import java.util.List;
  */
 public class CardConfig {
   /** Unique key used to look this card up. */
-  public String id = "unknown";
+  public String id = "";
 
   /** Name shown to the player. */
-  public String name = "Unknown Card";
+  public String name = "";
 
   /** Rules text shown to the player. */
   public String description = "";
@@ -41,82 +39,4 @@ public class CardConfig {
 
   /** Required by the JSON deserialiser. */
   public CardConfig() {}
-
-  /**
-   * Checks that this card is internally consistent and safe for gameplay systems to use. File level
-   * checks such as duplicate ids belong to the card loading task, since a single card cannot see
-   * the rest of the collection.
-   *
-   * @return a list of human-readable problems, empty if the card is valid
-   */
-  public List<String> validate() {
-    List<String> errors = new ArrayList<>();
-
-    if (id == null || id.isBlank() || "unknown".equals(id)) {
-      errors.add("id must be set to a unique value");
-    }
-    if (name == null || name.isBlank()) {
-      errors.add("name must not be blank");
-    }
-    if (cost < 0) {
-      errors.add("cost must not be negative, was " + cost);
-    }
-    if (type == null) {
-      errors.add("type must not be null");
-    }
-    if (rarity == null) {
-      errors.add("rarity must not be null");
-    }
-    if (target == null) {
-      errors.add("target must not be null");
-    }
-    if (texturePath == null || texturePath.isBlank()) {
-      errors.add("texturePath must not be blank");
-    }
-    if (effects == null || effects.length == 0) {
-      errors.add("a card must define at least one effect");
-      return errors;
-    }
-
-    for (int i = 0; i < effects.length; i++) {
-      validateEffect(effects[i], i, errors);
-    }
-    return errors;
-  }
-
-  /**
-   * Checks a single effect and appends any problems to the given list.
-   *
-   * @param effect the effect to check, may be null
-   * @param index position of the effect, used to make messages easier to trace
-   * @param errors list that problems are appended to
-   */
-  private void validateEffect(EffectConfig effect, int index, List<String> errors) {
-    String prefix = "effect " + index + ": ";
-    if (effect == null) {
-      errors.add(prefix + "must not be null");
-      return;
-    }
-    if (effect.type == null) {
-      errors.add(prefix + "type must not be null");
-      return;
-    }
-    if (effect.value <= 0) {
-      errors.add(prefix + effect.type + " value must be positive, was " + effect.value);
-    }
-    if (effect.type.usesDuration()) {
-      if (effect.duration <= 0) {
-        errors.add(prefix + effect.type + " requires a positive duration, was " + effect.duration);
-      }
-    } else if (effect.duration != 0) {
-      errors.add(prefix + effect.type + " must not set a duration, was " + effect.duration);
-    }
-  }
-
-  /**
-   * @return true if this card has no validation problems
-   */
-  public boolean isValid() {
-    return validate().isEmpty();
-  }
 }
