@@ -1,6 +1,7 @@
 package com.csse3200.game.cards.deck;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,5 +26,88 @@ public class BattleDeck {
       throw new IllegalArgumentException("playerDeck must not be null");
     }
     drawPile.addAll(playerDeck.getCardIds());
+  }
+
+  /** Randomises the current draw pile order. */
+  public void shuffleDrawPile() {
+    Collections.shuffle(drawPile);
+  }
+
+  /**
+   * Draws one card from the draw pile into the hand.
+   *
+   * @return drawn card ID, or null if the draw pile is empty
+   */
+  public String drawOne() {
+    if (drawPile.isEmpty()) {
+      return null;
+    }
+    String cardId = drawPile.remove(0);
+    hand.add(cardId);
+    return cardId;
+  }
+
+  /**
+   * Draws up to the requested number of cards from the draw pile into the hand.
+   *
+   * @param count number of cards to draw
+   * @return card IDs that were drawn, in draw order
+   */
+  public List<String> drawCards(int count) {
+    if (count < 0) {
+      throw new IllegalArgumentException("count must not be negative");
+    }
+
+    List<String> drawnCards = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      String cardId = drawOne();
+      if (cardId == null) {
+        break;
+      }
+      drawnCards.add(cardId);
+    }
+    return List.copyOf(drawnCards);
+  }
+
+  /**
+   * @return immutable snapshot of the draw pile
+   */
+  public List<String> getDrawPile() {
+    return List.copyOf(drawPile);
+  }
+
+  /**
+   * @return immutable snapshot of the hand
+   */
+  public List<String> getHand() {
+    return List.copyOf(hand);
+  }
+
+  /**
+   * @return immutable snapshot of the discard pile
+   */
+  public List<String> getDiscardPile() {
+    return List.copyOf(discardPile);
+  }
+
+  /**
+   * @return number of cards in the draw pile
+   */
+  public int getDrawPileSize() {
+    return drawPile.size();
+  }
+
+  /**
+   * @return number of cards in the hand
+   */
+  public int getHandSize() {
+    return hand.size();
+  }
+
+  /**
+   * @return number of cards in the discard pile
+   */
+  public int getDiscardPileSize() {
+    return discardPile.size();
   }
 }
