@@ -1,5 +1,6 @@
 package com.csse3200.game.cards;
 
+import com.csse3200.game.cards.configs.CardConfig;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;

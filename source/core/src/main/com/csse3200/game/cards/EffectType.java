@@ -2,8 +2,8 @@ package com.csse3200.game.cards;
 
 /**
  * The kinds of effect a card can apply. Each constant records whether the effect lasts over
- * multiple turns, which determines how the duration field of an {@link EffectConfig} is
- * interpreted.
+ * multiple turns, which determines how the duration field of an {@link
+ * com.csse3200.game.cards.configs.EffectConfig} is interpreted.
  */
 public enum EffectType {
   /** Immediate damage dealt to the target. */

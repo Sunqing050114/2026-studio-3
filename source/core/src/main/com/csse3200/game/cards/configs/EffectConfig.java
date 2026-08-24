@@ -1,4 +1,6 @@
-package com.csse3200.game.cards;
+package com.csse3200.game.cards.configs;
+
+import com.csse3200.game.cards.EffectType;
 
 /**
  * A single effect applied by a card, loaded as part of {@code configs/cards.json}. The meaning of

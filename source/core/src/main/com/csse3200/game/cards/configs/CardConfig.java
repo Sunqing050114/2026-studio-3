@@ -1,5 +1,8 @@
-package com.csse3200.game.cards;
+package com.csse3200.game.cards.configs;
 
+import com.csse3200.game.cards.CardType;
+import com.csse3200.game.cards.Rarity;
+import com.csse3200.game.cards.TargetType;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -2,6 +2,7 @@ package com.csse3200.game.cards;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.extensions.GameExtension;
 import java.util.List;
 import java.util.Optional;

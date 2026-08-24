@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
 import org.junit.jupiter.api.Test;
 
 class CardConfigTest {
