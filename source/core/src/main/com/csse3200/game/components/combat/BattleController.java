@@ -12,7 +12,7 @@ public class BattleController {
   private int currentEnemyIndex;
   private final BattleTransitions battleTransitions;
 
-  private BattleController() {
+  public BattleController() {
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
@@ -24,17 +24,23 @@ public class BattleController {
    * @param event The event to be handled.
    * @throws IllegalStateException When the given transition isn't allowed.
    */
-  private void handle(BattleEvent event) throws IllegalStateException {
+  public void handle(BattleEvent event) {
+    Objects.requireNonNull(event, "event cannot be null");
+
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
 
     this.validateEventTransition(event, nextPhase);
     this.transition(nextPhase);
   }
 
+  /**
+   * Transitions from the current phase to the next phase.
+   *
+   * @param nextPhase The phase to transition to.
+   */
   private void transition(BattlePhase nextPhase) {
     BattlePhase previousPhase = currentPhase;
     this.setCurrentPhase(nextPhase);
-
     this.notifyPhaseChange(previousPhase, this.getCurrentPhase());
     this.phaseChange(nextPhase);
   }
@@ -74,6 +80,7 @@ public class BattleController {
   }
 
   /*------------------------- Getters & Setters ----------------------------*/
+
   public BattlePhase getCurrentPhase() {
     return this.currentPhase;
   }
