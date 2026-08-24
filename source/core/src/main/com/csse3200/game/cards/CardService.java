@@ -1,29 +1,28 @@
 package com.csse3200.game.cards;
 
-import com.csse3200.game.cards.configs.CardConfig;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Provides access to the card configurations available to the game.
+ * Public retrieval API for card definitions.
  *
- * <p>Cards can be retrieved individually using their unique identifier or enumerated as a
- * collection.
+ * <p>Other game systems should depend on this interface rather than the Card Library's internal
+ * storage. Unknown IDs are reported as an empty {@link Optional} instead of {@code null}.
  */
 public interface CardService {
   /**
    * Retrieves the configuration of the card with the given identifier.
    *
    * @param cardId the unique identifier of the card to retrieve
-   * @return the card configuration, or an empty {@link Optional} if no card has the given
-   *     identifier
+   * @return the card configuration, or an empty {@link Optional} if the ID is unknown or null
    */
   Optional<CardConfig> getCard(String cardId);
 
   /**
-   * Retrieves all card configurations currently available to the game.
+   * Retrieves all currently registered card configurations.
    *
-   * @return an unmodifiable snapshot of all registered card configurations
+   * @return an unmodifiable snapshot of all registered card configurations. Modifications to the
+   *     returned list do not affect the library.
    */
   List<CardConfig> getAllCards();
 }
