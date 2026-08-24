@@ -81,7 +81,9 @@ public class MapGraph implements EncounterCallback {
       node.setState(NodeState.COMPLETED);
 
       for (MapNode connected : node.getConnections()) {
-        connected.setState(NodeState.AVAILABLE);
+        if (connected.getState() == NodeState.LOCKED) {
+          connected.setState(NodeState.AVAILABLE);
+        }
       }
     }
   }
@@ -113,7 +115,11 @@ public class MapGraph implements EncounterCallback {
   public boolean moveToNode(Integer nodeId) {
       MapNode targetNode = nodes.get(nodeId);
 
-      if (targetNode == null || targetNode.getState() != NodeState.AVAILABLE) {
+      // targetNode must be connected to currentNode and must be available
+      // TODO: Handle case where currentNode is null
+      if (targetNode == null
+              || targetNode.getState() != NodeState.AVAILABLE
+              || !currentNode.getConnections().contains(targetNode)) {
           return false;
       }
 
