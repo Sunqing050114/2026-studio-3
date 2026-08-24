@@ -2,7 +2,6 @@ package com.csse3200.game.cards;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.extensions.GameExtension;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +20,7 @@ class CardLibraryTest {
 
   @Test
   void shouldRegisterAndRetrieveCardById() {
-    CardConfig strike = new CardConfig("strike");
+    CardConfig strike = card("strike");
     library.register(strike);
 
     Optional<CardConfig> result = library.getCard("strike");
@@ -31,8 +30,8 @@ class CardLibraryTest {
 
   @Test
   void shouldRetrieveAllRegisteredCards() {
-    CardConfig strike = new CardConfig("strike");
-    CardConfig defend = new CardConfig("defend");
+    CardConfig strike = card("strike");
+    CardConfig defend = card("defend");
     library.register(strike);
     library.register(defend);
 
@@ -44,8 +43,8 @@ class CardLibraryTest {
 
   @Test
   void shouldRegisterCardsFromConstructor() {
-    CardConfig strike = new CardConfig("strike");
-    CardConfig defend = new CardConfig("defend");
+    CardConfig strike = card("strike");
+    CardConfig defend = card("defend");
 
     CardLibrary loaded = new CardLibrary(List.of(strike, defend));
 
@@ -56,8 +55,8 @@ class CardLibraryTest {
 
   @Test
   void shouldRejectDuplicateIdsWithoutOverwriting() {
-    CardConfig original = new CardConfig("strike");
-    CardConfig duplicate = new CardConfig("strike");
+    CardConfig original = card("strike");
+    CardConfig duplicate = card("strike");
     library.register(original);
 
     IllegalArgumentException error =
@@ -70,8 +69,8 @@ class CardLibraryTest {
 
   @Test
   void shouldRejectDuplicateIdsWhenConstructedFromCollection() {
-    CardConfig original = new CardConfig("strike");
-    CardConfig duplicate = new CardConfig("strike");
+    CardConfig original = card("strike");
+    CardConfig duplicate = card("strike");
     List<CardConfig> configs = List.of(original, duplicate);
 
     assertThrows(IllegalArgumentException.class, () -> new CardLibrary(configs));
@@ -79,7 +78,7 @@ class CardLibraryTest {
 
   @Test
   void shouldReturnEmptyOptionalForUnknownId() {
-    library.register(new CardConfig("strike"));
+    library.register(card("strike"));
 
     Optional<CardConfig> result = library.getCard("missing");
     assertTrue(result.isEmpty());
@@ -102,18 +101,18 @@ class CardLibraryTest {
 
   @Test
   void shouldRejectBlankCardId() {
-    assertThrows(IllegalArgumentException.class, () -> library.register(new CardConfig(null)));
-    assertThrows(IllegalArgumentException.class, () -> library.register(new CardConfig("")));
-    assertThrows(IllegalArgumentException.class, () -> library.register(new CardConfig("  ")));
+    assertThrows(IllegalArgumentException.class, () -> library.register(card(null)));
+    assertThrows(IllegalArgumentException.class, () -> library.register(card("")));
+    assertThrows(IllegalArgumentException.class, () -> library.register(card("  ")));
   }
 
   @Test
   void shouldPreventModificationOfReturnedCollection() {
-    CardConfig strike = new CardConfig("strike");
+    CardConfig strike = card("strike");
     library.register(strike);
 
     List<CardConfig> allCards = library.getAllCards();
-    assertThrows(UnsupportedOperationException.class, () -> allCards.add(new CardConfig("defend")));
+    assertThrows(UnsupportedOperationException.class, () -> allCards.add(card("defend")));
     assertThrows(UnsupportedOperationException.class, () -> allCards.remove(strike));
 
     assertEquals(1, library.getAllCards().size());
@@ -125,5 +124,11 @@ class CardLibraryTest {
     List<CardConfig> allCards = library.getAllCards();
     assertNotNull(allCards);
     assertTrue(allCards.isEmpty());
+  }
+
+  private static CardConfig card(String id) {
+    CardConfig config = new CardConfig();
+    config.id = id;
+    return config;
   }
 }

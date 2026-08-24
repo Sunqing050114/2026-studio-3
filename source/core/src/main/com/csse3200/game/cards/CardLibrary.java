@@ -1,6 +1,5 @@
 package com.csse3200.game.cards;
 
-import com.csse3200.game.cards.configs.CardConfig;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +54,7 @@ public class CardLibrary implements CardService {
       throw new IllegalArgumentException("Card config must not be null");
     }
 
-    String id = config.getId();
+    String id = config.id;
     if (id == null || id.isBlank()) {
       throw new IllegalArgumentException("Card ID must not be null or blank");
     }

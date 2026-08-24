@@ -1,6 +1,5 @@
 package com.csse3200.game.cards;
 
-import com.csse3200.game.cards.configs.CardConfig;
 import java.util.List;
 import java.util.Optional;
 
