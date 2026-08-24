@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "shop_heal_card",
+      "cardId": "card_heal",
+      "name": "Heal Card",
+      "description": "Restores health when added to the player's deck.",
+      "price": 20,
+      "stock": 2
+    },
+    {
+      "id": "shop_shield_card",
+      "cardId": "card_shield",
+      "name": "Shield Card",
+      "description": "Adds a defensive card reward to the player's deck.",
+      "price": 35,
+      "stock": 1
+    },
+    {
+      "id": "shop_strike_card",
+      "cardId": "card_strike",
+      "name": "Strike Card",
+      "description": "Adds a basic attack card reward to the player's deck.",
+      "price": 15,
+      "stock": 3
+    }
+  ]
+}

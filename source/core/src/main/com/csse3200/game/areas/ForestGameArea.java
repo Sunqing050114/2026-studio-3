@@ -6,10 +6,16 @@ import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.areas.terrain.TerrainFactory.TerrainType;
 import com.csse3200.game.components.gamearea.GameAreaDisplay;
+import com.csse3200.game.components.player.InventoryComponent;
+import com.csse3200.game.components.shop.ShopDisplay;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
+import com.csse3200.game.maps.MapGraph;
+import com.csse3200.game.maps.MapNode;
+import com.csse3200.game.maps.NodeState;
+import com.csse3200.game.maps.RoomType;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.utils.math.GridPoint2Utils;
@@ -22,6 +28,7 @@ public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
+  private static final String SHOP_NODE_ID = "forest-shop";
   private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(10, 10);
   private static final float WALL_WIDTH = 0.1f;
   private static final String[] forestTextures = {
@@ -47,6 +54,7 @@ public class ForestGameArea extends GameArea {
   private static final String[] forestMusic = {backgroundMusic};
 
   private final TerrainFactory terrainFactory;
+  private final MapGraph mapGraph;
 
   private Entity player;
 
@@ -59,6 +67,7 @@ public class ForestGameArea extends GameArea {
   public ForestGameArea(TerrainFactory terrainFactory) {
     super();
     this.terrainFactory = terrainFactory;
+    this.mapGraph = createDemoMapGraph();
   }
 
   /** Create the game area, including terrain, static entities (trees), dynamic entities (player) */
@@ -71,6 +80,7 @@ public class ForestGameArea extends GameArea {
     spawnTerrain();
     spawnTrees();
     player = spawnPlayer();
+    displayShop(player);
     spawnGhosts();
     spawnGhostKing();
 
@@ -81,6 +91,25 @@ public class ForestGameArea extends GameArea {
     Entity ui = new Entity();
     ui.addComponent(new GameAreaDisplay("Box Forest"));
     spawnEntity(ui);
+  }
+
+  private void displayShop(Entity player) {
+    Entity shopUi = new Entity();
+    shopUi.addComponent(
+        new ShopDisplay(player.getComponent(InventoryComponent.class), mapGraph, SHOP_NODE_ID));
+    spawnEntity(shopUi);
+  }
+
+  private MapGraph createDemoMapGraph() {
+    MapGraph graph = new MapGraph();
+    MapNode shopNode = new MapNode(SHOP_NODE_ID, RoomType.SHOP);
+    MapNode returnNode = new MapNode("forest-return", RoomType.EVENT);
+
+    shopNode.setState(NodeState.CURRENT);
+    graph.addNode(shopNode);
+    graph.addNode(returnNode);
+    graph.connectNodes(shopNode.getNodeId(), returnNode.getNodeId());
+    return graph;
   }
 
   private void spawnTerrain() {
