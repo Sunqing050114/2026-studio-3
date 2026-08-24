@@ -103,6 +103,7 @@ public class BattleTransitions {
 
   /**
    * Gets the phase reached by applying an event to the current phase.
+   * (mostly for testing purposes)
    *
    * @param currentPhase the phase before the event
    * @param incomingEvent the event to apply
@@ -110,6 +111,7 @@ public class BattleTransitions {
    */
   public BattlePhase getNextPhase(BattlePhase currentPhase, BattleEvent incomingEvent) {
     Map<BattleEvent, BattlePhase> transitions = allowedTransitions.get(currentPhase);
+    // Below guards against null pointer exception
     return transitions == null ? null : transitions.get(incomingEvent);
   }
 }
