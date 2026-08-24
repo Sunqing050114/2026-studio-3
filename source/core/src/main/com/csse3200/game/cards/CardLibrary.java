@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
  * existing card. Callers receive snapshots of the registered cards and cannot modify the internal
  * collection through the public API.
  *
- * <p>Per-card field validation belongs on {@code CardConfig} / the card loader. This class only
- * enforces collection-level rules such as unique IDs.
+ * <p>Per-card field validation belongs in {@link CardValidator}. This class only enforces
+ * collection-level rules such as unique IDs.
  */
 public class CardLibrary implements CardService {
   private static final Logger logger = LoggerFactory.getLogger(CardLibrary.class);
