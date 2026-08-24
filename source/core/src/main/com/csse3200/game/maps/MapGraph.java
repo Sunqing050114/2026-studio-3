@@ -6,7 +6,7 @@ import java.util.Map;
 /** Represents the map graph containing all map nodes. */
 public class MapGraph implements EncounterCallback {
 
-  private final Map<String, MapNode> nodes;
+  private final Map<Integer, MapNode> nodes;
   private MapNode currentNode;
 
   public MapGraph() {
@@ -28,7 +28,7 @@ public class MapGraph implements EncounterCallback {
    * @param nodeId node identifier
    * @return matching node
    */
-  public MapNode getNode(String nodeId) {
+  public MapNode getNode(Integer nodeId) {
     return nodes.get(nodeId);
   }
 
@@ -46,12 +46,12 @@ public class MapGraph implements EncounterCallback {
    *
    * @return all map nodes
    */
-  public Map<String, MapNode> getNodes() {
+  public Map<Integer, MapNode> getNodes() {
     return nodes;
   }
 
   /** Connects two nodes. */
-  public void connectNodes(String firstId, String secondId) {
+  public void connectNodes(Integer firstId, Integer secondId) {
 
     MapNode first = nodes.get(firstId);
     MapNode second = nodes.get(secondId);
@@ -68,7 +68,7 @@ public class MapGraph implements EncounterCallback {
    * @param nodeId completed node id
    * @param success whether encounter completed successfully
    */
-  public void completeNode(String nodeId, boolean success) {
+  public void completeNode(Integer nodeId, boolean success) {
 
     MapNode node = nodes.get(nodeId);
 
@@ -125,7 +125,7 @@ public class MapGraph implements EncounterCallback {
   }
 
   @Override
-  public void onEncounterComplete(String nodeId, boolean success) {
+  public void onEncounterComplete(Integer nodeId, boolean success) {
     completeNode(nodeId, success);
   }
 }

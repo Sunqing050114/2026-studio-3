@@ -9,5 +9,5 @@ public interface EncounterCallback {
    * @param nodeId id of the completed map node
    * @param success whether the encounter was completed successfully
    */
-  void onEncounterComplete(String nodeId, boolean success);
+  void onEncounterComplete(Integer nodeId, boolean success);
 }

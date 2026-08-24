@@ -6,7 +6,10 @@ import java.util.List;
 /** Represents a single node in the map graph. */
 public class MapNode {
 
-  private final String nodeId;
+  private Integer nodeId;
+
+  /** Refers to the layer of the map the node is placed */
+  private Integer height;
 
   private final RoomType roomType;
 
@@ -20,17 +23,22 @@ public class MapNode {
    * @param nodeId unique identifier
    * @param roomType type of room
    */
-  public MapNode(String nodeId, RoomType roomType) {
+  public MapNode(Integer nodeId, RoomType roomType) {
     this.nodeId = nodeId;
     this.roomType = roomType;
 
     this.state = NodeState.LOCKED;
 
+    this.height = 0;
     this.connections = new ArrayList<>();
   }
 
-  public String getNodeId() {
+  public Integer getNodeId() {
     return nodeId;
+  }
+
+  public Integer getHeight() {
+    return height;
   }
 
   public RoomType getRoomType() {
