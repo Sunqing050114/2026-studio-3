@@ -7,6 +7,7 @@ import java.util.Map;
 public class MapGraph implements EncounterCallback {
 
   private final Map<String, MapNode> nodes;
+  private MapNode currentNode;
 
   public MapGraph() {
     nodes = new HashMap<>();
@@ -29,6 +30,15 @@ public class MapGraph implements EncounterCallback {
    */
   public MapNode getNode(String nodeId) {
     return nodes.get(nodeId);
+  }
+
+  /**
+   * Gets the current node.
+   *
+   * @return current node or null if no current node is set
+   */
+  public MapNode getCurrentNode() {
+      return currentNode;
   }
 
   /**
@@ -74,6 +84,44 @@ public class MapGraph implements EncounterCallback {
         connected.setState(NodeState.AVAILABLE);
       }
     }
+  }
+
+  /**
+   * Get all nodes with the specified state
+   *
+   * @param state state to match
+   * @return nodes with the specified state
+   */
+  public List<MapNode> getNodesByState(NodeState state) {
+      List<MapNode> result = new ArrayList<>();
+
+      for (MapNode node : nodes.values()) {
+          if (node.getState() == state) {
+              result.add(node);
+          }
+      }
+
+      return result;
+  }
+
+  /**
+   * Checks if a move is valid and updates currentNode accordingly.
+   *
+   * @param nodeId id of the node to move to
+   * @return true if the move is valid, false otherwise
+   */
+  public boolean moveToNode(Integer nodeId) {
+      MapNode targetNode = nodes.get(nodeId);
+
+      if (targetNode == null || targetNode.getState() != NodeState.AVAILABLE) {
+          return false;
+      }
+
+      // state of previous currentNode should be updated when its encounter completes.
+      currentNode = targetNode;
+      targetNode.setState(NodeState.CURRENT);
+
+      return true;
   }
 
   @Override
