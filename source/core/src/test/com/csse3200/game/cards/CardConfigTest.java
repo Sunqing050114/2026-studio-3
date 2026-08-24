@@ -55,9 +55,10 @@ class CardConfigTest {
   }
 
   @Test
-  void shouldRejectDefaultPlaceholderId() {
-    CardConfig card = validCard();
-    card.id = "unknown";
+  void shouldDefaultIdentifiersToEmptyStrings() {
+    CardConfig card = new CardConfig();
+    assertEquals("", card.id);
+    assertEquals("", card.name);
     assertFalse(card.isValid());
   }
 

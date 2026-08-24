@@ -10,10 +10,10 @@ import java.util.List;
  */
 public class CardConfig {
   /** Unique key used to look this card up. */
-  public String id = "unknown";
+  public String id = "";
 
   /** Name shown to the player. */
-  public String name = "Unknown Card";
+  public String name = "";
 
   /** Rules text shown to the player. */
   public String description = "";
@@ -49,7 +49,7 @@ public class CardConfig {
   public List<String> validate() {
     List<String> errors = new ArrayList<>();
 
-    if (id == null || id.isBlank() || "unknown".equals(id)) {
+    if (id == null || id.isBlank()) {
       errors.add("id must be set to a unique value");
     }
     if (name == null || name.isBlank()) {
