@@ -47,8 +47,7 @@ class BattleControllerTest {
   @Test
   void shouldRejectInvalidTransitionWithoutChangingPhase() {
     IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class, () -> handle(BattleEvent.PLAYER_ATTACK_SELECTED));
+        assertThrows(IllegalStateException.class, () -> handle(BattleEvent.PLAYER_ATTACK_SELECTED));
 
     assertEquals(
         "Invalid battle transition: SETUP-->PLAYER_ATTACK_SELECTED", exception.getMessage());

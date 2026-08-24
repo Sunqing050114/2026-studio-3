@@ -102,8 +102,7 @@ public class BattleTransitions {
   }
 
   /**
-   * Gets the phase reached by applying an event to the current phase.
-   * (mostly for testing purposes)
+   * Gets the phase reached by applying an event to the current phase. (mostly for testing purposes)
    *
    * @param currentPhase the phase before the event
    * @param incomingEvent the event to apply

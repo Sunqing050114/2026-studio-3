@@ -25,10 +25,7 @@ public class BattleController {
    * @throws IllegalStateException When the given transition isn't allowed.
    */
   private void handle(BattleEvent event) throws IllegalStateException {
-    BattlePhase nextPhase = battleTransitions.getNextPhase(
-            this.getCurrentPhase(),
-            event
-    );
+    BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
 
     this.validateEventTransition(event, nextPhase);
     this.transition(nextPhase);
@@ -97,35 +94,28 @@ public class BattleController {
   /*------------------------- Helper functions ----------------------------*/
 
   /**
-   *  A helper function that validates whether a transition is allowed.
+   * A helper function that validates whether a transition is allowed.
    *
    * @param event The currently executing event.
    * @param nextPhase The speculative next phase to transition to.
    * @throws IllegalStateException Throws when the state transition is deemed illegal.
    */
   private void validateEventTransition(BattleEvent event, BattlePhase nextPhase)
-          throws IllegalStateException {
+      throws IllegalStateException {
     if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
-              "Invalid battle transition: "
-                      + this.currentPhase
-                      + "-->"
-                      + event
-      );
+          "Invalid battle transition: " + this.currentPhase + "-->" + event);
     }
   }
 
   /**
-   * Convenience function for returning if a given event can
-   * be handled within a state.
+   * Convenience function for returning if a given event can be handled within a state.
    *
    * @param event The event to check.
    * @return True if the event is valid to be applied. False if not.
    */
   public boolean canHandle(BattleEvent event) {
-    return this.battleTransitions
-            .getNextPhase(this.currentPhase, event)
-            != null;
+    return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
   }
 
   /*------------------------- Stub functions ----------------------------*/
