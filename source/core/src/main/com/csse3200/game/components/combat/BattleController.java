@@ -152,7 +152,6 @@ public class BattleController {
    * @param listener The instantiated external listener.
    */
   public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
-    Objects.requireNonNull(listener, "Listener must not be null.");
     eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
   }
 
@@ -226,6 +225,7 @@ public class BattleController {
     } else {
       handle(BattleEvent.ENEMY_OTHER_SELECTED);
     }
+
   }
 
   private void enterEnemyAttack() {
