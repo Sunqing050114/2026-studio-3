@@ -6,6 +6,9 @@ import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.factories.EnemyFactory;
+import com.csse3200.game.events.EventHandler;
+import com.csse3200.game.events.listeners.EventListener2;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -18,11 +21,14 @@ public class BattleController {
   private BattlePhase currentPhase;
   private int currentEnemyIndex;
   private final BattleTransitions battleTransitions;
+  private final EventHandler eventHandler;
+  private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
 
   public BattleController() {
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
+    this.eventHandler = new EventHandler();
   }
 
   /**
@@ -31,11 +37,9 @@ public class BattleController {
    * @param event The event to be handled.
    * @throws IllegalStateException When the given transition isn't allowed.
    */
-  public void handle(BattleEvent event) {
+  public void handle(BattleEvent event) { // TODO: I think it should be private?
     Objects.requireNonNull(event, "event cannot be null");
-
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
-
     this.validateEventTransition(event, nextPhase);
     this.transition(nextPhase);
   }
@@ -86,6 +90,8 @@ public class BattleController {
     }
   }
 
+  /*--------------------------- Public Methods -----------------------------*/
+
   /*------------------------- Getters & Setters ----------------------------*/
 
   public BattlePhase getCurrentPhase() {
@@ -118,8 +124,33 @@ public class BattleController {
       throws IllegalStateException {
     if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
-          "Invalid battle transition: " + this.currentPhase + "-->" + event);
+          "Invalid battle transition: " + this.currentPhase + String.format("----%s---->", event) + "null");
     }
+  }
+
+  /**
+   * Stub function for notifying UI or any listeners about a phase change.
+   *
+   * @param previousPhase The phase that is being left.
+   * @param nextPhase The phase that is being entered.
+   */
+  private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
+    eventHandler.trigger(
+            PHASE_CHANGED_EVENT,
+            previousPhase,
+            nextPhase
+    );
+  }
+
+  /**
+   * Adds a listener to the event handler, which ultimately informs external
+   * teams about a phase change.
+   *
+   * @param listener The instantiated external listener.
+   */
+  public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
   }
 
   /**
@@ -133,16 +164,6 @@ public class BattleController {
   }
 
   /*------------------------- Stub functions ----------------------------*/
-
-  /**
-   * Stub function for notifying UI or any listeners about a phase change.
-   *
-   * @param previousPhase The phase that is being left.
-   * @param nextPhase The phase that is being entered.
-   */
-  private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
-    ;
-  }
 
   private void enterSetup() {
     // Coordinate battle setup.
@@ -183,7 +204,7 @@ public class BattleController {
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
     List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex)); // not too sure if this is how
+    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex)); // not too sure if this is how
     // we're indexing
 
     EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
@@ -199,7 +220,7 @@ public class BattleController {
   private void enterEnemyAttack() {
     // Ask the enemy system to execute its attack intent.
     List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex));
+    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
 
     // execute the intent
     // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
@@ -218,22 +239,22 @@ public class BattleController {
   private void enterEnemyResolved() {
     // Check the outcome after the enemy action.
     List<String> ids = EnemyFactory.availableEnemies(); // maybe there's a more efficient way idk
-    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex));
+    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
 
     // if player is not alive, enter player defeat
 
     if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
       handle(BattleEvent.ADVANCE_ENEMY);
-    } else if (currentEnemyIndex < ids.size() - 1) {
+    } else if (this.currentEnemyIndex < ids.size() - 1) {
       handle(BattleEvent.MORE_ENEMIES);
-    } else if (currentEnemyIndex == ids.size() - 1) {
+    } else if (this.currentEnemyIndex == ids.size() - 1) {
       handle(BattleEvent.ENEMIES_DEFEATED);
     }
   }
 
   private void enterNextEnemy() {
     // Advance to the next eligible enemy.
-    currentEnemyIndex++;
+    this.currentEnemyIndex++;
     handle(BattleEvent.ENEMY_PHASE_COMPLETE);
   }
 
