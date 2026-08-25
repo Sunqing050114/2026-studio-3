@@ -26,9 +26,7 @@ public class BattleController {
    */
   public void handle(BattleEvent event) {
     Objects.requireNonNull(event, "event cannot be null");
-
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
-
     this.validateEventTransition(event, nextPhase);
     this.transition(nextPhase);
   }
@@ -111,7 +109,7 @@ public class BattleController {
       throws IllegalStateException {
     if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
-          "Invalid battle transition: " + this.currentPhase + "-->" + event);
+          "Invalid battle transition: " + this.currentPhase + String.format("----%s---->", event) + "null");
     }
   }
 
