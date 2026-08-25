@@ -6,7 +6,6 @@ import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.factories.EnemyFactory;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -195,7 +194,6 @@ public class BattleController {
     } else {
       handle(BattleEvent.ENEMY_OTHER_SELECTED);
     }
-
   }
 
   private void enterEnemyAttack() {
