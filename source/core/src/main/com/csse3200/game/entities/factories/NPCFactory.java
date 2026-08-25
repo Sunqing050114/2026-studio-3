@@ -36,7 +36,7 @@ import com.csse3200.game.services.ServiceLocator;
  */
 public class NPCFactory {
   private static final NPCConfigs configs =
-          FileLoader.readClass(NPCConfigs.class, "configs/NPCs.json");
+      FileLoader.readClass(NPCConfigs.class, "configs/NPCs.json");
 
   /**
    * Creates a ghost entity.
@@ -49,48 +49,55 @@ public class NPCFactory {
     BaseEntityConfig config = configs.ghost;
 
     AnimationRenderComponent animator =
-            new AnimationRenderComponent(
-                    ServiceLocator.getResourceService().getAsset("images/ghost.atlas", TextureAtlas.class));
+        new AnimationRenderComponent(
+            ServiceLocator.getResourceService().getAsset("images/ghost.atlas", TextureAtlas.class));
     animator.addAnimation("angry_float", 0.1f, Animation.PlayMode.LOOP);
     animator.addAnimation("float", 0.1f, Animation.PlayMode.LOOP);
 
     ghost
-            .addComponent(new CombatStatsComponent(config.health, config.baseAttack))
-            .addComponent(animator)
-            .addComponent(new GhostAnimationController());
+        .addComponent(new CombatStatsComponent(config.health, config.baseAttack))
+        .addComponent(animator)
+        .addComponent(new GhostAnimationController());
 
     ghost.getComponent(AnimationRenderComponent.class).scaleEntity();
 
     // 碰撞监听：撞到任何实体障碍物（树、墙等非 Sensor 物体）时施加反弹冲量并强行重置 AI 重新选路
-    ghost.getEvents().addListener("collisionStart", (Fixture fixtureA, Fixture fixtureB) -> {
-      // 找到与幽灵发生碰撞的另一个 Fixture
-      Fixture other = (fixtureA.getBody().getUserData() == ghost) ? fixtureB : fixtureA;
+    ghost
+        .getEvents()
+        .addListener(
+            "collisionStart",
+            (Fixture fixtureA, Fixture fixtureB) -> {
+              // 找到与幽灵发生碰撞的另一个 Fixture
+              Fixture other = (fixtureA.getBody().getUserData() == ghost) ? fixtureB : fixtureA;
 
-      // 只要对方不是 Sensor（即属于实体障碍物/碰撞体），就触发反弹与转向
-      if (other != null && !other.isSensor()) {
-        PhysicsMovementComponent movement = ghost.getComponent(PhysicsMovementComponent.class);
-        PhysicsComponent physics = ghost.getComponent(PhysicsComponent.class);
+              // 只要对方不是 Sensor（即属于实体障碍物/碰撞体），就触发反弹与转向
+              if (other != null && !other.isSensor()) {
+                PhysicsMovementComponent movement =
+                    ghost.getComponent(PhysicsMovementComponent.class);
+                PhysicsComponent physics = ghost.getComponent(PhysicsComponent.class);
 
-        if (movement != null && physics != null && physics.getBody() != null) {
-          // 1. 停止当前移动并清空线性速度
-          movement.setMoving(false);
-          physics.getBody().setLinearVelocity(Vector2.Zero);
+                if (movement != null && physics != null && physics.getBody() != null) {
+                  // 1. 停止当前移动并清空线性速度
+                  movement.setMoving(false);
+                  physics.getBody().setLinearVelocity(Vector2.Zero);
 
-          // 2. 算出一个远离障碍物的反向冲量，防止幽灵卡在障碍物内部
-          Vector2 ghostPos = ghost.getPosition();
-          Vector2 obstaclePos = other.getBody().getPosition();
-          Vector2 bounceDir = ghostPos.cpy().sub(obstaclePos).nor().scl(2f);
-          physics.getBody().applyLinearImpulse(bounceDir, physics.getBody().getWorldCenter(), true);
-        }
+                  // 2. 算出一个远离障碍物的反向冲量，防止幽灵卡在障碍物内部
+                  Vector2 ghostPos = ghost.getPosition();
+                  Vector2 obstaclePos = other.getBody().getPosition();
+                  Vector2 bounceDir = ghostPos.cpy().sub(obstaclePos).nor().scl(2f);
+                  physics
+                      .getBody()
+                      .applyLinearImpulse(bounceDir, physics.getBody().getWorldCenter(), true);
+                }
 
-        // 3. 强行重置 AI 组件，使 WanderTask 重新计算并生成新的远端巡逻点
-        AITaskComponent ai = ghost.getComponent(AITaskComponent.class);
-        if (ai != null) {
-          ai.setEnabled(false);
-          ai.setEnabled(true);
-        }
-      }
-    });
+                // 3. 强行重置 AI 组件，使 WanderTask 重新计算并生成新的远端巡逻点
+                AITaskComponent ai = ghost.getComponent(AITaskComponent.class);
+                if (ai != null) {
+                  ai.setEnabled(false);
+                  ai.setEnabled(true);
+                }
+              }
+            });
 
     return ghost;
   }
@@ -106,16 +113,16 @@ public class NPCFactory {
     GhostKingConfig config = configs.ghostKing;
 
     AnimationRenderComponent animator =
-            new AnimationRenderComponent(
-                    ServiceLocator.getResourceService()
-                            .getAsset("images/ghostKing.atlas", TextureAtlas.class));
+        new AnimationRenderComponent(
+            ServiceLocator.getResourceService()
+                .getAsset("images/ghostKing.atlas", TextureAtlas.class));
     animator.addAnimation("float", 0.1f, Animation.PlayMode.LOOP);
     animator.addAnimation("angry_float", 0.1f, Animation.PlayMode.LOOP);
 
     ghostKing
-            .addComponent(new CombatStatsComponent(config.health, config.baseAttack))
-            .addComponent(animator)
-            .addComponent(new GhostAnimationController());
+        .addComponent(new CombatStatsComponent(config.health, config.baseAttack))
+        .addComponent(animator)
+        .addComponent(new GhostAnimationController());
 
     ghostKing.getComponent(AnimationRenderComponent.class).scaleEntity();
     return ghostKing;
@@ -129,18 +136,18 @@ public class NPCFactory {
   private static Entity createBaseNPC(Entity target) {
     // 漫游范围设为适中的 (4f, 4f)，防止范围太大跑出地图或太小原地打转
     AITaskComponent aiComponent =
-            new AITaskComponent()
-                    .addTask(new WanderTask(new Vector2(4f, 4f), 1.5f))
-                    .addTask(new ChaseTask(target, 10, 3f, 4f));
+        new AITaskComponent()
+            .addTask(new WanderTask(new Vector2(4f, 4f), 1.5f))
+            .addTask(new ChaseTask(target, 10, 3f, 4f));
 
     Entity npc =
-            new Entity()
-                    .addComponent(new PhysicsComponent())
-                    .addComponent(new PhysicsMovementComponent())
-                    .addComponent(new ColliderComponent())
-                    .addComponent(new HitboxComponent().setLayer(PhysicsLayer.NPC))
-                    .addComponent(new TouchAttackComponent(PhysicsLayer.PLAYER, 1.5f))
-                    .addComponent(aiComponent);
+        new Entity()
+            .addComponent(new PhysicsComponent())
+            .addComponent(new PhysicsMovementComponent())
+            .addComponent(new ColliderComponent())
+            .addComponent(new HitboxComponent().setLayer(PhysicsLayer.NPC))
+            .addComponent(new TouchAttackComponent(PhysicsLayer.PLAYER, 1.5f))
+            .addComponent(aiComponent);
 
     PhysicsUtils.setScaledCollider(npc, 0.9f, 0.4f);
     return npc;
