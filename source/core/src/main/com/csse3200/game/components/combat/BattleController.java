@@ -1,5 +1,13 @@
 package com.csse3200.game.components.combat;
 
+import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
+import com.csse3200.game.components.enemy.EnemyIntent;
+import com.csse3200.game.components.enemy.EnemyStatsComponent;
+import com.csse3200.game.components.enemy.IntentType;
+import com.csse3200.game.entities.Entity;
+import com.csse3200.game.entities.factories.EnemyFactory;
+
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -173,10 +181,30 @@ public class BattleController {
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
+    List<String> ids = EnemyFactory.availableEnemies();
+    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex)); // not too sure if this is how
+    // we're indexing
+
+    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+    if (intent.getType() == IntentType.ATTACK) {
+      handle(BattleEvent.ENEMY_ATTACK_SELECTED);
+    } else if (intent.getType() == IntentType.DEFEND) {
+      handle(BattleEvent.ENEMY_DEFEND_SELECTED);
+    } else {
+      handle(BattleEvent.ENEMY_OTHER_SELECTED);
+    }
+
   }
 
   private void enterEnemyAttack() {
     // Ask the enemy system to execute its attack intent.
+    List<String> ids = EnemyFactory.availableEnemies();
+    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex));
+
+    // execute the intent
+    // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
+
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyDefend() {
@@ -189,10 +217,24 @@ public class BattleController {
 
   private void enterEnemyResolved() {
     // Check the outcome after the enemy action.
+    List<String> ids = EnemyFactory.availableEnemies(); // maybe there's a more efficient way idk
+    Entity enemy = EnemyFactory.create(ids.get(currentEnemyIndex));
+
+    // if player is not alive, enter player defeat
+
+    if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
+      handle(BattleEvent.ADVANCE_ENEMY);
+    } else if (currentEnemyIndex < ids.size() - 1) {
+      handle(BattleEvent.MORE_ENEMIES);
+    } else if (currentEnemyIndex == ids.size() - 1) {
+      handle(BattleEvent.ENEMIES_DEFEATED);
+    }
   }
 
   private void enterNextEnemy() {
     // Advance to the next eligible enemy.
+    currentEnemyIndex++;
+    handle(BattleEvent.ENEMY_PHASE_COMPLETE);
   }
 
   private void enterVictory() {
