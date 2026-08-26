@@ -144,8 +144,7 @@ class CardsEndToEndTest {
         () -> assertEquals("images/cards/inner_focus.png", innerFocus.texturePath));
   }
 
-  private static void assertEffect(
-      EffectConfig effect, EffectType type, int value, int duration) {
+  private static void assertEffect(EffectConfig effect, EffectType type, int value, int duration) {
     assertEquals(type, effect.type);
     assertEquals(value, effect.value);
     assertEquals(duration, effect.duration);
