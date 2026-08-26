@@ -26,7 +26,7 @@ import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import com.csse3200.game.components.battle.*;
 /***scene when clicked on map and display the stag will probably take reuseable
  *stages and setting stuff up
  *
@@ -46,6 +46,14 @@ public class BattleScreen extends ScreenAdapter {
         ServiceLocator.registerRenderService(new RenderService());
         ServiceLocator.registerTimeSource(new GameTime());
         renderer = RenderFactory.createRenderer();
+        createUI();
+    }
+
+    public void createUI() {
+        Stage stage = ServiceLocator.getRenderService().getStage();
+        Entity battleUi = new Entity()
+                .addComponent(new BattleDisplay())
+                .addComponent(new InputDecorator(stage, 10));
     }
     public void render(float delta) {
         ServiceLocator.getEntityService().update();
@@ -63,6 +71,7 @@ public class BattleScreen extends ScreenAdapter {
         ServiceLocator.getRenderService().dispose();
         ServiceLocator.getEntityService().dispose();
         ServiceLocator.clear();
+
     }
 
 
