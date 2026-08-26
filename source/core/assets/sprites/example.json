@@ -12,6 +12,16 @@
       "x": 100,
       "y": 200,
       "trigger": "example2"
+    },
+    {
+      "text": null,
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "size": [150,228],
+      "x": 600,
+      "y": 700,
+      "styleName": "cardStyle",
+      "trigger": "playCard_2D"
     }
   ]
 }

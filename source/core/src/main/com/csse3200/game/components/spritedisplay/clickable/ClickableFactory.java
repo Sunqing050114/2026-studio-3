@@ -3,6 +3,7 @@ package com.csse3200.game.components.spritedisplay.clickable;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.JsonReader;
@@ -27,14 +28,22 @@ public class ClickableFactory extends UIComponent {
     for (JsonValue entry : clickableArray) {
       String text = entry.getString("text", null);
       String skinFile = entry.getString("skinFile", null);
+      String skinAtlas = entry.getString("skinAtlas", null);
+      JsonValue sizeArray = entry.get("size");
+      float width = -1;
+      float height = -1;
+      if (sizeArray != null) {
+        width = sizeArray.getFloat(0);
+        height = sizeArray.getFloat(1);
+      }
       float x = entry.getFloat("x");
       float y = entry.getFloat("y");
       String styleName = entry.getString("styleName", null);
       String trigger = entry.getString("trigger");
-      ClickableRecord.ButtonType type = parseType(entry.getString("type", "imageText"));
+      ClickableRecord.ButtonType type = inferType(text, skinFile);
 
-      Skin skin = getOrLoadSkin(skinFile);
-      records.add(new ClickableRecord(text, skin, x, y, styleName, trigger, type));
+      Skin skin = getOrLoadSkin(skinFile, skinAtlas);
+      records.add(new ClickableRecord(text, skin, x, y, styleName, trigger, type, width, height));
     }
   }
 
@@ -42,19 +51,34 @@ public class ClickableFactory extends UIComponent {
     this.records.addAll(records);
   }
 
-  private ClickableRecord.ButtonType parseType(String type) {
-    return switch (type) {
-      case "text" -> ClickableRecord.ButtonType.TEXT;
-      case "image" -> ClickableRecord.ButtonType.IMAGE;
-      default -> ClickableRecord.ButtonType.IMAGE_TEXT;
-    };
+  private ClickableRecord.ButtonType inferType(String text, String skinFile) {
+    if (text == null) {
+      return ClickableRecord.ButtonType.IMAGE;
+    }
+    if (skinFile != null) {
+      return ClickableRecord.ButtonType.IMAGE_TEXT;
+    }
+    return ClickableRecord.ButtonType.TEXT;
   }
 
-  private Skin getOrLoadSkin(String skinFile) {
-    if (skinFile == null) {
+  private Skin getOrLoadSkin(String skinFile, String skinAtlas) {
+    if (skinFile == null && skinAtlas == null) {
       return null;
     }
-    return skinCache.computeIfAbsent(skinFile, f -> new Skin(Gdx.files.internal(f)));
+
+    String cacheKey = skinFile + "|" + skinAtlas;
+    return skinCache.computeIfAbsent(
+        cacheKey,
+        key -> {
+          if (skinFile != null && skinAtlas != null) {
+            TextureAtlas atlas = new TextureAtlas(Gdx.files.internal(skinAtlas));
+            return new Skin(Gdx.files.internal(skinFile), atlas);
+          } else if (skinFile != null) {
+            return new Skin(Gdx.files.internal(skinFile));
+          } else {
+            return new Skin(new TextureAtlas(Gdx.files.internal(skinAtlas)));
+          }
+        });
   }
 
   @Override
@@ -75,6 +99,10 @@ public class ClickableFactory extends UIComponent {
     for (Clickable clickable : clickables) {
       Button btn = clickable.getBtn();
       btn.setPosition(clickable.getX(), screenHeight - clickable.getY());
+
+      if (clickable.getWidth() > 0 && clickable.getHeight() > 0) {
+        btn.setSize(clickable.getWidth(), clickable.getHeight());
+      }
     }
   }
 

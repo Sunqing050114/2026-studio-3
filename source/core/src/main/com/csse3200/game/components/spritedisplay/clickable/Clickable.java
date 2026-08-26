@@ -20,6 +20,8 @@ public abstract class Clickable extends Component {
   Button btn;
   Skin btnSkin;
   String trigger;
+  float width;
+  float height;
 
   private static Skin getDefaultSkin() {
     if (defaultSkin == null) {
@@ -31,6 +33,8 @@ public abstract class Clickable extends Component {
   public Clickable(ClickableRecord record) {
     this.x = record.x();
     this.y = record.y();
+    this.width = record.width();
+    this.height = record.height();
     this.btnSkin = (record.btnSkin() != null) ? record.btnSkin() : getDefaultSkin();
 
     String text = record.text();
@@ -82,5 +86,13 @@ public abstract class Clickable extends Component {
 
   public float getX() {
     return x;
+  }
+
+  public float getWidth() {
+    return width;
+  }
+
+  public float getHeight() {
+    return height;
   }
 }

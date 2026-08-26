@@ -99,7 +99,7 @@ public class MainMenuScreen extends ScreenAdapter {
     ui.addComponent(new MainMenuDisplay())
         .addComponent(new InputDecorator(stage, 10))
         .addComponent(new MainMenuActions(game))
-        .addComponent(new ClickableFactory(Path.of("configs/example.json")));
+        .addComponent(new ClickableFactory(Path.of("sprites/example.json")));
     ServiceLocator.getEntityService().register(ui);
   }
 }
