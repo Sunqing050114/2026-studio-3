@@ -51,7 +51,8 @@ public final class NodePoolGenerator {
     int allocated = 0;
 
     for (int index = 0; index < types.length; index++) {
-      int weightedCount = nodeCount * weights[index];
+
+      long weightedCount = (long) nodeCount * weights[index];
 
       counts[index] = (int) (weightedCount / totalWeight);
       remainders[index] = weightedCount % totalWeight;

@@ -44,4 +44,12 @@ class RoomDistributionConfigTest {
   void rejectsAllZeroWeights() {
     assertThrows(IllegalArgumentException.class, () -> new RoomDistributionConfig(10, 0, 0, 0));
   }
+
+  @Test
+  void preservesLargeWeightTotal() {
+    RoomDistributionConfig config =
+        new RoomDistributionConfig(3, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 1L);
+
+    assertEquals(6_442_450_941L, config.getTotalWeight());
+  }
 }

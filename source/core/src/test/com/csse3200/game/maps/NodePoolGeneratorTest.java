@@ -48,6 +48,19 @@ class NodePoolGeneratorTest {
   }
 
   @Test
+  void usesLongArithmeticForLargeWeights() {
+    RoomDistributionConfig config =
+        new RoomDistributionConfig(
+            7, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 12345L);
+
+    List<MapNode> nodes = NodePoolGenerator.generate(config);
+
+    assertEquals(3, countRooms(nodes, RoomType.COMBAT));
+    assertEquals(2, countRooms(nodes, RoomType.EVENT));
+    assertEquals(2, countRooms(nodes, RoomType.SHOP));
+  }
+
+  @Test
   void sameSeedProducesSameRoomAssignments() {
     RoomDistributionConfig firstConfig = new RoomDistributionConfig(20, 60, 30, 10, 98765L);
     RoomDistributionConfig secondConfig = new RoomDistributionConfig(20, 60, 30, 10, 98765L);

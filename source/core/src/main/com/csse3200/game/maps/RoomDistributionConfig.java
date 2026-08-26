@@ -52,7 +52,7 @@ public final class RoomDistributionConfig {
     if (combatWeight < 0 || eventWeight < 0 || shopWeight < 0) {
       throw new IllegalArgumentException("Room weights cannot be negative!");
     }
-    if (combatWeight + eventWeight + shopWeight == 0) {
+    if ((long) combatWeight + eventWeight + shopWeight == 0) {
       throw new IllegalArgumentException("At least one room weight must be positive!");
     }
   }
@@ -83,7 +83,7 @@ public final class RoomDistributionConfig {
   }
 
   /** Returns the combined room weight. */
-  public int getTotalWeight() {
-    return combatWeight + eventWeight + shopWeight;
+  public long getTotalWeight() {
+    return (long) combatWeight + eventWeight + shopWeight;
   }
 }
