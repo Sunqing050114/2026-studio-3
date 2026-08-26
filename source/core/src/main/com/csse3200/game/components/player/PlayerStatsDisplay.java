@@ -58,7 +58,6 @@ public class PlayerStatsDisplay extends UIComponent {
     // draw is handled by the stage
   }
 
-
   /**
    * Updates the player's health on the ui.
    *
