@@ -17,7 +17,7 @@ public class EnergyComponent extends Component {
   public EnergyComponent(int maxEnergy) {
     this.maxEnergy = maxEnergy;
     this.currentEnergy = maxEnergy;
-  } // 初始化默认能量上限
+  }
 
   // --- Getters & Setters ---
   public int getCurrentEnergy() {
@@ -51,12 +51,25 @@ public class EnergyComponent extends Component {
   }
 
   // --- Team 5 (Card System) integration stubs ---
-
+  /**
+   * Checks whether the player currently has enough energy to cover the given cost. Read-only check,
+   * does not modify state. Intended for Team 5 to validate whether a card is playable before
+   * committing to spendEnergy().
+   *
+   * @param amount the energy cost to check against
+   * @return true if currentEnergy >= amount, false otherwise
+   */
   public boolean canAfford(int amount) {
     return currentEnergy >= amount;
   }
 
-  /** 供卡牌 UI 判断某张牌当前能不能点 */
+  /**
+   * Attempts to spend the given amount of energy, e.g. when a card is played. Fails safely (no
+   * state change) if the player does not have enough energy.
+   *
+   * @param amount the amount of energy to spend, must be non-negative
+   * @return true if the energy was successfully spent, false if insufficient energy
+   */
   public boolean spendEnergy(int amount) {
     if (amount < 0) {
       logger.warn("Attempted to spend negative energy: {}", amount);
@@ -71,7 +84,12 @@ public class EnergyComponent extends Component {
     return true;
   }
 
-  /** 真正扣能量的方法 */
+  /**
+   * Restores the given amount of energy, capped at maxEnergy. Can be used for card effects or other
+   * sources that grant energy mid-turn.
+   *
+   * @param amount the amount of energy to restore, must be non-negative
+   */
   public void restoreEnergy(int amount) {
     if (amount < 0) {
       logger.warn("Attempted to restore negative energy: {}", amount);
@@ -81,16 +99,16 @@ public class EnergyComponent extends Component {
     notifyEnergyChange();
   }
 
-  /** 给能量加值但不超过上限，用于打出某张牌返还1点能量等效果，和"回合重置到满"不同 */
-
-  // --- Team 3 (Battle/Turn System) lifecycle hooks ---
-
+  // --- Team 3 lifecycle hooks ---
+  /**
+   * Called by the turn/battle system at the start of the player's turn. Resets currentEnergy back
+   * to maxEnergy.
+   */
   public void onTurnStart() {
     this.currentEnergy = maxEnergy;
     notifyEnergyChange();
   }
 
-  /** 回合开始时把能量重置为满 */
   public void onTurnEnd() {
     // Intentionally left as a stub pending Team 3 alignment on
     // whether any end-of-turn energy behavior is needed.
