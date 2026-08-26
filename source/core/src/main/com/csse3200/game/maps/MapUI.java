@@ -1,0 +1,40 @@
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.csse3200.game.ui.UIComponent;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+public abstract class MapUI extends UIComponent {
+
+  @Override
+  public void create() {
+    super.create();
+    addActors();
+  }
+
+  @Override
+  public int getLayer() {
+    return 1;
+  }
+
+  @Override
+  public float getZIndex() {
+    return 1f;
+  }
+
+  private void addActors() {
+    // something
+
+  }
+
+  @Override
+  public void draw(SpriteBatch batch) {
+    // draw is handled by the stage
+  }
+
+  @Override
+  public void dispose() {
+    super.dispose();
+  }
+}
