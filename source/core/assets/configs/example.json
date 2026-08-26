@@ -1,0 +1,17 @@
+{
+  "Clickable": [
+    {
+      "text": "example 1",
+      "x": 100,
+      "y": 100,
+      "trigger": "start"
+    },
+    {
+      "text": "example 2",
+      "skinFile": "flat-earth/skin/flat-earth-ui.json",
+      "x": 100,
+      "y": 200,
+      "trigger": "example2"
+    }
+  ]
+}
