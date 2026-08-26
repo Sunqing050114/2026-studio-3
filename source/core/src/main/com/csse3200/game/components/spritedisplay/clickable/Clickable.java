@@ -3,6 +3,8 @@ package com.csse3200.game.components.spritedisplay.clickable;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
@@ -60,12 +62,36 @@ public abstract class Clickable extends Component {
   private void init(String trigger) {
     this.trigger = trigger;
     btn.addListener(
+        new InputListener() {
+          @Override
+          public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+            onEnter();
+          }
+
+          @Override
+          public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+            onExit();
+          }
+        });
+    btn.addListener(
         new ChangeListener() {
           @Override
           public void changed(ChangeEvent changeEvent, Actor actor) {
-            entity.getEvents().trigger(trigger);
+            onClick();
           }
         });
+  }
+
+  protected void onEnter() {
+    btn.setColor(1.2f, 1.2f, 1.2f, 1f); // brighten
+  }
+
+  protected void onExit() {
+    btn.setColor(1f, 1f, 1f, 1f); // reset
+  }
+
+  protected void onClick() {
+    entity.getEvents().trigger(trigger);
   }
 
   public Button getBtn() {
@@ -94,5 +120,14 @@ public abstract class Clickable extends Component {
 
   public float getHeight() {
     return height;
+  }
+
+  public void draw() {
+      int screenHeight = Gdx.graphics.getHeight();
+      btn.setPosition(this.getX(), screenHeight - this.getY());
+
+      if (this.getWidth() > 0 && this.getHeight() > 0) {
+          btn.setSize(this.getWidth(), this.getHeight());
+      }
   }
 }

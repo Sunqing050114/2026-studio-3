@@ -1,0 +1,66 @@
+{
+  "Clickable": [
+    {
+      "text": "exit",
+      "x": 100,
+      "y": 100,
+      "trigger": "exit"
+    },
+    {
+      "text": "up",
+      "x": 100,
+      "y": 200,
+      "trigger": "up"
+    },
+    {
+      "text": "down",
+      "x": 100,
+      "y": 300,
+      "trigger": "down"
+    },
+    {
+      "text": null,
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "size": [300,456],
+      "x": 50,
+      "y": 1700,
+      "styleName": "cardStyle",
+      "trigger": "card1",
+      "variant": "inout"
+    },
+    {
+      "text": null,
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "size": [300,456],
+      "x": 400,
+      "y": 1700,
+      "styleName": "cardStyle",
+      "trigger": "card2",
+      "variant": "inout"
+    },
+    {
+      "text": null,
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "size": [300,456],
+      "x": 750,
+      "y": 1700,
+      "styleName": "cardStyle",
+      "trigger": "card3",
+      "variant": "inout"
+    },
+    {
+      "text": null,
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "size": [300,456],
+      "x": 1100,
+      "y": 1700,
+      "styleName": "cardStyle",
+      "trigger": "card4",
+      "variant": "inout"
+    }
+  ]
+}

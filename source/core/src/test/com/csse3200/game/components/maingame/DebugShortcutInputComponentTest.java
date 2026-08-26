@@ -11,25 +11,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 // use mockito to check with unit test if a component in  a game is actually working
 @ExtendWith(MockitoExtension.class)
 class DebugShortcutInputComponentTest {
-    @Mock GdxGame game;
+  @Mock GdxGame game;
 
-    private DebugShortcutInputComponent input;
+  private DebugShortcutInputComponent input;
 
-    @BeforeEach
-    void setUp() {
-        input = new DebugShortcutInputComponent(game);
-    }
+  @BeforeEach
+  void setUp() {
+    input = new DebugShortcutInputComponent(game);
+  }
 
-    @Test
-    void shouldStartBattleWhenCtrlShiftBPressed() {
-        assertFalse(input.keyDown(Keys.CONTROL_LEFT));
-        assertFalse(input.keyDown(Keys.SHIFT_LEFT));
+  @Test
+  void shouldStartBattleWhenCtrlShiftBPressed() {
+    assertFalse(input.keyDown(Keys.CONTROL_LEFT));
+    assertFalse(input.keyDown(Keys.SHIFT_LEFT));
 
-        assertTrue(input.keyDown(Keys.B));
+    assertTrue(input.keyDown(Keys.B));
 
-        verify(game).startBattle();
-    }
+    verify(game).startBattle();
+  }
 }

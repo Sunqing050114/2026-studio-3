@@ -17,33 +17,47 @@ import java.util.Map;
 
 public class ClickableFactory extends UIComponent {
 
+  private static final String DEFAULT_VARIANT = "Clickable";
+  private static final Map<String, ClickableSupplier> STATIC_VARIANTS = new HashMap<>();
+
+  static {
+    registerVariant(DEFAULT_VARIANT, record -> new Clickable(record) {});
+    registerVariant("inout", InOutOnTrigger::new);
+    // add future built-in variants here, e.g.:
+    // registerVariant("toggle", ToggleClickable::new);
+  }
+
+  public static void registerVariant(String name, ClickableSupplier supplier) {
+    STATIC_VARIANTS.put(name, supplier);
+  }
+
   private final List<ClickableRecord> records = new ArrayList<>();
   private final List<Clickable> clickables = new ArrayList<>();
   private final Map<String, Skin> skinCache = new HashMap<>();
+  private final Map<String, ClickableSupplier> instanceVariants = new HashMap<>();
 
   public ClickableFactory(Path file) {
     JsonValue root = new JsonReader().parse(Gdx.files.internal(file.toString()));
     JsonValue clickableArray = root.get("Clickable");
 
     for (JsonValue entry : clickableArray) {
-      String text = entry.getString("text", null);
-      String skinFile = entry.getString("skinFile", null);
-      String skinAtlas = entry.getString("skinAtlas", null);
-      JsonValue sizeArray = entry.get("size");
-      float width = -1;
-      float height = -1;
-      if (sizeArray != null) {
-        width = sizeArray.getFloat(0);
-        height = sizeArray.getFloat(1);
-      }
-      float x = entry.getFloat("x");
-      float y = entry.getFloat("y");
-      String styleName = entry.getString("styleName", null);
-      String trigger = entry.getString("trigger");
-      ClickableRecord.ButtonType type = inferType(text, skinFile);
+      Skin skin =
+          getOrLoadSkin(entry.getString("skinFile", null), entry.getString("skinAtlas", null));
 
-      Skin skin = getOrLoadSkin(skinFile, skinAtlas);
-      records.add(new ClickableRecord(text, skin, x, y, styleName, trigger, type, width, height));
+      ClickableRecord.Builder b =
+          ClickableRecord.builder(entry.getString("trigger"))
+              .text(entry.getString("text", null))
+              .skin(skin)
+              .position(entry.getFloat("x"), entry.getFloat("y"))
+              .styleName(entry.getString("styleName", null))
+              .variant(entry.getString("variant", DEFAULT_VARIANT));
+
+      JsonValue sizeArray = entry.get("size");
+      if (sizeArray != null) {
+        b.size(sizeArray.getFloat(0), sizeArray.getFloat(1));
+      }
+
+      records.add(b.build());
     }
   }
 
@@ -51,14 +65,20 @@ public class ClickableFactory extends UIComponent {
     this.records.addAll(records);
   }
 
-  private ClickableRecord.ButtonType inferType(String text, String skinFile) {
-    if (text == null) {
-      return ClickableRecord.ButtonType.IMAGE;
+  /**
+   * Registers a variant for THIS factory instance only, overriding a static variant of the same
+   * name if present. Optional — most variants should go in the static block above instead.
+   */
+  public void registerInstanceVariant(String name, ClickableSupplier supplier) {
+    instanceVariants.put(name, supplier);
+  }
+
+  private ClickableSupplier resolveVariant(String name) {
+    ClickableSupplier supplier = instanceVariants.get(name);
+    if (supplier != null) {
+      return supplier;
     }
-    if (skinFile != null) {
-      return ClickableRecord.ButtonType.IMAGE_TEXT;
-    }
-    return ClickableRecord.ButtonType.TEXT;
+    return STATIC_VARIANTS.get(name);
   }
 
   private Skin getOrLoadSkin(String skinFile, String skinAtlas) {
@@ -85,8 +105,18 @@ public class ClickableFactory extends UIComponent {
   public void create() {
     super.create();
     for (ClickableRecord record : records) {
-      Clickable clickable = new Clickable(record) {};
+      ClickableSupplier supplier = resolveVariant(record.variant());
+      if (supplier == null) {
+        Gdx.app.error(
+            "ClickableFactory",
+            "Unknown clickable variant \"" + record.variant() + "\", falling back to default");
+        supplier = STATIC_VARIANTS.get(DEFAULT_VARIANT);
+      }
+
+      Clickable clickable = supplier.create(record);
       clickable.setEntity(this.entity);
+
+      clickable.create();
 
       clickables.add(clickable);
       stage.addActor(clickable.getBtn());
@@ -95,14 +125,8 @@ public class ClickableFactory extends UIComponent {
 
   @Override
   protected void draw(SpriteBatch batch) {
-    int screenHeight = Gdx.graphics.getHeight();
     for (Clickable clickable : clickables) {
-      Button btn = clickable.getBtn();
-      btn.setPosition(clickable.getX(), screenHeight - clickable.getY());
-
-      if (clickable.getWidth() > 0 && clickable.getHeight() > 0) {
-        btn.setSize(clickable.getWidth(), clickable.getHeight());
-      }
+      clickable.draw();
     }
   }
 

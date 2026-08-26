@@ -12,7 +12,8 @@ public record ClickableRecord(
     String trigger,
     ButtonType type,
     float width,
-    float height) {
+    float height,
+    String variant) {
 
   public enum ButtonType {
     TEXT,
@@ -21,81 +22,83 @@ public record ClickableRecord(
   }
 
   private static final float NO_SIZE = -1;
+  private static final String DEFAULT_VARIANT = "Clickable";
 
-  // ImageTextButton, custom style, with size
-  public ClickableRecord(
-      String text,
-      Skin btnSkin,
-      float x,
-      float y,
-      String styleName,
-      String trigger,
-      float width,
-      float height) {
-    this(text, btnSkin, x, y, styleName, trigger, ButtonType.IMAGE_TEXT, width, height);
-  }
-
-  // ImageTextButton, custom style, no size
-  public ClickableRecord(
-      String text, Skin btnSkin, float x, float y, String styleName, String trigger) {
-    this(text, btnSkin, x, y, styleName, trigger, ButtonType.IMAGE_TEXT, NO_SIZE, NO_SIZE);
-  }
-
-  // ImageTextButton, default style, with size
-  public ClickableRecord(
-      String text, Skin btnSkin, float x, float y, String trigger, float width, float height) {
-    this(text, btnSkin, x, y, null, trigger, ButtonType.IMAGE_TEXT, width, height);
-  }
-
-  // ImageTextButton, default style, no size
-  public ClickableRecord(String text, Skin btnSkin, float x, float y, String trigger) {
-    this(text, btnSkin, x, y, null, trigger, ButtonType.IMAGE_TEXT, NO_SIZE, NO_SIZE);
-  }
-
-  // ImageButton, custom style, with size
-  public ClickableRecord(
-      Skin btnSkin, float x, float y, String styleName, String trigger, float width, float height) {
-    this(null, btnSkin, x, y, styleName, trigger, ButtonType.IMAGE, width, height);
-  }
-
-  // ImageButton, custom style, no size
-  public ClickableRecord(Skin btnSkin, float x, float y, String styleName, String trigger) {
-    this(null, btnSkin, x, y, styleName, trigger, ButtonType.IMAGE, NO_SIZE, NO_SIZE);
-  }
-
-  // ImageButton, default style, with size
-  public ClickableRecord(
-      Skin btnSkin, float x, float y, String trigger, float width, float height) {
-    this(null, btnSkin, x, y, null, trigger, ButtonType.IMAGE, width, height);
-  }
-
-  // ImageButton, default style, no size
-  public ClickableRecord(Skin btnSkin, float x, float y, String trigger) {
-    this(null, btnSkin, x, y, null, trigger, ButtonType.IMAGE, NO_SIZE, NO_SIZE);
-  }
-
-  // TextButton, custom style, default skin, with size
-  public ClickableRecord(
-      String text, float x, float y, String styleName, String trigger, float width, float height) {
-    this(text, null, x, y, styleName, trigger, ButtonType.TEXT, width, height);
-  }
-
-  // TextButton, custom style, default skin, no size
-  public ClickableRecord(String text, float x, float y, String styleName, String trigger) {
-    this(text, null, x, y, styleName, trigger, ButtonType.TEXT, NO_SIZE, NO_SIZE);
-  }
-
-  // TextButton, default style, default skin, with size
-  public ClickableRecord(String text, float x, float y, String trigger, float width, float height) {
-    this(text, null, x, y, null, trigger, ButtonType.TEXT, width, height);
-  }
-
-  // TextButton, default style, default skin, no size
-  public ClickableRecord(String text, float x, float y, String trigger) {
-    this(text, null, x, y, null, trigger, ButtonType.TEXT, NO_SIZE, NO_SIZE);
+  public ClickableRecord {
+    if (variant == null) {
+      variant = DEFAULT_VARIANT;
+    }
   }
 
   public boolean hasSize() {
     return width != NO_SIZE && height != NO_SIZE;
+  }
+
+  public static Builder builder(String trigger) {
+    return new Builder(trigger);
+  }
+
+  public static final class Builder {
+    private String text;
+    private Skin btnSkin;
+    private float x;
+    private float y;
+    private String styleName;
+    private final String trigger;
+    private float width = NO_SIZE;
+    private float height = NO_SIZE;
+    private String variant = DEFAULT_VARIANT;
+
+    private Builder(String trigger) {
+      this.trigger = trigger;
+    }
+
+    public Builder text(String text) {
+      this.text = text;
+      return this;
+    }
+
+    public Builder skin(Skin btnSkin) {
+      this.btnSkin = btnSkin;
+      return this;
+    }
+
+    public Builder position(float x, float y) {
+      this.x = x;
+      this.y = y;
+      return this;
+    }
+
+    public Builder styleName(String styleName) {
+      this.styleName = styleName;
+      return this;
+    }
+
+    public Builder size(float width, float height) {
+      this.width = width;
+      this.height = height;
+      return this;
+    }
+
+    public Builder variant(String variant) {
+      this.variant = variant;
+      return this;
+    }
+
+    public ClickableRecord build() {
+      ButtonType type = inferType(text, btnSkin);
+      return new ClickableRecord(
+          text, btnSkin, x, y, styleName, trigger, type, width, height, variant);
+    }
+
+    private static ButtonType inferType(String text, Skin btnSkin) {
+      if (text == null) {
+        return ButtonType.IMAGE;
+      }
+      if (btnSkin != null) {
+        return ButtonType.IMAGE_TEXT;
+      }
+      return ButtonType.TEXT;
+    }
   }
 }

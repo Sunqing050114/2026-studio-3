@@ -1,5 +1,3 @@
 package com.csse3200.game.components.battle;
 
-public class BattleArea {
-
-}
+public class BattleArea {}
