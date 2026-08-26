@@ -15,6 +15,9 @@ public class PlayerStatsDisplay extends UIComponent {
   private Image heartImage;
   private Label healthLabel;
 
+  private Image energyImage;
+  private Label energyLabel;
+
   /** Creates reusable ui styles and adds actors to the stage. */
   @Override
   public void create() {
@@ -54,6 +57,7 @@ public class PlayerStatsDisplay extends UIComponent {
   public void draw(SpriteBatch batch) {
     // draw is handled by the stage
   }
+
 
   /**
    * Updates the player's health on the ui.

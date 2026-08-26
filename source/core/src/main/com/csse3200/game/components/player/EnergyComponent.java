@@ -17,7 +17,7 @@ public class EnergyComponent extends Component {
   public EnergyComponent(int maxEnergy) {
     this.maxEnergy = maxEnergy;
     this.currentEnergy = maxEnergy;
-  }
+  }//初始化默认能量上限
 
   // --- Getters & Setters ---
   public int getCurrentEnergy() {
@@ -49,6 +49,55 @@ public class EnergyComponent extends Component {
       entity.getEvents().trigger(EVT_UPDATE_MAX_ENERGY, this.maxEnergy);
     }
   }
-}
 
-// --- API Stubs for  ---
+  // --- Team 5 (Card System) integration stubs ---
+
+  public boolean canAfford(int amount) {
+    return currentEnergy >= amount;
+  }
+  /**供卡牌 UI 判断某张牌当前能不能点
+   */
+
+  public boolean spendEnergy(int amount) {
+    if (amount < 0) {
+      logger.warn("Attempted to spend negative energy: {}", amount);
+      return false;
+    }
+    if (!canAfford(amount)) {
+      logger.debug("Not enough energy: have {}, need {}", currentEnergy, amount);
+      return false;
+    }
+    this.currentEnergy -= amount;
+    notifyEnergyChange();
+    return true;
+  }
+  /**
+   *真正扣能量的方法
+   */
+  public void restoreEnergy(int amount) {
+    if (amount < 0) {
+      logger.warn("Attempted to restore negative energy: {}", amount);
+      return;
+    }
+    this.currentEnergy = Math.min(currentEnergy + amount, maxEnergy);
+    notifyEnergyChange();
+  }
+/**
+ * 给能量加值但不超过上限，用于打出某张牌返还1点能量等效果，和"回合重置到满"不同
+ */
+
+  // --- Team 3 (Battle/Turn System) lifecycle hooks ---
+
+  public void onTurnStart() {
+    this.currentEnergy = maxEnergy;
+    notifyEnergyChange();
+  }
+  /**
+   * 回合开始时把能量重置为满
+   */
+
+  public void onTurnEnd() {
+    // Intentionally left as a stub pending Team 3 alignment on
+    // whether any end-of-turn energy behavior is needed.
+  }
+}
