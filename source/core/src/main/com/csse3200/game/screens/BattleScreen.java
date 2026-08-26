@@ -6,6 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.csse3200.game.GdxGame;
 import com.csse3200.game.areas.ForestGameArea;
 import com.csse3200.game.areas.terrain.TerrainFactory;
+import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.gamearea.PerformanceDisplay;
 import com.csse3200.game.components.maingame.MainGameActions;
 import com.csse3200.game.components.maingame.MainGameExitDisplay;
@@ -37,6 +38,7 @@ public class BattleScreen extends ScreenAdapter {
     private final GdxGame game;
     private static final Logger logger = LoggerFactory.getLogger(BattleScreen.class);
     private final Renderer renderer;
+    private BattleController controller =  new BattleController();
     public BattleScreen(GdxGame game) {
         this.game = game;
 
@@ -53,7 +55,10 @@ public class BattleScreen extends ScreenAdapter {
         Stage stage = ServiceLocator.getRenderService().getStage();
         Entity battleUi = new Entity()
                 .addComponent(new BattleDisplay())
+                .addComponent(new BattleActions(controller))
+                .addComponent(new BattleArea())
                 .addComponent(new InputDecorator(stage, 10));
+        ServiceLocator.getEntityService().register(battleUi);
     }
     public void render(float delta) {
         ServiceLocator.getEntityService().update();

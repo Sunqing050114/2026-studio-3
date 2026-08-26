@@ -15,6 +15,7 @@ public class BattleDisplay extends UIComponent{
     private TextButton defendCard; /// same as above
     private TextButton endTurnButton;
     private  Label phaseLabel;
+    private Label hpLabel;
 
     @Override
     public void create() {
@@ -27,9 +28,30 @@ public class BattleDisplay extends UIComponent{
     private void createActors() {
         root = new Table();
         root.setFillParent(true);
+        phaseLabel = new Label("Phase 1", skin);
+        attackCard = new TextButton("Attack Card", skin);
+        defendCard = new TextButton("Defend Card", skin);
+        hpLabel = new Label("HP", skin);
+        endTurnButton = new TextButton("End Turn", skin);
+
+        root.add(phaseLabel);
+        root.add(defendCard);
+        root.add(endTurnButton);
+        root.add(hpLabel);
+        root.row();
+        root.row();
+        root.add(attackCard);
+        stage.addActor(root);
     }
     private void registerEvents() { ///Handle aiden's phase change
         entity.getEvents().addListener("phaseChange", (BattlePhase phase) -> updatePhase(phase));
+        attackCard.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                entity.getEvents().trigger("attackCardSelected");
+            }
+        });
+
     }
     /// Currently used as a method to check player turns to handle disabling cards and
     private void updatePhase(BattlePhase phase) {
