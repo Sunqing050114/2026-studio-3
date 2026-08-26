@@ -7,7 +7,20 @@ public final class RoomDistributionConfig {
   private final int combatWeight;
   private final int eventWeight;
   private final int shopWeight;
-  private final long seed;
+  private final Long seed;
+
+  /**
+   * Creates and validates a room distribution configuration without seed.
+   *
+   * @param normalNodeCount number of normal nodes
+   * @param combatWeight relative combat-room weight
+   * @param eventWeight relative event-room weight
+   * @param shopWeight relative shop-room weight
+   */
+  public RoomDistributionConfig(
+      int normalNodeCount, int combatWeight, int eventWeight, int shopWeight) {
+    this(normalNodeCount, combatWeight, eventWeight, shopWeight, null);
+  }
 
   /**
    * Creates and validates a room distribution configuration.
@@ -19,7 +32,7 @@ public final class RoomDistributionConfig {
    * @param seed seed used for repeatable random generation
    */
   public RoomDistributionConfig(
-      int normalNodeCount, int combatWeight, int eventWeight, int shopWeight, long seed) {
+      int normalNodeCount, int combatWeight, int eventWeight, int shopWeight, Long seed) {
 
     checkValid(normalNodeCount, combatWeight, eventWeight, shopWeight);
 

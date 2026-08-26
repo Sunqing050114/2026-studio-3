@@ -1,6 +1,7 @@
 package com.csse3200.game.maps;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -20,32 +21,67 @@ public final class NodePoolGenerator {
     if (config == null) {
       throw new NullPointerException("Config cannot be null!");
     }
-    Random random = new Random(config.getSeed());
-    List<MapNode> nodes = new ArrayList<>();
-    int nodeCount = config.getNormalNodeCount();
 
-    for (int index = 0; index < nodeCount; index++) {
-      nodes.add(new MapNode(index, selectRoomType(config, random)));
+    int nodeCount = config.getNormalNodeCount();
+    List<RoomType> roomTypes = createRoomTypes(config);
+    Long seed = config.getSeed();
+    Random random = seed == null ? new Random() : new Random(seed);
+
+    Collections.shuffle(roomTypes, random); // Shuffleeeee
+    List<MapNode> nodes = new ArrayList<>(nodeCount + 1);
+
+    // Using zero-based IDs here: 0 to nodeCount - 1.
+    for (int index = 0; index < roomTypes.size(); index++) {
+      nodes.add(new MapNode(index, roomTypes.get(index)));
     }
 
-    nodes.add(new MapNode((nodeCount + 1), RoomType.FINAL)); // Boss
+    nodes.add(new MapNode(config.getNormalNodeCount(), RoomType.FINAL)); // Final Node
     return List.copyOf(nodes);
   }
 
-  /** Randomly selects a room type using the configured weights. */
-  private static RoomType selectRoomType(RoomDistributionConfig config, Random random) {
-    int totalWeight = config.getCombatWeight() + config.getEventWeight() + config.getShopWeight();
-    int selection = random.nextInt(totalWeight);
+  /** Calculates proportional room counts and creates the room-type list. */
+  private static List<RoomType> createRoomTypes(RoomDistributionConfig config) {
+    RoomType[] types = {RoomType.COMBAT, RoomType.EVENT, RoomType.SHOP};
+    int[] weights = {config.getCombatWeight(), config.getEventWeight(), config.getShopWeight()};
 
-    if (selection < config.getCombatWeight()) {
-      return RoomType.COMBAT;
+    int nodeCount = config.getNormalNodeCount();
+    long totalWeight = config.getTotalWeight();
+    int[] counts = new int[types.length];
+    long[] remainders = new long[types.length];
+    int allocated = 0;
+
+    for (int index = 0; index < types.length; index++) {
+      int weightedCount = nodeCount * weights[index];
+
+      counts[index] = (int) (weightedCount / totalWeight);
+      remainders[index] = weightedCount % totalWeight;
+      allocated += counts[index];
     }
 
-    selection -= config.getCombatWeight();
-    if (selection < config.getEventWeight()) {
-      return RoomType.EVENT;
+    // Give Remaining Nodeto room types with the largest remainders.
+    while (allocated < nodeCount) {
+      int largestRemainderIndex = 0;
+
+      for (int index = 1; index < remainders.length; index++) {
+        if (remainders[index] > remainders[largestRemainderIndex]) {
+          largestRemainderIndex = index;
+        }
+      }
+
+      counts[largestRemainderIndex]++;
+      remainders[largestRemainderIndex] = -1;
+      allocated++;
     }
 
-    return RoomType.SHOP;
+    List<RoomType> roomTypes = new ArrayList<>(nodeCount);
+
+    // Chuck the room types node into the list :D
+    for (int index = 0; index < types.length; index++) {
+      for (int count = 0; count < counts[index]; count++) {
+        roomTypes.add(types[index]);
+      }
+    }
+
+    return roomTypes;
   }
 }
