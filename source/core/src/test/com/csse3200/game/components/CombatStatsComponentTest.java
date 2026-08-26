@@ -21,7 +21,6 @@ class CombatStatsComponentTest {
     combat.setHealth(-50);
     assertEquals(0, combat.getHealth());
   }
-
   @Test
   void shouldCheckIsDead() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
