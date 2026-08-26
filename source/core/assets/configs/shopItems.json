@@ -2,27 +2,27 @@
   "items": [
     {
       "id": "shop_heal_card",
-      "cardId": "card_heal",
-      "name": "Heal Card",
-      "description": "Restores health when added to the player's deck.",
+      "cardId": "bandage",
+      "name": "Bandage",
+      "description": "Heal 6 health when this card is played.",
       "price": 20,
-      "stock": 2
+      "stock": 1
     },
     {
       "id": "shop_shield_card",
-      "cardId": "card_shield",
-      "name": "Shield Card",
-      "description": "Adds a defensive card reward to the player's deck.",
+      "cardId": "defend",
+      "name": "Defend",
+      "description": "Gain 5 block when this card is played.",
       "price": 35,
       "stock": 1
     },
     {
       "id": "shop_strike_card",
-      "cardId": "card_strike",
-      "name": "Strike Card",
-      "description": "Adds a basic attack card reward to the player's deck.",
+      "cardId": "strike",
+      "name": "Strike",
+      "description": "Deal 6 damage to a single enemy.",
       "price": 15,
-      "stock": 3
+      "stock": 1
     }
   ]
 }

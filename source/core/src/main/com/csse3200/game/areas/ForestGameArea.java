@@ -5,6 +5,8 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.areas.terrain.TerrainFactory.TerrainType;
+import com.csse3200.game.chance.ChanceEncounterFactory;
+import com.csse3200.game.components.chance.ChanceEncounterDisplay;
 import com.csse3200.game.components.gamearea.GameAreaDisplay;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.shop.ShopDisplay;
@@ -29,6 +31,7 @@ public class ForestGameArea extends GameArea {
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
   private static final String SHOP_NODE_ID = "forest-shop";
+  private static final String CHANCE_NODE_ID = "forest-chance";
   private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(10, 10);
   private static final float WALL_WIDTH = 0.1f;
   private static final String[] forestTextures = {
@@ -80,7 +83,7 @@ public class ForestGameArea extends GameArea {
     spawnTerrain();
     spawnTrees();
     player = spawnPlayer();
-    displayShop(player);
+    displayChanceEncounter();
     spawnGhosts();
     spawnGhostKing();
 
@@ -100,15 +103,34 @@ public class ForestGameArea extends GameArea {
     spawnEntity(shopUi);
   }
 
+  private void displayChanceEncounter() {
+    Entity chanceUi = new Entity();
+    chanceUi.addComponent(
+        new ChanceEncounterDisplay(
+            ChanceEncounterFactory.createInitialEncounters().get(0),
+            (nodeId, success) -> {
+              mapGraph.onEncounterComplete(nodeId, success);
+              if (success) {
+                displayShop(player);
+              }
+            },
+            CHANCE_NODE_ID));
+    spawnEntity(chanceUi);
+  }
+
   private MapGraph createDemoMapGraph() {
     MapGraph graph = new MapGraph();
     MapNode shopNode = new MapNode(SHOP_NODE_ID, RoomType.SHOP);
+    MapNode chanceNode = new MapNode(CHANCE_NODE_ID, RoomType.EVENT);
     MapNode returnNode = new MapNode("forest-return", RoomType.EVENT);
 
     shopNode.setState(NodeState.CURRENT);
+    chanceNode.setState(NodeState.CURRENT);
     graph.addNode(shopNode);
+    graph.addNode(chanceNode);
     graph.addNode(returnNode);
     graph.connectNodes(shopNode.getNodeId(), returnNode.getNodeId());
+    graph.connectNodes(chanceNode.getNodeId(), returnNode.getNodeId());
     return graph;
   }
 
