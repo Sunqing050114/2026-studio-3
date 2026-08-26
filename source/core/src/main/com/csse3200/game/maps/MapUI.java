@@ -1,9 +1,5 @@
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.csse3200.game.ui.UIComponent;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.csse3200.game.ui.UIComponent;
 
 public abstract class MapUI extends UIComponent {
 
