@@ -41,7 +41,7 @@ class MapSelectionControllerTest {
     mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
     mapGraph.addNode(node(2, RoomType.SHOP, NodeState.AVAILABLE));
     mapGraph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
-    mapGraph.addNode(node(4, RoomType.BOSS, NodeState.LOCKED));
+    mapGraph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
 
     mapGraph.connectNodes(0, 1);
     mapGraph.connectNodes(0, 2);
@@ -96,7 +96,7 @@ class MapSelectionControllerTest {
 
   @Test
   void roomTypeIsExposedForBossNode() {
-    assertEquals(RoomType.BOSS, mapGraph.getNode(4).getRoomType());
+    assertEquals(RoomType.FINAL, mapGraph.getNode(4).getRoomType());
   }
 
   // Blocked until MapGraph can seed a starting CURRENT node:
