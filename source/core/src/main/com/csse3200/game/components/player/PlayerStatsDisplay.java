@@ -14,6 +14,8 @@ public class PlayerStatsDisplay extends UIComponent {
   Table table;
   private Image heartImage;
   private Label healthLabel;
+  private Image energyImage;
+  private Label energyLabel;
 
   private Image energyImage;
   private Label energyLabel;
@@ -25,6 +27,7 @@ public class PlayerStatsDisplay extends UIComponent {
     addActors();
 
     entity.getEvents().addListener("updateHealth", this::updatePlayerHealthUI);
+    entity.getEvents().addListener("updateEnergy", this::updatePlayerEnergyUI);
   }
 
   /**
@@ -48,8 +51,18 @@ public class PlayerStatsDisplay extends UIComponent {
     CharSequence healthText = String.format("Health: %d", health);
     healthLabel = new Label(healthText, skin, "large");
 
+    // Energy image
+    float energySideLength = 30f;
+    energyImage = new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
+    //Energy text
+    energyLabel = new Label("Energy: ", skin, "large");
+
     table.add(heartImage).size(heartSideLength).pad(5);
     table.add(healthLabel);
+    table.row();
+    table.add(energyImage).size(energySideLength).pad(5);
+    table.add(energyLabel);
+    table.row();
     stage.addActor(table);
   }
 
@@ -68,10 +81,16 @@ public class PlayerStatsDisplay extends UIComponent {
     healthLabel.setText(text);
   }
 
+  public void updatePlayerEnergyUI(int energy) {
+    CharSequence text = String.format("Energy: %d, energy");
+    energyLabel.setText(text);
+  }
+
   @Override
   public void dispose() {
     super.dispose();
     heartImage.remove();
     healthLabel.remove();
+    energyLabel.remove();
   }
 }
