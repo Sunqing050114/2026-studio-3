@@ -16,6 +16,8 @@ public class PlayerStatsDisplay extends UIComponent {
   private Label healthLabel;
   private Image energyImage;
   private Label energyLabel;
+  private Image pietyImage;
+  private Label pietyLabel;
 
   private Image energyImage;
   private Label energyLabel;
@@ -28,6 +30,7 @@ public class PlayerStatsDisplay extends UIComponent {
 
     entity.getEvents().addListener("updateHealth", this::updatePlayerHealthUI);
     entity.getEvents().addListener("updateEnergy", this::updatePlayerEnergyUI);
+    entity.getEvents().addListener("updatePiety", this::updatePlayerPietyUI);
   }
 
   /**
@@ -41,8 +44,10 @@ public class PlayerStatsDisplay extends UIComponent {
     table.setFillParent(true);
     table.padTop(45f).padLeft(5f);
 
+    // Image size
+    float imageSideLength = 30f;
+
     // Heart image
-    float heartSideLength = 30f;
     heartImage =
         new Image(ServiceLocator.getResourceService().getAsset("images/heart.png", Texture.class));
 
@@ -52,17 +57,28 @@ public class PlayerStatsDisplay extends UIComponent {
     healthLabel = new Label(healthText, skin, "large");
 
     // Energy image
-    float energySideLength = 30f;
-    energyImage = new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
+    energyImage =
+        new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
+
     //Energy text
     energyLabel = new Label("Energy: ", skin, "large");
 
-    table.add(heartImage).size(heartSideLength).pad(5);
+    //Piety image
+    pietyImage =
+        new Image(ServiceLocator.getResourceService().getAsset("images/piety.png", Texture.class));
+
+    //Piety text
+    pietyLabel = new Label("Piety: ", skin, "large");
+
+    table.add(heartImage).size(imageSideLength).pad(5);
     table.add(healthLabel);
     table.row();
-    table.add(energyImage).size(energySideLength).pad(5);
-    table.add(energyLabel);
+
+    table.add(energyImage).size(imageSideLength).pad(5);
+    table.add(energyLabel).left();
     table.row();
+    table.add(pietyImage).size(imageSideLength).pad(5);
+    table.add(pietyLabel).left();
     stage.addActor(table);
   }
 
@@ -81,16 +97,35 @@ public class PlayerStatsDisplay extends UIComponent {
     healthLabel.setText(text);
   }
 
+  /**
+   * Updates the player's energy on the ui.
+   *
+   * @param energy player energy
+   */
   public void updatePlayerEnergyUI(int energy) {
-    CharSequence text = String.format("Energy: %d, energy");
+    CharSequence text = String.format("Energy: %d", energy);
     energyLabel.setText(text);
   }
+
+  /**
+   * Updates the player's piety on the ui.
+   *
+   * @param piety player piety
+   */
+  public void updatePlayerPietyUI(int piety) {
+    CharSequence text = String.format("Piety: %d", piety);
+    pietyLabel.setText(text);
+  }
+
 
   @Override
   public void dispose() {
     super.dispose();
     heartImage.remove();
     healthLabel.remove();
+    energyImage.remove();
     energyLabel.remove();
+    pietyImage.remove();
+    pietyLabel.remove();
   }
 }
