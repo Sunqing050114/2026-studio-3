@@ -15,10 +15,6 @@ public class PlayerStatsDisplay extends UIComponent {
     private Image heartImage;
     private Label healthLabel;
 
-    // Gold display components
-    private Image goldImage;
-    private Label goldLabel;
-
 
   /** Creates reusable ui styles and adds actors to the stage. */
   @Override
@@ -27,7 +23,6 @@ public class PlayerStatsDisplay extends UIComponent {
     addActors();
 
     entity.getEvents().addListener("updateHealth", this::updatePlayerHealthUI);
-    entity.getEvents().addListener("updateGold", this::updatePlayerGoldUI);
   }
 
   /**
@@ -51,23 +46,8 @@ public class PlayerStatsDisplay extends UIComponent {
     CharSequence healthText = String.format("Health: %d", health);
     healthLabel = new Label(healthText, skin, "large");
 
-    //Gold image and text setup
-      goldImage =
-              new Image(ServiceLocator.getResourceService().getAsset("images/heart.png", Texture.class));
-
-      int gold = 0;
-      InventoryComponent inventory = entity.getComponent(InventoryComponent.class);
-      if (inventory != null) {
-          gold = inventory.getGold();
-      }
-      CharSequence goldText = String.format("Gold: %d", gold);
-      goldLabel = new Label(goldText, skin, "large");
-
     table.add(heartImage).size(heartSideLength).pad(5);
     table.add(healthLabel);
-    table.row();
-    table.add(goldImage).size(heartSideLength).pad(5);
-    table.add(goldLabel);
 
     stage.addActor(table);
   }
@@ -87,17 +67,12 @@ public class PlayerStatsDisplay extends UIComponent {
       healthLabel.setText(text);
   }
 
-    public void updatePlayerGoldUI(int gold) {
-        CharSequence text = String.format("Gold: %d", gold);
-        goldLabel.setText(text);
-    }
 
   @Override
   public void dispose() {
     super.dispose();
     heartImage.remove();
     healthLabel.remove();
-      goldImage.remove();
-      goldLabel.remove();
+
   }
 }
