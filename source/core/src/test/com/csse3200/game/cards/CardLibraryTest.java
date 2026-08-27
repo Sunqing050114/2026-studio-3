@@ -1,10 +1,6 @@
 package com.csse3200.game.cards;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.configs.EffectConfig;
@@ -180,6 +176,6 @@ class CardLibraryTest {
   void shouldReturnEmptyListWhenNoCardsAreRegistered() {
     List<CardConfig> allCards = library.getAllCards();
     assertNotNull(allCards);
-    assertTrue(!allCards.isEmpty());
+    assertFalse(allCards.isEmpty());
   }
 }
