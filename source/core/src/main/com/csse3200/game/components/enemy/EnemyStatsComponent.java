@@ -24,12 +24,13 @@ public class EnemyStatsComponent extends CombatStatsComponent {
     this.maxHealth = health;
     this.armour = Math.max(armour, 0);
     this.displayName =
-            displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
+        displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
   }
 
   public String getDisplayName() {
     return displayName;
   }
+
   public int getMaxHealth() {
     return maxHealth;
   }
