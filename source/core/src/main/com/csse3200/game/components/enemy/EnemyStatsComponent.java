@@ -9,19 +9,27 @@ import com.csse3200.game.components.CombatStatsComponent;
  * callers.
  */
 public class EnemyStatsComponent extends CombatStatsComponent {
+  private static final String DEFAULT_DISPLAY_NAME = "Unknown Enemy";
+
   private final int maxHealth;
+  private final String displayName;
   private int armour;
 
-  public EnemyStatsComponent(int health, int baseAttack) {
-    this(health, baseAttack, 0);
+  public EnemyStatsComponent(int health, int baseAttack, int armour) {
+    this(health, baseAttack, armour, DEFAULT_DISPLAY_NAME);
   }
 
-  public EnemyStatsComponent(int health, int baseAttack, int armour) {
+  public EnemyStatsComponent(int health, int baseAttack, int armour, String displayName) {
     super(health, baseAttack);
     this.maxHealth = health;
     this.armour = Math.max(armour, 0);
+    this.displayName =
+            displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
   }
 
+  public String getDisplayName() {
+    return displayName;
+  }
   public int getMaxHealth() {
     return maxHealth;
   }
@@ -49,17 +57,26 @@ public class EnemyStatsComponent extends CombatStatsComponent {
    * @param damage incoming damage, ignored if not positive
    */
   public void takeDamage(int damage) {
-    if (damage <= 0) {
+    if (damage <= 0 || !isAlive()) {
       return;
     }
+
+    int healthBeforeDamage = getHealth();
+
     int absorbed = Math.min(armour, damage);
-    armour -= absorbed;
+    setArmour(armour - absorbed);
+
     int remaining = damage - absorbed;
     if (remaining > 0) {
       setHealth(getHealth() - remaining);
-      entity.getEvents().trigger("enemyDamaged", remaining);
     }
-    if (!isAlive()) {
+
+    int actualHealthDamage = healthBeforeDamage - getHealth();
+    if (actualHealthDamage > 0 && entity != null) {
+      entity.getEvents().trigger("enemyDamaged", actualHealthDamage);
+    }
+
+    if (healthBeforeDamage > 0 && !isAlive() && entity != null) {
       entity.getEvents().trigger("enemyDefeated");
     }
   }
