@@ -47,8 +47,8 @@ public class CardLibrary implements CardService {
    * Registers a valid card definition using its unique ID.
    *
    * @param config card to register
-   * @throws IllegalArgumentException if {@code config} is null, its ID is null/blank, or the ID is
-   *     already registered
+   * @throws IllegalArgumentException if {@code config} is null, its ID is null, blank, or has
+   *     surrounding whitespace, or the ID is already registered
    */
   public void register(CardConfig config) {
     if (config == null) {
@@ -56,8 +56,9 @@ public class CardLibrary implements CardService {
     }
 
     String id = config.id;
-    if (id == null || id.isBlank()) {
-      throw new IllegalArgumentException("Card ID must not be null or blank");
+    if (id == null || id.isBlank() || !id.equals(id.strip())) {
+      throw new IllegalArgumentException(
+          "Card ID must not be null, blank, or have surrounding whitespace");
     }
     if (cards.containsKey(id)) {
       throw new IllegalArgumentException("Duplicate card ID: " + id);
