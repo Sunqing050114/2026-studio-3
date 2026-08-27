@@ -19,9 +19,6 @@ public class PlayerStatsDisplay extends UIComponent {
   private Image pietyImage;
   private Label pietyLabel;
 
-  private Image energyImage;
-  private Label energyLabel;
-
   /** Creates reusable ui styles and adds actors to the stage. */
   @Override
   public void create() {
@@ -61,7 +58,13 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
 
     //Energy text
-    energyLabel = new Label("Energy: ", skin, "large");
+    int energy = 100;
+    EnergyComponent component = entity.getComponent(EnergyComponent.class);
+    if (energy != 100) {
+      energy = component.getCurrentEnergy();
+    }
+    CharSequence energyText = String.format("Energy: %d", energy);
+    energyLabel = new Label(energyText, skin, "large");
 
     //Piety image
     pietyImage =
