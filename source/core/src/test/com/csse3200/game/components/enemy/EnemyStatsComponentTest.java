@@ -21,6 +21,7 @@ class EnemyStatsComponentTest {
     assertEquals(17, stats.getHealth());
     assertEquals(0, stats.getArmour());
   }
+
   @Test
   void shouldLetArmourFullyAbsorbDamage() {
     Entity enemy = new Entity();
