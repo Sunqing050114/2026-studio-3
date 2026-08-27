@@ -69,7 +69,7 @@ public class CardLibrary implements CardService {
 
   @Override
   public Optional<CardConfig> getCard(String cardId) {
-    if (cardId == null) {
+    if (cardId == null || cardId.isBlank()) {
       return Optional.empty();
     }
     return Optional.ofNullable(cards.get(cardId));
