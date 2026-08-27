@@ -34,4 +34,43 @@ class EnemyStatsComponentTest {
     assertEquals(20, stats.getHealth());
     assertEquals(2, stats.getArmour());
   }
+
+  @Test
+  void shouldDamageHealthDirectlyWhenNoArmour() {
+    Entity enemy = new Entity();
+    EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 0);
+    enemy.addComponent(stats);
+    enemy.create();
+
+    stats.takeDamage(6);
+
+    assertEquals(14, stats.getHealth());
+    assertEquals(0, stats.getArmour());
+  }
+
+  @Test
+  void shouldIgnoreZeroDamage() {
+    Entity enemy = new Entity();
+    EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
+    enemy.addComponent(stats);
+    enemy.create();
+
+    stats.takeDamage(0);
+
+    assertEquals(20, stats.getHealth());
+    assertEquals(5, stats.getArmour());
+  }
+
+  @Test
+  void shouldIgnoreNegativeDamage() {
+    Entity enemy = new Entity();
+    EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
+    enemy.addComponent(stats);
+    enemy.create();
+
+    stats.takeDamage(-5);
+
+    assertEquals(20, stats.getHealth());
+    assertEquals(5, stats.getArmour());
+  }
 }
