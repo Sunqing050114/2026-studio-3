@@ -69,6 +69,18 @@ class InventoryComponentTest {
   }
 
   @Test
+  void shouldRemoveOneCardAtATime() {
+    InventoryComponent inventory = new InventoryComponent(100);
+    inventory.addCard("card_heal", 2);
+
+    assertTrue(inventory.removeCard("card_heal"));
+    assertEquals(1, inventory.getCardCount("card_heal"));
+    assertTrue(inventory.removeCard("card_heal"));
+    assertEquals(0, inventory.getCardCount("card_heal"));
+    assertFalse(inventory.removeCard("card_heal"));
+  }
+
+  @Test
   void shouldRejectInvalidCardAdditions() {
     InventoryComponent inventory = new InventoryComponent(100);
 

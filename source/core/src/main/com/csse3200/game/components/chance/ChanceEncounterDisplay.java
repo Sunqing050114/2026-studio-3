@@ -14,6 +14,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.csse3200.game.chance.ChanceChoice;
 import com.csse3200.game.chance.ChanceEncounter;
 import com.csse3200.game.chance.ChanceOutcome;
+import com.csse3200.game.encounters.integration.ChanceEncounterSession;
+import com.csse3200.game.encounters.integration.ChanceResolution;
 import com.csse3200.game.maps.EncounterCallback;
 import com.csse3200.game.ui.UIComponent;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ public class ChanceEncounterDisplay extends UIComponent {
   private static final Color MUTED_COLOUR = new Color(0.66f, 0.59f, 0.53f, 1f);
 
   private final ChanceEncounter encounter;
+  private final ChanceEncounterSession encounterSession;
   private final EncounterCallback completionCallback;
   private final String nodeId;
   private final List<TextButton> choiceButtons = new ArrayList<>();
@@ -72,7 +75,29 @@ public class ChanceEncounterDisplay extends UIComponent {
    */
   public ChanceEncounterDisplay(
       ChanceEncounter encounter, EncounterCallback completionCallback, String nodeId) {
+    this(encounter, completionCallback, nodeId, null);
+  }
+
+  /**
+   * Creates a display backed by a fully integrated Chance Encounter session.
+   *
+   * @param encounterSession session that applies outcomes and reports completion to the map
+   */
+  public ChanceEncounterDisplay(ChanceEncounterSession encounterSession) {
+    this(
+        Objects.requireNonNull(encounterSession, "encounterSession cannot be null").getEncounter(),
+        null,
+        encounterSession.getNodeId(),
+        encounterSession);
+  }
+
+  private ChanceEncounterDisplay(
+      ChanceEncounter encounter,
+      EncounterCallback completionCallback,
+      String nodeId,
+      ChanceEncounterSession encounterSession) {
     this.encounter = Objects.requireNonNull(encounter, "encounter cannot be null");
+    this.encounterSession = encounterSession;
     this.completionCallback = completionCallback;
     this.nodeId = Objects.requireNonNull(nodeId, "nodeId cannot be null");
   }
@@ -219,7 +244,18 @@ public class ChanceEncounterDisplay extends UIComponent {
       return;
     }
 
-    ChanceOutcome outcome = encounter.resolveChoice(choice.getId());
+    ChanceOutcome outcome;
+    if (encounterSession == null) {
+      outcome = encounter.resolveChoice(choice.getId());
+    } else {
+      ChanceResolution resolution = encounterSession.resolveChoice(choice.getId());
+      if (!resolution.isSuccess()) {
+        resultLabel.setStyle(createLabelStyle("default", new Color(0.9f, 0.35f, 0.3f, 1f)));
+        resultLabel.setText("OUTCOME\n" + resolution.getMessage());
+        return;
+      }
+      outcome = resolution.getOutcome();
+    }
     if (outcome == null) {
       resultLabel.setStyle(createLabelStyle("default", new Color(0.9f, 0.35f, 0.3f, 1f)));
       resultLabel.setText(
@@ -251,7 +287,9 @@ public class ChanceEncounterDisplay extends UIComponent {
   }
 
   private void notifyCompletion() {
-    if (completionCallback != null) {
+    if (encounterSession != null) {
+      encounterSession.complete();
+    } else if (completionCallback != null) {
       completionCallback.onEncounterComplete(nodeId, true);
     }
   }

@@ -7,6 +7,7 @@ public class PurchaseResult {
     ITEM_NOT_FOUND,
     OUT_OF_STOCK,
     INSUFFICIENT_GOLD,
+    CARD_NOT_FOUND,
     INVALID_ITEM,
     INVALID_INVENTORY,
     SHOP_CLOSED,
@@ -70,6 +71,8 @@ public class PurchaseResult {
         return "Item is out of stock.";
       case INSUFFICIENT_GOLD:
         return "Not enough gold.";
+      case CARD_NOT_FOUND:
+        return "Card definition is unavailable.";
       case INVALID_ITEM:
         return "Item cannot be purchased.";
       case INVALID_INVENTORY:

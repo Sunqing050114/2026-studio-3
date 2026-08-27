@@ -118,6 +118,29 @@ public class InventoryComponent extends Component {
   }
 
   /**
+   * Removes one copy of a card from the temporary Sprint 1 collection.
+   *
+   * <p>This is primarily used to roll back a shop purchase if the matching currency update fails.
+   * Team 5's persistent deck will replace this temporary storage after cross-team integration.
+   *
+   * @param cardId stable card identifier
+   * @return true if one copy was removed
+   */
+  public boolean removeCard(String cardId) {
+    int count = getCardCount(cardId);
+    if (count <= 0) {
+      return false;
+    }
+
+    if (count == 1) {
+      cards.remove(cardId);
+    } else {
+      cards.put(cardId, count - 1);
+    }
+    return true;
+  }
+
+  /**
    * Returns an immutable view of owned card quantities.
    *
    * @return card quantities by card id
