@@ -1,21 +1,20 @@
 package com.csse3200.game.cards;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.configs.EffectConfig;
 import com.csse3200.game.extensions.GameExtension;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GameExtension.class)
 class CardLibraryTest {
@@ -29,11 +28,11 @@ class CardLibraryTest {
     config.name = "Test Card";
     config.description = "Test card description.";
     config.cost = 1;
-    config.effects = new EffectConfig[] { new EffectConfig(EffectType.DAMAGE, 1) };
+    config.effects = new EffectConfig[] {new EffectConfig(EffectType.DAMAGE, 1)};
     config.texturePath = "images/cards/test.png";
     return config;
   }
-  
+
   @BeforeEach
   void setUp() {
     library.register(strike);

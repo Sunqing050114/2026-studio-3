@@ -157,12 +157,12 @@ public final class CardConfigLoader {
     JsonValue cardArray = root.get("cards");
     if (cardArray == null || !cardArray.isArray()) {
       throw new CardLoadingException(
-              "Card configuration must contain a 'cards' array: " + filename);
+          "Card configuration must contain a 'cards' array: " + filename);
     }
 
     if (cardArray.size == 0) {
       throw new CardLoadingException(
-              "Card configuration must contain at least one card: " + filename);
+          "Card configuration must contain at least one card: " + filename);
     }
 
     return cardArray;
