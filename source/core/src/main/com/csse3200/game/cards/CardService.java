@@ -15,7 +15,7 @@ public interface CardService {
    * Retrieves the configuration of the card with the given identifier.
    *
    * @param cardId the unique identifier of the card to retrieve
-   * @return the card configuration, or an empty {@link Optional} if the ID is unknown or null
+   * @return the card configuration, or an empty {@link Optional} if the ID is unknown, blank or null
    */
   Optional<CardConfig> getCard(String cardId);
 
