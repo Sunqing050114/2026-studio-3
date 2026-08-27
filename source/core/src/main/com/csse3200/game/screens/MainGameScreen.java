@@ -35,7 +35,7 @@ import com.csse3200.game.components.maingame.DebugShortcutInputComponent;
  */
 public class MainGameScreen extends ScreenAdapter {
   private static final Logger logger = LoggerFactory.getLogger(MainGameScreen.class);
-  private static final String[] mainGameTextures = {"images/heart.png","images/energy.png", "images/piety.png"};
+  private static final String[] mainGameTextures = {"images/heart.png","images/energy.png", "images/piety.png", "images/money.png"};
   private static final Vector2 CAMERA_POSITION = new Vector2(7.5f, 7.5f);
 
   private final GdxGame game;

@@ -18,6 +18,8 @@ public class PlayerStatsDisplay extends UIComponent {
   private Label energyLabel;
   private Image pietyImage;
   private Label pietyLabel;
+  private Image moneyImage;
+  private Label moneyLabel;
 
   /** Creates reusable ui styles and adds actors to the stage. */
   @Override
@@ -28,6 +30,7 @@ public class PlayerStatsDisplay extends UIComponent {
     entity.getEvents().addListener("updateHealth", this::updatePlayerHealthUI);
     entity.getEvents().addListener("updateEnergy", this::updatePlayerEnergyUI);
     entity.getEvents().addListener("updatePiety", this::updatePlayerPietyUI);
+    entity.getEvents().addListener("updateMoney", this::updatePlayerMoneyUI);
   }
 
   /**
@@ -71,7 +74,14 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/piety.png", Texture.class));
 
     //Piety text
-    pietyLabel = new Label("Piety: ", skin, "large");
+    pietyLabel = new Label("Piety: 1", skin, "large");
+
+    //Money image
+    moneyImage =
+        new Image(ServiceLocator.getResourceService().getAsset("images/money.png", Texture.class));
+
+    //Money text
+    moneyLabel = new Label("Money: $0", skin, "large");
 
     table.add(heartImage).size(imageSideLength).pad(5);
     table.add(healthLabel);
@@ -80,8 +90,13 @@ public class PlayerStatsDisplay extends UIComponent {
     table.add(energyImage).size(imageSideLength).pad(5);
     table.add(energyLabel).left();
     table.row();
+
     table.add(pietyImage).size(imageSideLength).pad(5);
     table.add(pietyLabel).left();
+    table.row();
+
+    table.add(moneyImage).size(imageSideLength).pad(5);
+    table.add(moneyLabel).left();
     stage.addActor(table);
   }
 
@@ -120,6 +135,15 @@ public class PlayerStatsDisplay extends UIComponent {
     pietyLabel.setText(text);
   }
 
+  /** Updates the player's money on the ui.
+   *
+   * @param money player money
+   */
+  public void updatePlayerMoneyUI(int money) {
+    CharSequence text = String.format("Money: %d", money);
+    moneyLabel.setText(text);
+  }
+
 
   @Override
   public void dispose() {
@@ -130,5 +154,7 @@ public class PlayerStatsDisplay extends UIComponent {
     energyLabel.remove();
     pietyImage.remove();
     pietyLabel.remove();
+    moneyImage.remove();
+    moneyLabel.remove();
   }
 }
