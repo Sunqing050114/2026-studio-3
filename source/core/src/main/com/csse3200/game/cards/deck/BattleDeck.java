@@ -40,8 +40,13 @@ public class BattleDeck {
    */
   public String drawOne() {
     if (drawPile.isEmpty()) {
+      reshuffleDiscardIntoDrawPile();
+    }
+
+    if (drawPile.isEmpty()) {
       return null;
     }
+
     String cardId = drawPile.remove(0);
     hand.add(cardId);
     return cardId;
@@ -67,6 +72,61 @@ public class BattleDeck {
       drawnCards.add(cardId);
     }
     return List.copyOf(drawnCards);
+  }
+
+  /**
+   * Plays a card from the hand and moves it to the discard pile.
+   *
+   * <p>Card validation and effect resolution should be completed before this method is called.
+   *
+   * @param cardId ID of the card being played
+   * @return true if the card was moved, otherwise false
+   */
+  public boolean playCard(String cardId) {
+    return discardCard(cardId);
+  }
+
+  /**
+   * Removes one matching card from the hand and moves it to the discard pile.
+   *
+   * @param cardId ID of the card to discard
+   * @return true if the card was discarded, otherwise false
+   */
+  public boolean discardCard(String cardId) {
+    if (cardId == null || !hand.remove(cardId)) {
+      return false;
+    }
+
+    discardPile.add(cardId);
+    return true;
+  }
+
+  /**
+   * Moves every card currently in the hand to the discard pile.
+   *
+   * @return number of cards discarded
+   */
+  public int discardHand() {
+    int discardedCount = hand.size();
+    discardPile.addAll(hand);
+    hand.clear();
+    return discardedCount;
+  }
+
+  /**
+   * Moves the discard pile into an empty draw pile and shuffles it.
+   *
+   * @return true if cards were moved and shuffled, otherwise false
+   */
+  public boolean reshuffleDiscardIntoDrawPile() {
+    if (!drawPile.isEmpty() || discardPile.isEmpty()) {
+      return false;
+    }
+
+    drawPile.addAll(discardPile);
+    discardPile.clear();
+    shuffleDrawPile();
+    return true;
   }
 
   /**
