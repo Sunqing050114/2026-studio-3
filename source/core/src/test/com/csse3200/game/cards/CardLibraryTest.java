@@ -1,29 +1,47 @@
 package com.csse3200.game.cards;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.csse3200.game.cards.configs.CardConfig;
-import com.csse3200.game.extensions.GameExtension;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
+import com.csse3200.game.extensions.GameExtension;
+
 @ExtendWith(GameExtension.class)
 class CardLibraryTest {
-  private CardLibrary library;
+  private final CardLibrary library = new CardLibrary();
+  private final CardConfig strike = card("strike");
+  private final CardConfig defend = card("defend");
 
+  private static CardConfig card(String id) {
+    CardConfig config = new CardConfig();
+    config.id = id;
+    config.name = "Test Card";
+    config.description = "Test card description.";
+    config.cost = 1;
+    config.effects = new EffectConfig[] { new EffectConfig(EffectType.DAMAGE, 1) };
+    config.texturePath = "images/cards/test.png";
+    return config;
+  }
+  
   @BeforeEach
   void setUp() {
-    library = new CardLibrary();
+    library.register(strike);
+    library.register(defend);
   }
 
   @Test
   void shouldRegisterAndRetrieveCardById() {
-    CardConfig strike = card("strike");
-    library.register(strike);
-
     Optional<CardConfig> result = library.getCard("strike");
     assertTrue(result.isPresent());
     assertEquals(strike, result.get());
@@ -31,11 +49,6 @@ class CardLibraryTest {
 
   @Test
   void shouldRetrieveAllRegisteredCards() {
-    CardConfig strike = card("strike");
-    CardConfig defend = card("defend");
-    library.register(strike);
-    library.register(defend);
-
     List<CardConfig> allCards = library.getAllCards();
     assertEquals(2, allCards.size());
     assertTrue(allCards.contains(strike));
@@ -44,9 +57,6 @@ class CardLibraryTest {
 
   @Test
   void shouldRegisterCardsFromConstructor() {
-    CardConfig strike = card("strike");
-    CardConfig defend = card("defend");
-
     CardLibrary loaded = new CardLibrary(List.of(strike, defend));
 
     assertEquals(strike, loaded.getCard("strike").orElseThrow());
@@ -55,32 +65,31 @@ class CardLibraryTest {
   }
 
   @Test
-  void shouldRejectDuplicateIdsWithoutOverwriting() {
-    CardConfig original = card("strike");
-    CardConfig duplicate = card("strike");
-    library.register(original);
+  void shouldCreateEmptyLibraryFromEmptyCollection() {
+    CardLibrary loaded = new CardLibrary(List.of());
+    assertTrue(loaded.getAllCards().isEmpty());
+  }
 
+  @Test
+  void shouldRejectDuplicateIdsWithoutOverwriting() {
+    CardConfig duplicate = card("strike");
     IllegalArgumentException error =
         assertThrows(IllegalArgumentException.class, () -> library.register(duplicate));
 
     assertTrue(error.getMessage().contains("strike"));
-    assertEquals(original, library.getCard("strike").orElseThrow());
-    assertEquals(1, library.getAllCards().size());
+    assertEquals(strike, library.getCard("strike").orElseThrow());
+    assertEquals(2, library.getAllCards().size());
   }
 
   @Test
   void shouldRejectDuplicateIdsWhenConstructedFromCollection() {
-    CardConfig original = card("strike");
     CardConfig duplicate = card("strike");
-    List<CardConfig> configs = List.of(original, duplicate);
-
+    List<CardConfig> configs = List.of(strike, duplicate);
     assertThrows(IllegalArgumentException.class, () -> new CardLibrary(configs));
   }
 
   @Test
   void shouldReturnEmptyOptionalForUnknownId() {
-    library.register(card("strike"));
-
     Optional<CardConfig> result = library.getCard("missing");
     assertTrue(result.isEmpty());
   }
@@ -88,6 +97,22 @@ class CardLibraryTest {
   @Test
   void shouldReturnEmptyOptionalForNullId() {
     assertTrue(library.getCard(null).isEmpty());
+  }
+
+  @Test
+  void shouldReturnEmptyOptionalForEmptyId() {
+    assertTrue(library.getCard("").isEmpty());
+  }
+
+  @Test
+  void shouldReturnEmptyOptionalForWhitespaceOnlyId() {
+    assertTrue(library.getCard(" \t\n").isEmpty());
+  }
+
+  @Test
+  void shouldMatchIdsCaseSensitively() {
+    assertTrue(library.getCard("Strike").isEmpty());
+    assertEquals(strike, library.getCard("strike").orElseThrow());
   }
 
   @Test
@@ -108,15 +133,47 @@ class CardLibraryTest {
   }
 
   @Test
-  void shouldPreventModificationOfReturnedCollection() {
-    CardConfig strike = card("strike");
-    library.register(strike);
+  void shouldRejectRegisteringSameCardObjectTwice() {
+    assertThrows(IllegalArgumentException.class, () -> library.register(strike));
+  }
 
+  @Test
+  void shouldRejectCardIdsWithSurroundingWhitespace() {
+    assertAll(
+        () -> assertThrows(IllegalArgumentException.class, () -> library.register(card(" strike"))),
+        () ->
+            assertThrows(IllegalArgumentException.class, () -> library.register(card("strike "))));
+  }
+
+  @Test
+  void shouldRejectNullElementInConstructorCollection() {
+    List<CardConfig> configs = Collections.singletonList(null);
+
+    assertThrows(IllegalArgumentException.class, () -> new CardLibrary(configs));
+  }
+
+  @Test
+  void shouldRejectNullIdInConstructorCollection() {
+    assertThrows(IllegalArgumentException.class, () -> new CardLibrary(List.of(card(null))));
+  }
+
+  @Test
+  void shouldRejectEmptyOrWhitespaceOnlyIdInConstructorCollection() {
+    assertAll(
+        () ->
+            assertThrows(IllegalArgumentException.class, () -> new CardLibrary(List.of(card("")))),
+        () ->
+            assertThrows(
+                IllegalArgumentException.class, () -> new CardLibrary(List.of(card("  ")))));
+  }
+
+  @Test
+  void shouldPreventModificationOfReturnedCollection() {
     List<CardConfig> allCards = library.getAllCards();
     assertThrows(UnsupportedOperationException.class, () -> allCards.add(card("defend")));
     assertThrows(UnsupportedOperationException.class, () -> allCards.remove(strike));
 
-    assertEquals(1, library.getAllCards().size());
+    assertEquals(2, library.getAllCards().size());
     assertEquals(strike, library.getCard("strike").orElseThrow());
   }
 
@@ -124,12 +181,6 @@ class CardLibraryTest {
   void shouldReturnEmptyListWhenNoCardsAreRegistered() {
     List<CardConfig> allCards = library.getAllCards();
     assertNotNull(allCards);
-    assertTrue(allCards.isEmpty());
-  }
-
-  private static CardConfig card(String id) {
-    CardConfig config = new CardConfig();
-    config.id = id;
-    return config;
+    assertTrue(!allCards.isEmpty());
   }
 }
