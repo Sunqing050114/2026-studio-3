@@ -32,7 +32,7 @@ public class BattleController {
     this.player = player;
     // Guard against null PLayer entity
     if (this.player == null) {
-      throw new IllegalArgumentException("Player cannot be null;");
+      throw new IllegalArgumentException("Player cannot be null.");
     }
 
     this.enemies = enemies;
@@ -45,7 +45,7 @@ public class BattleController {
 
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
-    this.currentEnemyIndex = -1;
+    this.currentEnemyIndex = 0;
     this.eventHandler = new EventHandler();
   }
 
@@ -55,7 +55,7 @@ public class BattleController {
    * @param event The event to be handled.
    * @throws IllegalStateException When the given transition isn't allowed.
    */
-  public void handle(BattleEvent event) { // TODO: I think it should be private?
+  private void handle(BattleEvent event) {
     Objects.requireNonNull(event, "event cannot be null");
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
     this.validateEventTransition(event, nextPhase);
@@ -117,8 +117,7 @@ public class BattleController {
   }
 
   private void setCurrentPhase(BattlePhase nextPhase) {
-    // TODO: defensive check here
-    this.currentPhase = nextPhase;
+      this.currentPhase = nextPhase;
   }
 
   private void setCurrentEnemyIndex(int currentEnemyIndex) {
