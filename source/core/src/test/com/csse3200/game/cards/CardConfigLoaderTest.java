@@ -108,7 +108,7 @@ class CardConfigLoaderTest {
     String message = exception.getMessage();
 
     assertAll(
-        () -> assertTrue(message.contains("id must be set")),
+        () -> assertTrue(message.contains("id must not be null or blank")),
         () -> assertTrue(message.contains("name must not be blank")),
         () -> assertTrue(message.contains("cost must not be negative")),
         () -> assertTrue(message.contains("texturePath must not be blank")),
