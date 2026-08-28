@@ -1,5 +1,6 @@
 package com.csse3200.game.components.combat;
 
+import com.badlogic.gdx.utils.IntSet;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
@@ -20,15 +21,16 @@ import java.util.Objects;
 public class BattleController {
   private BattlePhase currentPhase;
   private int currentEnemyIndex;
+  private EnemyIntent currentEnemyIntent;
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
-  // TODO: record enemy intent
 
   public BattleController() {
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
+    this.currentEnemyIntent = null;
     this.eventHandler = new EventHandler();
   }
 
@@ -173,17 +175,22 @@ public class BattleController {
 
   private void enterSetup() {
     // Coordinate battle setup.
+
+    // check for available enemies and change the list
+    // update the player private variable
+    handle(BattleEvent.SETUP_COMPLETE);
   }
 
   private void enterRevealIntents() {
     // Ask the enemy system to reveal intents.
     Entity enemy = getEnemy();
-    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+    currentEnemyIntent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
     handle(BattleEvent.INTENTS_REVEALED);
   }
 
   private void enterPlayerStart() {
     // Coordinate start-of-turn operations.
+    handle(BattleEvent.PLAYER_TURN_STARTED);
   }
 
   private void enterPlayerTurn() {
@@ -212,12 +219,9 @@ public class BattleController {
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
-    Entity enemy = getEnemy();
-
-    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
-    if (intent.getType() == IntentType.ATTACK) {
+    if (currentEnemyIntent.getType() == IntentType.ATTACK) {
       handle(BattleEvent.ENEMY_ATTACK_SELECTED);
-    } else if (intent.getType() == IntentType.DEFEND) {
+    } else if (currentEnemyIntent.getType() == IntentType.DEFEND) {
       handle(BattleEvent.ENEMY_DEFEND_SELECTED);
     } else {
       handle(BattleEvent.ENEMY_OTHER_SELECTED);
