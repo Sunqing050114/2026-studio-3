@@ -11,15 +11,15 @@ public class EnemyConfigs {
   private transient Map<String, EnemyConfig> index;
 
   public EnemyConfig get(String id) {
-    return index.get(id);
+    return index().get(id);
   }
 
   public boolean contains(String id) {
-    return index.containsKey(id);
+    return index().containsKey(id);
   }
 
   public List<String> ids() {
-    return new ArrayList<>(index.keySet());
+    return new ArrayList<>(index().keySet());
   }
 
   private Map<String, EnemyConfig> index() {

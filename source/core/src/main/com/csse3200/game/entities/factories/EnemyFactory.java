@@ -5,16 +5,30 @@ import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyConfigs;
+import com.csse3200.game.files.FileLoader;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Creates enemy entities from configuration.
+ * Creates enemy entities from configuration loaded from {@code configs/enemies.json}.
  *
- * <p>Placeholder implementation: the roster is empty and unknown ids fall back to a default enemy.
- * Loading from {@code configs/enemies.json} is added in #18.
+ * <p>Unknown enemy ids fall back to a default enemy configuration.
  */
 public class EnemyFactory {
-  private static final EnemyConfigs roster = new EnemyConfigs();
+  private static final Logger logger = LoggerFactory.getLogger(EnemyFactory.class);
+  private static final EnemyConfigs roster = loadRoster();
+
+  private static EnemyConfigs loadRoster() {
+    EnemyConfigs configs = FileLoader.readClass(EnemyConfigs.class, "configs/enemies.json");
+
+    if (configs == null) {
+      logger.warn("Failed to load enemy configs, using empty roster");
+      return new EnemyConfigs();
+    }
+
+    return configs;
+  }
 
   /**
    * Creates an enemy by id, falling back to a default enemy when the id is unknown.
@@ -24,7 +38,13 @@ public class EnemyFactory {
    */
   public static Entity create(String id) {
     EnemyConfig config = roster.get(id);
-    return create(config == null ? new EnemyConfig() : config);
+
+    if (config == null) {
+      logger.warn("Unknown enemy id: {}", id);
+      config = new EnemyConfig();
+    }
+
+    return create(config);
   }
 
   /**
