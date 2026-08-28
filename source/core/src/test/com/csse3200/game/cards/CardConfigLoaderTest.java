@@ -16,7 +16,7 @@ class CardConfigLoaderTest {
   private static final String TEST_DIRECTORY = "test/cards/";
 
   @Test
-  void shouldLoadSixCardsFromDefaultFile() {
+  void shouldLoadCardsFromDefaultFile() {
     List<CardConfig> cards = CardConfigLoader.loadCards();
 
     assertEquals(6, cards.size());

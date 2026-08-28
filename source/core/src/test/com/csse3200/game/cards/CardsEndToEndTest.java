@@ -41,8 +41,8 @@ class CardsEndToEndTest {
   }
 
   @Test
-  void shouldLoadValidateRegisterAndRetrieveAllSixCards() {
-    assertEquals(6, library.getAllCards().size());
+  void shouldLoadValidateRegisterAndRetrieveAllInitialCards() {
+    assertEquals(EXPECTED_IDS.size(), library.getAllCards().size());
 
     Set<String> loadedIds =
         library.getAllCards().stream().map(card -> card.id).collect(Collectors.toSet());
