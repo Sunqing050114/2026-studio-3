@@ -55,7 +55,7 @@ public class CardLibrary implements CardService {
     if (!errors.isEmpty()) {
       throw new IllegalArgumentException("Card config is invalid: " + String.join("; ", errors));
     }
-    
+
     String id = config.id;
     if (cards.containsKey(id)) {
       throw new IllegalArgumentException("Duplicate card ID: " + id);
