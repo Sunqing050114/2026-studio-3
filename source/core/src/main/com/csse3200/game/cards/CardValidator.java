@@ -62,8 +62,11 @@ public final class CardValidator {
   }
 
   private static void validateBasicFields(CardConfig card, List<String> errors) {
-    if (card.id == null || card.id.isBlank()) {
-      errors.add("id must be set to a unique value");
+    String id = card.id;
+    if (id == null || id.isBlank()) {
+      errors.add("id must not be null or blank");
+    } else if (!id.equals(id.strip())) {
+      errors.add("id must not have surrounding whitespace");
     }
     if (card.name == null || card.name.isBlank()) {
       errors.add("name must not be blank");
