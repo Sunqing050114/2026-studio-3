@@ -5,15 +5,40 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.csse3200.game.entities.Entity;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BattleControllerTest {
   private BattleController controller;
+  private Entity player;
+  private List<Entity> enemies;
 
   @BeforeEach
   void setUp() {
-    controller = new BattleController();
+    player = new Entity();
+    enemies = List.of(new Entity(), new Entity());
+    controller = new BattleController(player, enemies);
+  }
+
+  @Test
+  void shouldRejectNullPlayer() {
+    assertThrows(IllegalArgumentException.class, () -> new BattleController(null, enemies));
+  }
+
+  @Test
+  void shouldRejectEmptyEnemyList() {
+    assertThrows(IllegalArgumentException.class, () -> new BattleController(player, List.of()));
+  }
+
+  @Test
+  void shouldRejectNullEnemy() {
+    List<Entity> enemiesWithNull = Collections.singletonList(null);
+
+    assertThrows(
+        IllegalArgumentException.class, () -> new BattleController(player, enemiesWithNull));
   }
 
   @Test

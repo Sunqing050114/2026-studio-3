@@ -20,11 +20,29 @@ import java.util.Objects;
 public class BattleController {
   private BattlePhase currentPhase;
   private int currentEnemyIndex;
+  private final Entity player;
+  private final List<Entity> enemies;
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
 
-  public BattleController() {
+  public BattleController(Entity player, List<Entity> enemies)
+          throws IllegalArgumentException {
+
+    this.player = player;
+    // Guard against null PLayer entity
+    if (this.player == null) {
+      throw new IllegalArgumentException("Player cannot be null;");
+    }
+
+    this.enemies = enemies;
+    // Protects against empty array and null values.
+    if (enemies.isEmpty()) {
+      throw new IllegalArgumentException("Enemy array cannot be null.");
+    } else if (!enemies.stream().allMatch(Objects::nonNull)) {
+      throw new IllegalArgumentException("One or more enemies are null.");
+    }
+
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
