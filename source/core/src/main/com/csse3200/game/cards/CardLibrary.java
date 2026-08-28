@@ -51,15 +51,12 @@ public class CardLibrary implements CardService {
    *     surrounding whitespace, or the ID is already registered
    */
   public void register(CardConfig config) {
-    if (config == null) {
-      throw new IllegalArgumentException("Card config must not be null");
+    List<String> errors = CardValidator.validate(config);
+    if (!errors.isEmpty()) {
+      throw new IllegalArgumentException("Card config is invalid: " + String.join("; ", errors));
     }
-
+    
     String id = config.id;
-    if (id == null || id.isBlank() || !id.equals(id.strip())) {
-      throw new IllegalArgumentException(
-          "Card ID must not be null, blank, or have surrounding whitespace");
-    }
     if (cards.containsKey(id)) {
       throw new IllegalArgumentException("Duplicate card ID: " + id);
     }
