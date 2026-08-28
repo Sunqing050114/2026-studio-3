@@ -17,7 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * End-to-end coverage for the Sprint 1 initial card set: load real {@code configs/cards.json},
- * validate, register into {@link CardLibrary}, and retrieve by ID.
+ * validate, register into {@link CardLibrary}, and retrieve by ID. The card pool may grow beyond
+ * these six cards in later sprints; this test only locks in the Sprint 1 initial definitions.
  *
  * <p>Sprint grouping (docs) maps onto CardType as:
  *
@@ -42,11 +43,9 @@ class CardsEndToEndTest {
 
   @Test
   void shouldLoadValidateRegisterAndRetrieveAllInitialCards() {
-    assertEquals(EXPECTED_IDS.size(), library.getAllCards().size());
-
     Set<String> loadedIds =
         library.getAllCards().stream().map(card -> card.id).collect(Collectors.toSet());
-    assertEquals(EXPECTED_IDS, loadedIds);
+    assertTrue(loadedIds.containsAll(EXPECTED_IDS));
 
     for (String id : EXPECTED_IDS) {
       assertTrue(library.getCard(id).isPresent(), "missing card: " + id);
