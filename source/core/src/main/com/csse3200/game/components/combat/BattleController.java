@@ -124,7 +124,7 @@ public class BattleController {
       throws IllegalStateException {
     if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
-          "Invalid battle transition: " + this.currentPhase + String.format("----%s---->", event) + "null");
+          "Invalid battle transition: " + this.currentPhase + "-->" + event);
     }
   }
 
@@ -255,7 +255,7 @@ public class BattleController {
   private void enterNextEnemy() {
     // Advance to the next eligible enemy.
     this.currentEnemyIndex++;
-    handle(BattleEvent.ENEMY_PHASE_COMPLETE);
+    handle(BattleEvent.MORE_ENEMIES);
   }
 
   private void enterVictory() {
