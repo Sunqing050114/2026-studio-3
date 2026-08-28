@@ -23,6 +23,7 @@ public class BattleController {
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
+  // TODO: record enemy intent
 
   public BattleController() {
     this.battleTransitions = new BattleTransitions();
@@ -165,12 +166,20 @@ public class BattleController {
 
   /*------------------------- Stub functions ----------------------------*/
 
+  private Entity getEnemy() {
+    List<String> ids = EnemyFactory.availableEnemies();
+      return EnemyFactory.create(ids.get(this.currentEnemyIndex));
+  }
+
   private void enterSetup() {
     // Coordinate battle setup.
   }
 
   private void enterRevealIntents() {
     // Ask the enemy system to reveal intents.
+    Entity enemy = getEnemy();
+    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+    handle(BattleEvent.INTENTS_REVEALED);
   }
 
   private void enterPlayerStart() {
@@ -203,9 +212,7 @@ public class BattleController {
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex)); // not too sure if this is how
-    // we're indexing
+    Entity enemy = getEnemy();
 
     EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
     if (intent.getType() == IntentType.ATTACK) {
@@ -219,8 +226,7 @@ public class BattleController {
 
   private void enterEnemyAttack() {
     // Ask the enemy system to execute its attack intent.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
+    Entity enemy = getEnemy();
 
     // execute the intent
     // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
@@ -230,10 +236,22 @@ public class BattleController {
 
   private void enterEnemyDefend() {
     // Ask the enemy system to execute its defend intent.
+    Entity enemy = getEnemy();
+
+    // execute the intent
+    // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
+
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyOther() {
     // Ask the enemy system to execute its other intent.
+    Entity enemy = getEnemy();
+
+    // execute the intent
+    // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
+
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyResolved() {
@@ -241,12 +259,13 @@ public class BattleController {
     List<String> ids = EnemyFactory.availableEnemies(); // maybe there's a more efficient way idk
     Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
 
-    // if player is not alive, enter player defeat
+    // TODO: if player is not alive, enter player defeat
 
-    if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
+      // if the current enemy is still alive or if there are more available enemies
+    if (enemy.getComponent(EnemyStatsComponent.class).isAlive() ||
+            this.currentEnemyIndex < ids.size() - 1) {
       handle(BattleEvent.ADVANCE_ENEMY);
-    } else if (this.currentEnemyIndex < ids.size() - 1) {
-      handle(BattleEvent.MORE_ENEMIES);
+      // if there are no more enemies
     } else if (this.currentEnemyIndex == ids.size() - 1) {
       handle(BattleEvent.ENEMIES_DEFEATED);
     }
@@ -254,8 +273,18 @@ public class BattleController {
 
   private void enterNextEnemy() {
     // Advance to the next eligible enemy.
-    this.currentEnemyIndex++;
-    handle(BattleEvent.ENEMY_PHASE_COMPLETE);
+    List<String> ids = EnemyFactory.availableEnemies();
+    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
+
+    // if the enemy is still alive, then it goes again
+    if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
+      handle(BattleEvent.MORE_ENEMIES);
+    }
+    // if there are more enemies, then advance to the next available enemy
+    if (this.currentEnemyIndex < ids.size() - 1) {
+      this.currentEnemyIndex++;
+      handle(BattleEvent.ENEMY_PHASE_COMPLETE);
+    }
   }
 
   private void enterVictory() {
