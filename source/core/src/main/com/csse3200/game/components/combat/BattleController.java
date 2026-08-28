@@ -45,7 +45,7 @@ public class BattleController {
 
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
-    this.currentEnemyIndex = 0;
+    this.currentEnemyIndex = -1;
     this.eventHandler = new EventHandler();
   }
 
@@ -55,7 +55,7 @@ public class BattleController {
    * @param event The event to be handled.
    * @throws IllegalStateException When the given transition isn't allowed.
    */
-  private void handle(BattleEvent event) {
+  public void handle(BattleEvent event) {
     Objects.requireNonNull(event, "event cannot be null");
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
     this.validateEventTransition(event, nextPhase);
