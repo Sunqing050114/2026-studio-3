@@ -35,7 +35,7 @@ public class EnemyConfigs {
           continue;
         }
 
-        if (config.id == null || config.id.isBlank()) {
+        if (config.id == null || config.id.isBlank() || config.id.equals("unknown")) {
           logger.warn("Skipping enemy config with missing id");
           continue;
         }

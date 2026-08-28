@@ -1,5 +1,6 @@
 package com.csse3200.game.entities.configs;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -63,5 +64,26 @@ class EnemyConfigsTest {
     assertEquals(5, enemy.baseAttack);
     assertEquals(2, enemy.armour);
     assertEquals(EnemyTier.NORMAL, enemy.tier);
+  }
+
+  @Test
+  void shouldSkipMissingIdFromJson() {
+    EnemyConfigs configs = FileLoader.readClass(EnemyConfigs.class, "test/enemies/missing-id.json");
+
+    assertNotNull(configs);
+    assertTrue(configs.ids().isEmpty());
+    assertFalse(configs.contains("unknown"));
+  }
+
+  @Test
+  void shouldUseDefaultHealthWhenMissingFromJson() {
+    EnemyConfigs configs =
+        FileLoader.readClass(EnemyConfigs.class, "test/enemies/missing-health.json");
+
+    assertNotNull(configs);
+
+    EnemyConfig enemy = configs.enemies[0];
+
+    assertEquals(1, enemy.health);
   }
 }
