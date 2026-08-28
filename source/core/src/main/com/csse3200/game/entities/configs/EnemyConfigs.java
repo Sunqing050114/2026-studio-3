@@ -13,14 +13,31 @@ public class EnemyConfigs {
   public EnemyConfig[] enemies = new EnemyConfig[0];
   private transient Map<String, EnemyConfig> index;
 
+  /**
+   * Gets an enemy configuration by id.
+   *
+   * @param id enemy id
+   * @return the enemy configuration, or null if not found
+   */
   public EnemyConfig get(String id) {
     return index().get(id);
   }
 
+  /**
+   * Checks whether an enemy id exists in the roster.
+   *
+   * @param id enemy id
+   * @return true if the enemy exists
+   */
   public boolean contains(String id) {
     return index().containsKey(id);
   }
 
+  /**
+   * Gets all valid enemy ids in the roster.
+   *
+   * @return list of enemy ids
+   */
   public List<String> ids() {
     return new ArrayList<>(index().keySet());
   }

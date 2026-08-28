@@ -2,7 +2,17 @@ package com.csse3200.game.entities.configs;
 
 /** Applies progression-based stat scaling to enemy configurations. */
 public final class EnemyScaling {
-
+  /**
+   * Creates a scaled copy of an enemy configuration based on run progression.
+   *
+   * <p>Normal enemies gain 8% health and 5% attack per progression step. Elite enemies gain 10%
+   * health and 7% attack per progression step. Negative progression values are treated as zero. The
+   * original configuration is not modified.
+   *
+   * @param base the base enemy configuration
+   * @param progression the current run progression
+   * @return a new enemy configuration containing the scaled stats
+   */
   public static EnemyConfig scale(EnemyConfig base, int progression) {
     int safeProgression = Math.max(0, progression);
 
