@@ -4,7 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
+import com.csse3200.game.components.enemy.EnemyIntent;
+import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.entities.Entity;
 import java.util.Collections;
 import java.util.List;
@@ -15,11 +21,18 @@ class BattleControllerTest {
   private BattleController controller;
   private Entity player;
   private List<Entity> enemies;
+  private EnemyBehaviourComponent firstEnemyBehaviour;
+  private EnemyBehaviourComponent secondEnemyBehaviour;
 
   @BeforeEach
   void setUp() {
     player = new Entity();
-    enemies = List.of(new Entity(), new Entity());
+    firstEnemyBehaviour = mock(EnemyBehaviourComponent.class);
+    secondEnemyBehaviour = mock(EnemyBehaviourComponent.class);
+    enemies =
+        List.of(
+            createLivingDefendingEnemy(firstEnemyBehaviour),
+            createLivingDefendingEnemy(secondEnemyBehaviour));
     controller = new BattleController(player, enemies);
   }
 
@@ -31,6 +44,11 @@ class BattleControllerTest {
   @Test
   void shouldRejectEmptyEnemyList() {
     assertThrows(IllegalArgumentException.class, () -> new BattleController(player, List.of()));
+  }
+
+  @Test
+  void shouldRejectNullEnemyList() {
+    assertThrows(IllegalArgumentException.class, () -> new BattleController(player, null));
   }
 
   @Test
@@ -87,33 +105,17 @@ class BattleControllerTest {
     assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
   }
 
-
-  /** Test failing becauseit was tuned to old inputs -> need more information
-   * from enemy team before test is suitable again.
   @Test
   void shouldEndPlayerTurnAndProcessMultipleEnemies() {
     advanceToEnemyTurn();
 
-    controller.handle(BattleEvent.ENEMY_ATTACK_SELECTED);
-    assertEquals(BattlePhase.ENEMY_ATTACK, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.ENEMY_ACTION_RESOLVED);
-    assertEquals(BattlePhase.ENEMY_RESOLVED, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.ADVANCE_ENEMY);
-    assertEquals(BattlePhase.NEXT_ENEMY, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.MORE_ENEMIES);
-    assertEquals(BattlePhase.ENEMY_TURN, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.ENEMY_OTHER_SELECTED);
-    controller.handle(BattleEvent.ENEMY_ACTION_RESOLVED);
-    controller.handle(BattleEvent.ADVANCE_ENEMY);
-    controller.handle(BattleEvent.ENEMY_PHASE_COMPLETE);
-
     assertEquals(BattlePhase.PLAYER_START, controller.getCurrentPhase());
+    assertEquals(-1, controller.getCurrentEnemyIndex());
+    verify(firstEnemyBehaviour).rollIntent();
+    verify(firstEnemyBehaviour).executeIntent(player);
+    verify(secondEnemyBehaviour).rollIntent();
+    verify(secondEnemyBehaviour).executeIntent(player);
   }
-   **/
 
   @Test
   void shouldEnterVictoryAndRejectFurtherEvents() {
@@ -176,5 +178,15 @@ class BattleControllerTest {
     advanceToPlayerTurn();
     controller.handle(BattleEvent.PLAYER_END_REQUESTED);
     controller.handle(BattleEvent.PLAYER_TURN_ENDED);
+  }
+
+  private Entity createLivingDefendingEnemy(EnemyBehaviourComponent behaviour) {
+    Entity enemy = mock(Entity.class);
+    EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
+    when(enemy.getComponent(EnemyBehaviourComponent.class)).thenReturn(behaviour);
+    when(enemy.getComponent(EnemyStatsComponent.class)).thenReturn(stats);
+    when(behaviour.rollIntent()).thenReturn(EnemyIntent.defend(1));
+    when(stats.isAlive()).thenReturn(true);
+    return enemy;
   }
 }

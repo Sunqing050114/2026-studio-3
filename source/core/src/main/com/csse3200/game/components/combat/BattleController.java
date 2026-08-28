@@ -5,10 +5,8 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
-import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -26,22 +24,20 @@ public class BattleController {
   private final EventHandler eventHandler;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
 
-  public BattleController(Entity player, List<Entity> enemies)
-          throws IllegalArgumentException {
-
+  public BattleController(Entity player, List<Entity> enemies) throws IllegalArgumentException {
     this.player = player;
-    // Guard against null PLayer entity
+    // Guard against a null player entity.
     if (this.player == null) {
       throw new IllegalArgumentException("Player cannot be null.");
     }
 
-    this.enemies = enemies;
-    // Protects against empty array and null values.
-    if (enemies.isEmpty()) {
-      throw new IllegalArgumentException("Enemy array cannot be null.");
+    // Protect against a null or empty list and null entries.
+    if (enemies == null || enemies.isEmpty()) {
+      throw new IllegalArgumentException("Enemy list cannot be null or empty.");
     } else if (!enemies.stream().allMatch(Objects::nonNull)) {
       throw new IllegalArgumentException("One or more enemies are null.");
     }
+    this.enemies = List.copyOf(enemies);
 
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
@@ -100,7 +96,6 @@ public class BattleController {
       case ENEMY_DEFEND -> enterEnemyDefend();
       case ENEMY_OTHER -> enterEnemyOther();
       case ENEMY_RESOLVED -> enterEnemyResolved();
-      case NEXT_ENEMY -> enterNextEnemy();
 
       // Terminal States
       case VICTORY -> enterVictory();
@@ -117,7 +112,7 @@ public class BattleController {
   }
 
   private void setCurrentPhase(BattlePhase nextPhase) {
-      this.currentPhase = nextPhase;
+    this.currentPhase = nextPhase;
   }
 
   private void setCurrentEnemyIndex(int currentEnemyIndex) {
@@ -152,16 +147,12 @@ public class BattleController {
    * @param nextPhase The phase that is being entered.
    */
   private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
-    eventHandler.trigger(
-            PHASE_CHANGED_EVENT,
-            previousPhase,
-            nextPhase
-    );
+    eventHandler.trigger(PHASE_CHANGED_EVENT, previousPhase, nextPhase);
   }
 
   /**
-   * Adds a listener to the event handler, which ultimately informs external
-   * teams about a phase change.
+   * Adds a listener to the event handler, which ultimately informs external teams about a phase
+   * change.
    *
    * @param listener The instantiated external listener.
    */
@@ -220,11 +211,11 @@ public class BattleController {
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex)); // not too sure if this is how
-    // we're indexing
+    if (currentEnemyIndex < 0) {
+      currentEnemyIndex = 0;
+    }
 
-    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+    EnemyIntent intent = getCurrentEnemyBehaviour().rollIntent();
     if (intent.getType() == IntentType.ATTACK) {
       handle(BattleEvent.ENEMY_ATTACK_SELECTED);
     } else if (intent.getType() == IntentType.DEFEND) {
@@ -235,44 +226,55 @@ public class BattleController {
   }
 
   private void enterEnemyAttack() {
-    // Ask the enemy system to execute its attack intent.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
-
-    // execute the intent
-    // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
-
-    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
+    executeCurrentEnemyIntent();
   }
 
   private void enterEnemyDefend() {
-    // Ask the enemy system to execute its defend intent.
+    executeCurrentEnemyIntent();
   }
 
   private void enterEnemyOther() {
-    // Ask the enemy system to execute its other intent.
+    executeCurrentEnemyIntent();
   }
 
   private void enterEnemyResolved() {
-    // Check the outcome after the enemy action.
-    List<String> ids = EnemyFactory.availableEnemies(); // maybe there's a more efficient way idk
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
+    currentEnemyIndex++;
+    while (currentEnemyIndex < enemies.size() && !isEnemyAlive(enemies.get(currentEnemyIndex))) {
+      currentEnemyIndex++;
+    }
 
-    // if player is not alive, enter player defeat
-
-    if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
-      handle(BattleEvent.ADVANCE_ENEMY);
-    } else if (this.currentEnemyIndex < ids.size() - 1) {
+    if (currentEnemyIndex < enemies.size()) {
       handle(BattleEvent.MORE_ENEMIES);
-    } else if (this.currentEnemyIndex == ids.size() - 1) {
-      handle(BattleEvent.ENEMIES_DEFEATED);
+    } else {
+      currentEnemyIndex = -1;
+      handle(BattleEvent.ENEMY_PHASE_COMPLETE);
     }
   }
 
-  private void enterNextEnemy() {
-    // Advance to the next eligible enemy.
-    this.currentEnemyIndex++;
-    handle(BattleEvent.MORE_ENEMIES);
+  private Entity getCurrentEnemy() {
+    if (currentEnemyIndex < 0 || currentEnemyIndex >= enemies.size()) {
+      throw new IllegalStateException("No active enemy.");
+    }
+    return enemies.get(currentEnemyIndex);
+  }
+
+  private EnemyBehaviourComponent getCurrentEnemyBehaviour() {
+    EnemyBehaviourComponent behaviour =
+        getCurrentEnemy().getComponent(EnemyBehaviourComponent.class);
+    if (behaviour == null) {
+      throw new IllegalStateException("Current enemy is missing EnemyBehaviourComponent.");
+    }
+    return behaviour;
+  }
+
+  private void executeCurrentEnemyIntent() {
+    getCurrentEnemyBehaviour().executeIntent(player);
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
+  }
+
+  private boolean isEnemyAlive(Entity enemy) {
+    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+    return stats != null && stats.isAlive();
   }
 
   private void enterVictory() {
