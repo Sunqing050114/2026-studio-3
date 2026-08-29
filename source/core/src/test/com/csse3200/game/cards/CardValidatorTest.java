@@ -117,6 +117,13 @@ class CardValidatorTest {
   }
 
   @Test
+  void shouldRejectNegativeEffectValue() {
+    CardConfig card = validCard();
+    card.effects = new EffectConfig[] {new EffectConfig(EffectType.DAMAGE, -1)};
+    assertFalse(CardValidator.isValid(card));
+  }
+
+  @Test
   void shouldRejectOngoingEffectWithoutDuration() {
     CardConfig card = validCard();
     card.effects = new EffectConfig[] {new EffectConfig(EffectType.POISON, 3, 0)};

@@ -53,36 +53,7 @@ public final class CardConfigLoader {
    * @throws CardLoadingException if the path, file structure or card data is invalid
    */
   public static List<CardConfig> loadCards(String filename) {
-    if (filename == null || filename.isBlank()) {
-      throw new CardLoadingException("Card configuration filename must not be null or blank");
-    }
-
-    FileHandle file = Gdx.files.internal(filename);
-    if (!file.exists()) {
-      throw new CardLoadingException("Card configuration file does not exist: " + filename);
-    }
-
-    JsonValue root;
-    try {
-      root = new JsonReader().parse(file);
-    } catch (Exception exception) {
-      throw new CardLoadingException("Malformed card configuration file: " + filename, exception);
-    }
-
-    if (root == null || !root.isObject()) {
-      throw new CardLoadingException("Card configuration root must be a JSON object: " + filename);
-    }
-
-    JsonValue cardArray = root.get("cards");
-    if (cardArray == null || !cardArray.isArray()) {
-      throw new CardLoadingException(
-          "Card configuration must contain a 'cards' array: " + filename);
-    }
-
-    if (cardArray.size == 0) {
-      throw new CardLoadingException(
-          "Card configuration must contain at least one card: " + filename);
-    }
+    JsonValue cardArray = loadCardArray(filename);
 
     List<CardConfig> cards = new ArrayList<>();
     List<String> errors = new ArrayList<>();
@@ -160,5 +131,40 @@ public final class CardConfigLoader {
         + System.lineSeparator()
         + "- "
         + String.join(separator, errors);
+  }
+
+  private static JsonValue loadCardArray(String filename) throws CardLoadingException {
+    if (filename == null || filename.isBlank()) {
+      throw new CardLoadingException("Card configuration filename must not be null or blank");
+    }
+
+    FileHandle file = Gdx.files.internal(filename);
+    if (!file.exists()) {
+      throw new CardLoadingException("Card configuration file does not exist: " + filename);
+    }
+
+    JsonValue root;
+    try {
+      root = new JsonReader().parse(file);
+    } catch (Exception exception) {
+      throw new CardLoadingException("Malformed card configuration file: " + filename, exception);
+    }
+
+    if (root == null || !root.isObject()) {
+      throw new CardLoadingException("Card configuration root must be a JSON object: " + filename);
+    }
+
+    JsonValue cardArray = root.get("cards");
+    if (cardArray == null || !cardArray.isArray()) {
+      throw new CardLoadingException(
+          "Card configuration must contain a 'cards' array: " + filename);
+    }
+
+    if (cardArray.size == 0) {
+      throw new CardLoadingException(
+          "Card configuration must contain at least one card: " + filename);
+    }
+
+    return cardArray;
   }
 }

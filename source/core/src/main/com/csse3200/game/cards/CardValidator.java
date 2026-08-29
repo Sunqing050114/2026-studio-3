@@ -20,40 +20,14 @@ public final class CardValidator {
    */
   public static List<String> validate(CardConfig card) {
     List<String> errors = new ArrayList<>();
+
     if (card == null) {
-      errors.add("card config must not be null");
-      return List.copyOf(errors);
+      return List.of("card config must not be null");
     }
 
-    if (card.id == null || card.id.isBlank()) {
-      errors.add("id must be set to a unique value");
-    }
-    if (card.name == null || card.name.isBlank()) {
-      errors.add("name must not be blank");
-    }
-    if (card.cost < 0) {
-      errors.add("cost must not be negative, was " + card.cost);
-    }
-    if (card.type == null) {
-      errors.add("type must not be null");
-    }
-    if (card.rarity == null) {
-      errors.add("rarity must not be null");
-    }
-    if (card.target == null) {
-      errors.add("target must not be null");
-    }
-    if (card.texturePath == null || card.texturePath.isBlank()) {
-      errors.add("texturePath must not be blank");
-    }
-    if (card.effects == null || card.effects.length == 0) {
-      errors.add("a card must define at least one effect");
-      return List.copyOf(errors);
-    }
+    validateBasicFields(card, errors);
+    validateEffects(card.effects, errors);
 
-    for (int i = 0; i < card.effects.length; i++) {
-      validateEffect(card.effects[i], i, errors);
-    }
     return List.copyOf(errors);
   }
 
@@ -84,6 +58,44 @@ public final class CardValidator {
       }
     } else if (effect.duration != 0) {
       errors.add(prefix + effect.type + " must not set a duration, was " + effect.duration);
+    }
+  }
+
+  private static void validateBasicFields(CardConfig card, List<String> errors) {
+    String id = card.id;
+    if (id == null || id.isBlank()) {
+      errors.add("id must not be null or blank");
+    } else if (!id.equals(id.strip())) {
+      errors.add("id must not have surrounding whitespace");
+    }
+    if (card.name == null || card.name.isBlank()) {
+      errors.add("name must not be blank");
+    }
+    if (card.cost < 0) {
+      errors.add("cost must not be negative, was " + card.cost);
+    }
+    if (card.type == null) {
+      errors.add("type must not be null");
+    }
+    if (card.rarity == null) {
+      errors.add("rarity must not be null");
+    }
+    if (card.target == null) {
+      errors.add("target must not be null");
+    }
+    if (card.texturePath == null || card.texturePath.isBlank()) {
+      errors.add("texturePath must not be blank");
+    }
+  }
+
+  private static void validateEffects(EffectConfig[] effects, List<String> errors) {
+    if (effects == null || effects.length == 0) {
+      errors.add("a card must define at least one effect");
+      return;
+    }
+
+    for (int i = 0; i < effects.length; i++) {
+      validateEffect(effects[i], i, errors);
     }
   }
 }
