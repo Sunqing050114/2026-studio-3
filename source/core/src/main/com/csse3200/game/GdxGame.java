@@ -6,11 +6,10 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.csse3200.game.files.UserSettings;
+import com.csse3200.game.screens.BattleScreen;
 import com.csse3200.game.screens.MainGameScreen;
 import com.csse3200.game.screens.MainMenuScreen;
 import com.csse3200.game.screens.SettingsScreen;
-import com.csse3200.game.screens.BattleScreen;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +52,12 @@ public class GdxGame extends Game {
     }
     setScreen(newScreen(screenType));
   }
-  /// Method used to test to start battle scene to see if code is working!
-  /// will probably  be used by other methods eg when cliked on top of a map to trigger battle with stage varible
- public void startBattle() {
-   setScreen(ScreenType.BATTLE_SCREEN);
- }
+
+  /** Opens the battle screen. Used by encounter navigation and the temporary debug shortcut. */
+  public void startBattle() {
+    setScreen(ScreenType.BATTLE_SCREEN);
+  }
+
   @Override
   public void dispose() {
     logger.debug("Disposing of current screen");
