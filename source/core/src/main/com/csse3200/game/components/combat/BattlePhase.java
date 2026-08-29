@@ -50,9 +50,6 @@ public enum BattlePhase {
   /** An enemy action has resolved and its outcome is being checked. */
   ENEMY_RESOLVED,
 
-  /** The controller is advancing to or selecting the next eligible enemy. */
-  NEXT_ENEMY,
-
   // Terminal States
   /** Terminal state reached when every enemy has been defeated. */
   VICTORY,

@@ -47,9 +47,6 @@ public enum BattleEvent {
   /** The current enemy's action has finished resolving. */
   ENEMY_ACTION_RESOLVED,
 
-  /** Processing should advance from the current enemy to the next-enemy step. */
-  ADVANCE_ENEMY,
-
   /** Another eligible enemy is available to take a turn. */
   MORE_ENEMIES,
 

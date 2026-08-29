@@ -68,12 +68,6 @@ class BattleControllerTest {
   @Test
   void shouldApplyValidTransitions() {
     controller.handle(BattleEvent.SETUP_COMPLETE);
-    assertEquals(BattlePhase.REVEAL_INTENTS, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.INTENTS_REVEALED);
-    assertEquals(BattlePhase.PLAYER_START, controller.getCurrentPhase());
-
-    controller.handle(BattleEvent.PLAYER_TURN_STARTED);
     assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
 
     controller.handle(BattleEvent.PLAYER_ATTACK_SELECTED);
@@ -87,7 +81,10 @@ class BattleControllerTest {
 
     controller.handle(BattleEvent.SETUP_COMPLETE);
 
-    assertTrue(controller.canHandle(BattleEvent.INTENTS_REVEALED));
+    assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
+    assertTrue(controller.canHandle(BattleEvent.PLAYER_ATTACK_SELECTED));
+    assertTrue(controller.canHandle(BattleEvent.PLAYER_END_REQUESTED));
+    assertFalse(controller.canHandle(BattleEvent.INTENTS_REVEALED));
     assertFalse(controller.canHandle(BattleEvent.SETUP_COMPLETE));
   }
 
@@ -109,7 +106,7 @@ class BattleControllerTest {
   void shouldEndPlayerTurnAndProcessMultipleEnemies() {
     advanceToEnemyTurn();
 
-    assertEquals(BattlePhase.PLAYER_START, controller.getCurrentPhase());
+    assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
     assertEquals(-1, controller.getCurrentEnemyIndex());
     verify(firstEnemyBehaviour).rollIntent();
     verify(firstEnemyBehaviour).executeIntent(player);
@@ -119,7 +116,7 @@ class BattleControllerTest {
 
   @Test
   void shouldEnterVictoryAndRejectFurtherEvents() {
-    advanceToPlayerStart();
+    advanceToPlayerResolved();
 
     controller.handle(BattleEvent.ENEMIES_DEFEATED);
 
@@ -132,7 +129,7 @@ class BattleControllerTest {
 
   @Test
   void shouldEnterDefeatAndRejectFurtherEvents() {
-    advanceToPlayerStart();
+    advanceToPlayerResolved();
 
     controller.handle(BattleEvent.PLAYER_DEFEATED);
 
@@ -164,14 +161,14 @@ class BattleControllerTest {
     assertEquals(BattlePhase.SETUP, controller.getCurrentPhase());
   }
 
-  private void advanceToPlayerStart() {
+  private void advanceToPlayerTurn() {
     controller.handle(BattleEvent.SETUP_COMPLETE);
-    controller.handle(BattleEvent.INTENTS_REVEALED);
   }
 
-  private void advanceToPlayerTurn() {
-    advanceToPlayerStart();
-    controller.handle(BattleEvent.PLAYER_TURN_STARTED);
+  private void advanceToPlayerResolved() {
+    advanceToPlayerTurn();
+    controller.handle(BattleEvent.PLAYER_ATTACK_SELECTED);
+    controller.handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
   private void advanceToEnemyTurn() {
