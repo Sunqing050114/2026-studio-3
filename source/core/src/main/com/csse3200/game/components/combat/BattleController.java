@@ -8,6 +8,7 @@ import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -147,10 +148,7 @@ public class BattleController {
       throws IllegalStateException {
     if (Objects.isNull(nextPhase)) {
       throw new IllegalStateException(
-          "Invalid battle transition: "
-              + this.currentPhase
-              + String.format("----%s---->", event)
-              + "null");
+          "Invalid battle transition: " + this.currentPhase + "-->" + event);
     }
   }
 
@@ -161,12 +159,16 @@ public class BattleController {
    * @param nextPhase The phase that is being entered.
    */
   private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
-    eventHandler.trigger(PHASE_CHANGED_EVENT, previousPhase, nextPhase);
+    eventHandler.trigger(
+            PHASE_CHANGED_EVENT,
+            previousPhase,
+            nextPhase
+    );
   }
 
   /**
-   * Adds a listener to the event handler, which ultimately informs external teams about a phase
-   * change.
+   * Adds a listener to the event handler, which ultimately informs external
+   * teams about a phase change.
    *
    * @param listener The instantiated external listener.
    */
@@ -245,13 +247,7 @@ public class BattleController {
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy =
-        EnemyFactory.create(ids.get(this.currentEnemyIndex)); // not too sure if this is how
-    // we're indexing
-
-    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
-    if (intent.getType() == IntentType.ATTACK) {
+    if (currentEnemyIntent.getType() == IntentType.ATTACK) {
       handle(BattleEvent.ENEMY_ATTACK_SELECTED);
     } else if (currentEnemyIntent.getType() == IntentType.DEFEND) {
       handle(BattleEvent.ENEMY_DEFEND_SELECTED);
