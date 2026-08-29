@@ -7,8 +7,11 @@ import com.csse3200.game.components.battle.BattleActions;
 import com.csse3200.game.components.battle.BattleArea;
 import com.csse3200.game.components.battle.BattleDisplay;
 import com.csse3200.game.components.combat.BattleController;
+import com.csse3200.game.components.combat.BattleEvent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
+import com.csse3200.game.entities.configs.EnemyConfig;
+import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.RenderFactory;
 import com.csse3200.game.input.InputDecorator;
 import com.csse3200.game.input.InputService;
@@ -17,6 +20,7 @@ import com.csse3200.game.rendering.Renderer;
 import com.csse3200.game.services.GameTime;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class BattleScreen extends ScreenAdapter {
   private static final Logger logger = LoggerFactory.getLogger(BattleScreen.class);
   private final Renderer renderer;
-  private final BattleController controller = new BattleController();
+  private final BattleController controller;
 
   public BattleScreen(GdxGame game) {
     ServiceLocator.registerInputService(new InputService());
@@ -33,7 +37,13 @@ public class BattleScreen extends ScreenAdapter {
     ServiceLocator.registerRenderService(new RenderService());
     ServiceLocator.registerTimeSource(new GameTime());
     renderer = RenderFactory.createRenderer();
+
+    Entity player = new Entity();
+    List<Entity> enemies = List.of(EnemyFactory.create(new EnemyConfig()));
+    controller = new BattleController(player, enemies);
+
     createUI();
+    controller.handle(BattleEvent.SETUP_COMPLETE);
   }
 
   private void createUI() {

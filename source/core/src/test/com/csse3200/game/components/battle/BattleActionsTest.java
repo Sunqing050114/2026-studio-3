@@ -6,6 +6,9 @@ import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.combat.BattleEvent;
 import com.csse3200.game.components.combat.BattlePhase;
 import com.csse3200.game.entities.Entity;
+import com.csse3200.game.entities.configs.EnemyConfig;
+import com.csse3200.game.entities.factories.EnemyFactory;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +19,9 @@ class BattleActionsTest {
 
   @BeforeEach
   void setUp() {
-    controller = new BattleController();
+    Entity player = new Entity();
+    Entity enemy = EnemyFactory.create(new EnemyConfig());
+    controller = new BattleController(player, List.of(enemy));
     entity = new Entity().addComponent(new BattleActions(controller));
     entity.create();
   }
@@ -68,7 +73,5 @@ class BattleActionsTest {
 
   private void advanceToPlayerTurn() {
     controller.handle(BattleEvent.SETUP_COMPLETE);
-    controller.handle(BattleEvent.INTENTS_REVEALED);
-    controller.handle(BattleEvent.PLAYER_TURN_STARTED);
   }
 }
