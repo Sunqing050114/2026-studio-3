@@ -1,5 +1,6 @@
 package com.csse3200.game.entities.factories;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -21,19 +23,24 @@ import com.csse3200.game.rendering.RenderService;
 import com.csse3200.game.rendering.TextureRenderComponent;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 
 @ExtendWith(GameExtension.class)
 class EnemyFactoryTest {
+
+  private ResourceService resourceService;
 
   @BeforeEach
   void registerServices() {
     // Headless tests have no real assets. Hand the factory a mocked ResourceService that returns a
     // dummy texture for any request, so TextureRenderComponent can be constructed without a GPU.
-    ResourceService resourceService = mock(ResourceService.class);
+    resourceService = mock(ResourceService.class);
     when(resourceService.getAsset(anyString(), eq(Texture.class))).thenReturn(mock(Texture.class));
     ServiceLocator.registerResourceService(resourceService);
 
@@ -123,5 +130,39 @@ class EnemyFactoryTest {
   @Test
   void availableEnemiesIsNeverNull() {
     assertNotNull(EnemyFactory.availableEnemies());
+  }
+
+  @Test
+  void getTexturePathsIncludesDefaultAndRosterSprites() {
+    List<String> paths = Arrays.asList(EnemyFactory.getTexturePaths());
+
+    assertTrue(paths.contains("images/enemies/default.png"));
+    assertTrue(paths.contains("images/enemies/lesser_shade.png"));
+    assertTrue(paths.contains("images/enemies/void_knight.png"));
+  }
+
+  @Test
+  void getTexturePathsHasNoDuplicates() {
+    String[] paths = EnemyFactory.getTexturePaths();
+
+    assertEquals(paths.length, new HashSet<>(Arrays.asList(paths)).size());
+  }
+
+  @Test
+  void loadAssetsQueuesEnemyTextures() {
+    EnemyFactory.loadAssets();
+
+    ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
+    verify(resourceService).loadTextures(captor.capture());
+    assertArrayEquals(EnemyFactory.getTexturePaths(), captor.getValue());
+  }
+
+  @Test
+  void unloadAssetsReleasesEnemyTextures() {
+    EnemyFactory.unloadAssets();
+
+    ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
+    verify(resourceService).unloadAssets(captor.capture());
+    assertArrayEquals(EnemyFactory.getTexturePaths(), captor.getValue());
   }
 }

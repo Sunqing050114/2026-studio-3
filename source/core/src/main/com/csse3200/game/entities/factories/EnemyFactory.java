@@ -9,8 +9,12 @@ import com.csse3200.game.entities.configs.EnemyScaling;
 import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.files.FileLoader;
 import com.csse3200.game.rendering.TextureRenderComponent;
+import com.csse3200.game.services.ResourceService;
+import com.csse3200.game.services.ServiceLocator;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,6 +103,40 @@ public class EnemyFactory {
    */
   public static List<String> availableEnemies() {
     return roster.ids();
+  }
+
+  /**
+   * Returns every texture path the factory may render, so a game area can queue them for loading.
+   *
+   * <p>Always includes the shared default sprite. The result has no duplicates.
+   *
+   * @return the internal texture paths used by roster enemies
+   */
+  public static String[] getTexturePaths() {
+    Set<String> paths = new LinkedHashSet<>();
+    paths.add(DEFAULT_SPRITE);
+
+    for (String id : roster.ids()) {
+      paths.add(spritePath(roster.get(id)));
+    }
+
+    return paths.toArray(new String[0]);
+  }
+
+  /**
+   * Queues every enemy texture with the resource service. The caller is responsible for pumping the
+   * load (e.g. {@code ResourceService.loadForMillis}) and for calling {@link #unloadAssets()} on
+   * teardown.
+   */
+  public static void loadAssets() {
+    ResourceService resourceService = ServiceLocator.getResourceService();
+    resourceService.loadTextures(getTexturePaths());
+  }
+
+  /** Releases every enemy texture previously queued by {@link #loadAssets()}. */
+  public static void unloadAssets() {
+    ResourceService resourceService = ServiceLocator.getResourceService();
+    resourceService.unloadAssets(getTexturePaths());
   }
 
   /**
