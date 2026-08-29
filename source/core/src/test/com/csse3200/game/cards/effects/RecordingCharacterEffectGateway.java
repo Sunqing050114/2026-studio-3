@@ -1,40 +1,44 @@
 package com.csse3200.game.cards.effects;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/** In-memory character boundary used to verify effect execution without Team 7 dependencies. */
 class RecordingCharacterEffectGateway implements CharacterEffectGateway {
-  int damage;
+  private final int strengthModifier;
   int block;
   int healing;
-  int poison;
-  int vulnerable;
   int strength;
+  final List<String> events = new ArrayList<>();
+
+  RecordingCharacterEffectGateway() {
+    this(0);
+  }
+
+  RecordingCharacterEffectGateway(int strengthModifier) {
+    this.strengthModifier = strengthModifier;
+  }
 
   @Override
-  public void damage(int amount) {
-    damage += amount;
+  public int getStrengthModifier() {
+    return strengthModifier;
   }
 
   @Override
   public void gainBlock(int amount) {
     block += amount;
+    events.add("BLOCK:" + amount);
   }
 
   @Override
   public void heal(int amount) {
     healing += amount;
+    events.add("HEAL:" + amount);
   }
 
   @Override
-  public void applyPoison(int amount) {
-    poison += amount;
-  }
-
-  @Override
-  public void applyVulnerable(int amount) {
-    vulnerable += amount;
-  }
-
-  @Override
-  public void applyStrength(int amount) {
+  public void gainStrength(int amount) {
     strength += amount;
+    events.add("STRENGTH:" + amount);
   }
 }

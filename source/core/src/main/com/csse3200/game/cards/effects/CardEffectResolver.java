@@ -1,11 +1,9 @@
 package com.csse3200.game.cards.effects;
 
-import com.csse3200.game.cards.config.CardConfig;
-import com.csse3200.game.cards.config.EffectConfig;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-/** Resolves card effect target declarations into concrete runtime targets and executes them. */
+/** Resolves a card's effects without taking ownership of player or enemy state. */
 public class CardEffectResolver {
   private final EffectExecutor effectExecutor;
 
@@ -20,57 +18,38 @@ public class CardEffectResolver {
     this.effectExecutor = effectExecutor;
   }
 
-  public void resolve(
-      CardConfig card,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    if (card == null) {
-      throw new IllegalArgumentException("Card cannot be null");
-    }
-    if (card.effects == null) {
-      return;
-    }
+  /**
+   * Resolves a prepared card effect request.
+   *
+   * <p>The returned list contains only effects that need another system to apply them, currently
+   * enemy-targeting effects. Self effects are sent directly through {@code playerStats}.
+   */
+  public List<ResolvedCardEffect> resolve(
+      CardEffectRequest request, CharacterEffectGateway playerStats) {
+    validate(request, playerStats);
 
-    for (EffectConfig effect : card.effects) {
-      for (CharacterEffectGateway target :
-          resolveTargets(effect, self, selectedEnemy, safeEnemies(allEnemies))) {
-        effectExecutor.execute(effect, target);
-      }
+    List<ResolvedCardEffect> resolvedEffects = new ArrayList<>();
+    for (CardEffect effect : request.effects()) {
+      resolvedEffects.addAll(
+          effectExecutor.execute(request.cardId(), effect, request.target(), playerStats));
     }
+    return List.copyOf(resolvedEffects);
   }
 
-  private List<CharacterEffectGateway> resolveTargets(
-      EffectConfig effect,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    if (effect == null) {
-      throw new IllegalArgumentException("Effect cannot be null");
-    }
-    if (effect.target == null) {
-      throw new IllegalArgumentException("Effect target type cannot be null");
-    }
-
-    switch (effect.target) {
-      case SELF:
-        if (self == null) {
-          throw new IllegalArgumentException("Self target cannot be null");
-        }
-        return Collections.singletonList(self);
-      case SINGLE_ENEMY:
-        if (selectedEnemy == null) {
-          throw new IllegalArgumentException("Selected enemy target cannot be null");
-        }
-        return Collections.singletonList(selectedEnemy);
-      case ALL_ENEMIES:
-        return allEnemies;
-      default:
-        throw new IllegalArgumentException("Unsupported target type: " + effect.target);
-    }
+  public List<ResolvedCardEffect> resolve(
+      String cardId,
+      TargetType target,
+      List<CardEffect> effects,
+      CharacterEffectGateway playerStats) {
+    return resolve(new CardEffectRequest(cardId, target, effects), playerStats);
   }
 
-  private List<CharacterEffectGateway> safeEnemies(List<CharacterEffectGateway> allEnemies) {
-    return allEnemies == null ? Collections.emptyList() : allEnemies;
+  private void validate(CardEffectRequest request, CharacterEffectGateway playerStats) {
+    if (request == null) {
+      throw new IllegalArgumentException("Card effect request cannot be null");
+    }
+    if (playerStats == null) {
+      throw new IllegalArgumentException("Player stats gateway cannot be null");
+    }
   }
 }
