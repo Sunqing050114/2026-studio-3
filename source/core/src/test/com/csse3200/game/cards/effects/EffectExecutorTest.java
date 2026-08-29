@@ -4,72 +4,197 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.csse3200.game.cards.EffectType;
+import com.csse3200.game.cards.TargetType;
 import com.csse3200.game.cards.configs.EffectConfig;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EffectExecutorTest {
   private EffectExecutor executor;
-  private RecordingCharacterEffectGateway target;
+  private PlayerEffectState playerState;
 
   @BeforeEach
   void setUp() {
     executor = new EffectExecutor();
-    target = new RecordingCharacterEffectGateway();
+    playerState = new PlayerEffectState();
   }
 
   @Test
-  void shouldExecuteEveryTeam6EffectType() {
-    executor.execute(new EffectConfig(EffectType.DAMAGE, 6), target);
-    executor.execute(new EffectConfig(EffectType.BLOCK, 5), target);
-    executor.execute(new EffectConfig(EffectType.HEAL, 4), target);
-    executor.execute(new EffectConfig(EffectType.POISON, 3, 2), target);
-    executor.execute(new EffectConfig(EffectType.VULNERABLE, 2, 1), target);
-    executor.execute(new EffectConfig(EffectType.STRENGTH, 2), target);
+  void shouldResolveDamageTargetingEnemyWithStrengthModifier() {
+    playerState.addStrength(5);
 
-    assertEquals(6, target.damage);
-    assertEquals(5, target.block);
-    assertEquals(4, target.healing);
-    assertEquals(3, target.poison);
-    assertEquals(2, target.poisonDuration);
-    assertEquals(2, target.vulnerable);
-    assertEquals(1, target.vulnerableDuration);
-    assertEquals(2, target.strength);
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike",
+            new EffectConfig(EffectType.DAMAGE, 6),
+            TargetType.SINGLE_ENEMY,
+            0,
+            playerState);
+
     assertEquals(
-        List.of("DAMAGE:6", "BLOCK:5", "HEAL:4", "POISON:3:2", "VULNERABLE:2:1", "STRENGTH:2"),
-        target.events);
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 11, 0, 0),
+        result);
   }
 
   @Test
-  void shouldRejectMissingEffectOrTarget() {
-    assertThrows(IllegalArgumentException.class, () -> executor.execute(null, target));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> executor.execute(new EffectConfig(EffectType.DAMAGE, 1), null));
+  void shouldClampOutgoingDamageAtZero() {
+    PlayerEffectState weakenedPlayer = new PlayerEffectState(-10);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike",
+            new EffectConfig(EffectType.DAMAGE, 6),
+            TargetType.SINGLE_ENEMY,
+            0,
+            weakenedPlayer);
+
+    assertEquals(
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 0, 0, 0),
+        result);
   }
 
   @Test
-  void shouldRejectNullTypeAndNonPositiveValue() {
-    EffectConfig nullType = new EffectConfig(EffectType.DAMAGE, 1);
-    nullType.type = null;
-
-    assertThrows(IllegalArgumentException.class, () -> executor.execute(nullType, target));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> executor.execute(new EffectConfig(EffectType.DAMAGE, 0), target));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> executor.execute(new EffectConfig(EffectType.DAMAGE, -1), target));
+  void shouldReturnEnemyStatusEffectsForOtherSystemsToApply() {
+    assertEquals(
+        new ResolvedCardEffect("toxin", EffectType.POISON, TargetType.ALL_ENEMIES, 3, 2, 0),
+        executor.resolve(
+            "toxin",
+            new EffectConfig(EffectType.POISON, 3, 2),
+            TargetType.ALL_ENEMIES,
+            0,
+            playerState));
+    assertEquals(
+        new ResolvedCardEffect("expose", EffectType.VULNERABLE, TargetType.SINGLE_ENEMY, 2, 1, 1),
+        executor.resolve(
+            "expose",
+            new EffectConfig(EffectType.VULNERABLE, 2, 1),
+            TargetType.SINGLE_ENEMY,
+            1,
+            playerState));
   }
 
   @Test
-  void shouldEnforceTeam6DurationContract() {
+  void shouldReturnPlayerEffectsWithoutApplyingExternalPlayerState() {
+    assertEquals(
+        new ResolvedCardEffect("defend", EffectType.BLOCK, TargetType.SELF, 5, 0, 0),
+        executor.resolve(
+            "defend", new EffectConfig(EffectType.BLOCK, 5), TargetType.SELF, 0, playerState));
+    assertEquals(
+        new ResolvedCardEffect("bandage", EffectType.HEAL, TargetType.SELF, 4, 0, 1),
+        executor.resolve(
+            "bandage", new EffectConfig(EffectType.HEAL, 4), TargetType.SELF, 1, playerState));
+  }
+
+  @Test
+  void shouldUpdateTeamFiveStrengthStateWhenResolvingStrength() {
+    ResolvedCardEffect result =
+        executor.resolve(
+            "inner_focus",
+            new EffectConfig(EffectType.STRENGTH, 2),
+            TargetType.SELF,
+            0,
+            playerState);
+
+    assertEquals(
+        new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0),
+        result);
+    assertEquals(2, playerState.getStrength());
+  }
+
+  @Test
+  void shouldRejectUnsupportedTargetCombinations() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> executor.execute(new EffectConfig(EffectType.POISON, 3), target));
+        () ->
+            executor.resolve(
+                "self_damage",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SELF,
+                0,
+                playerState));
     assertThrows(
         IllegalArgumentException.class,
-        () -> executor.execute(new EffectConfig(EffectType.DAMAGE, 6, 2), target));
+        () ->
+            executor.resolve(
+                "enemy_heal",
+                new EffectConfig(EffectType.HEAL, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+  }
+
+  @Test
+  void shouldRejectInvalidArguments() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> executor.resolve("strike", null, TargetType.SINGLE_ENEMY, 0, playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "strike", new EffectConfig(EffectType.DAMAGE, 1), null, 0, playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "strike",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                -1,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "strike",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                null));
+  }
+
+  @Test
+  void shouldValidateEffectConfigValues() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad", new EffectConfig(null, 1), TargetType.SINGLE_ENEMY, 0, playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.DAMAGE, 0),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.DAMAGE, 1, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.POISON, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
   }
 }

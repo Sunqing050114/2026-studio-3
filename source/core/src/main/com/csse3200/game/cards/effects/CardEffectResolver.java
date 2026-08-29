@@ -2,26 +2,29 @@ package com.csse3200.game.cards.effects;
 
 import com.csse3200.game.cards.CardService;
 import com.csse3200.game.cards.CardValidator;
-import com.csse3200.game.cards.TargetType;
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.configs.EffectConfig;
+import java.util.ArrayList;
 import java.util.List;
 
-/** Looks up Team 6 card definitions, resolves their targets, and executes effects in order. */
+/** Resolves Team 6 card configs into Team 5 card effect results. */
 public class CardEffectResolver {
   private final CardService cardService;
   private final EffectExecutor effectExecutor;
 
-  /** Creates a resolver backed by Team 6's public card retrieval API. */
+  public CardEffectResolver() {
+    this(null, new EffectExecutor());
+  }
+
   public CardEffectResolver(CardService cardService) {
     this(cardService, new EffectExecutor());
   }
 
-  /** Creates a resolver with explicit dependencies, primarily for integration and testing. */
+  public CardEffectResolver(EffectExecutor effectExecutor) {
+    this(null, effectExecutor);
+  }
+
   public CardEffectResolver(CardService cardService, EffectExecutor effectExecutor) {
-    if (cardService == null) {
-      throw new IllegalArgumentException("Card service cannot be null");
-    }
     if (effectExecutor == null) {
       throw new IllegalArgumentException("Effect executor cannot be null");
     }
@@ -29,85 +32,44 @@ public class CardEffectResolver {
     this.effectExecutor = effectExecutor;
   }
 
-  /**
-   * Retrieves a card by ID through {@link CardService}, then resolves it.
-   *
-   * @throws IllegalArgumentException if the ID is blank or unknown, the card is invalid, or a
-   *     required target is missing
-   */
-  public void resolve(
-      String cardId,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
+  /** Resolves a card that has already been retrieved from Team 6's card library. */
+  public CardEffectResolution resolve(CardConfig card, PlayerEffectState playerState) {
+    validate(card, playerState);
+
+    List<ResolvedCardEffect> results = new ArrayList<>();
+    for (int i = 0; i < card.effects.length; i++) {
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, playerState));
+    }
+    return new CardEffectResolution(card.id, results);
+  }
+
+  /** Resolves a card by ID through the Team 6 card service supplied to this resolver. */
+  public CardEffectResolution resolve(String cardId, PlayerEffectState playerState) {
+    if (cardService == null) {
+      throw new IllegalStateException("Card service is required to resolve by card ID");
+    }
     if (cardId == null || cardId.isBlank()) {
       throw new IllegalArgumentException("Card ID cannot be null or blank");
     }
-
     CardConfig card =
         cardService
             .getCard(cardId)
             .orElseThrow(() -> new IllegalArgumentException("Unknown card ID: " + cardId));
-    resolve(card, self, selectedEnemy, allEnemies);
+    return resolve(card, playerState);
   }
 
-  /**
-   * Resolves a card configuration that has already been retrieved by the calling system.
-   *
-   * <p>The target is declared once on {@link CardConfig}; every effect uses that target and is
-   * executed in its array declaration order.
-   */
-  public void resolve(
-      CardConfig card,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    validateCard(card);
-    List<CharacterEffectGateway> targets =
-        resolveTargets(card.target, self, selectedEnemy, allEnemies);
-
-    for (EffectConfig effect : card.effects) {
-      for (CharacterEffectGateway target : targets) {
-        effectExecutor.execute(effect, target);
-      }
+  private void validate(CardConfig card, PlayerEffectState playerState) {
+    if (playerState == null) {
+      throw new IllegalArgumentException("Player effect state cannot be null");
     }
-  }
-
-  private void validateCard(CardConfig card) {
     List<String> errors = CardValidator.validate(card);
     if (!errors.isEmpty()) {
       throw new IllegalArgumentException("Invalid card config: " + String.join("; ", errors));
     }
-  }
-
-  private List<CharacterEffectGateway> resolveTargets(
-      TargetType targetType,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    return switch (targetType) {
-      case SELF -> List.of(requireTarget(self, "Self target cannot be null"));
-      case SINGLE_ENEMY ->
-          List.of(requireTarget(selectedEnemy, "Selected enemy target cannot be null"));
-      case ALL_ENEMIES -> copyEnemyTargets(allEnemies);
-    };
-  }
-
-  private CharacterEffectGateway requireTarget(CharacterEffectGateway target, String errorMessage) {
-    if (target == null) {
-      throw new IllegalArgumentException(errorMessage);
-    }
-    return target;
-  }
-
-  private List<CharacterEffectGateway> copyEnemyTargets(List<CharacterEffectGateway> allEnemies) {
-    if (allEnemies == null) {
-      throw new IllegalArgumentException("Enemy target list cannot be null");
-    }
-    try {
-      return List.copyOf(allEnemies);
-    } catch (NullPointerException exception) {
-      throw new IllegalArgumentException("Enemy target list cannot contain null", exception);
+    for (EffectConfig effect : card.effects) {
+      if (effect == null) {
+        throw new IllegalArgumentException("Card effects cannot contain null");
+      }
     }
   }
 }
