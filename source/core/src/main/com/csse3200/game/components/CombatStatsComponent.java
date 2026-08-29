@@ -85,22 +85,27 @@ public class CombatStatsComponent extends Component {
     }
   }
 
-  /**
-   * Damage the entity's health. Incoming damage is first modified by any active status effects
-   * (e.g. Vulnerable), then absorbed by armor, and the remainder is applied to health. If health
-   * reaches 0 the entity dies.
-   *
-   * @param damage damage
-   */
+    /**
+     * Damage the entity's health. Incoming damage is first absorbed by armor, and the remainder is
+     * applied to health. If health reaches 0 the entity dies.
+     *
+     * <p>NOTE: this method does NOT apply any status-effect-based damage modifiers (e.g.
+     * Vulnerable). Callers that need a status effect to change the amount of incoming damage should
+     * calculate the final damage value themselves (e.g. by reading the relevant StatusEffect via
+     * getStatusEffect()) before calling this method. This keeps this class limited to
+     * armor/status-effect storage and lifecycle management, not the specific calculation rules for
+     * any individual effect type.
+     *
+     * @param damage damage
+     */
   public void takeDamage(int damage) {
-    if (damage >= 0 && !isDead()) {
-      int modifiedDamage = applyStatusEffectDamageModifiers(damage);
-      int remainingDamage = absorbDamageWithArmor(modifiedDamage);
-      setHealth(Math.max(this.health - remainingDamage, 0));
-      if (entity != null && isDead()) {
-        entity.getEvents().trigger("entityIsDead");
+      if (damage >= 0 && !isDead()) {
+          int remainingDamage = absorbDamageWithArmor(damage);
+          setHealth(Math.max(this.health - remainingDamage, 0));
+          if (entity != null && isDead()) {
+              entity.getEvents().trigger("entityIsDead");
+          }
       }
-    }
   }
 
   /**
@@ -296,25 +301,6 @@ public class CombatStatsComponent extends Component {
             });
   }
 
-  /**
-   * PLACEHOLDER / NOT FINAL: applies incoming-damage modifiers from active status effects to a raw
-   * damage amount, before armor absorption. This currently only demonstrates the mechanism using a
-   * single hard-coded example effect ("vulnerable", +50% incoming damage) so that the
-   * armor+status-effect pipeline in takeDamage() can be built and tested end-to-end. The actual set
-   * of supported status effect types, and how each one's effectValue should be interpreted
-   * (percentage vs flat amount, multiplicative vs additive, etc.), still needs to be confirmed with
-   * Team 5 (card effects) and Team 6 (card data model). This method WILL need to be
-   * rewritten/extended once that is confirmed; do not treat the current formula as final.
-   *
-   * @param rawDamage the un-modified incoming damage
-   * @return damage after status-effect modifiers are applied
-   */
-  private int applyStatusEffectDamageModifiers(int rawDamage) {
-    // Example only - pending confirmation with Team 5/6 on final effect calculation rules.
-    StatusEffect vulnerable = statusEffects.get("vulnerable");
-    if (vulnerable != null) {
-      rawDamage = Math.round(rawDamage * (1 + vulnerable.getEffectValue()));
-    }
-    return rawDamage;
-  }
+
+
 }
