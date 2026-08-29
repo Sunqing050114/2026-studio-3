@@ -43,6 +43,7 @@ public class BattleDisplay extends UIComponent{
         root.add(attackCard);
         stage.addActor(root);
     }
+    //change ui components here
     private void registerEvents() { ///Handle aiden's phase change
         entity.getEvents().addListener("phaseChange", (BattlePhase phase) -> updatePhase(phase));
         attackCard.addListener(new ChangeListener() {

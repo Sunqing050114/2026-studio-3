@@ -1,6 +1,5 @@
 package com.csse3200.game.components.battle;
 
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -25,6 +24,7 @@ public class BattleArea extends UIComponent {
         stage.addActor(root);
 
     }
+    /// change background components here
     private Table createPlaceholder(String text, Color colour) {
         Table area = new Table();
         area.setBackground(skin.newDrawable("white", colour));
