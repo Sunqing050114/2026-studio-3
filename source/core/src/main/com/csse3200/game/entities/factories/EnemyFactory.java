@@ -8,6 +8,7 @@ import com.csse3200.game.entities.configs.EnemyConfigs;
 import com.csse3200.game.entities.configs.EnemyScaling;
 import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.files.FileLoader;
+import com.csse3200.game.rendering.TextureRenderComponent;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -21,6 +22,9 @@ import org.slf4j.LoggerFactory;
 public class EnemyFactory {
   private static final Logger logger = LoggerFactory.getLogger(EnemyFactory.class);
   private static final EnemyConfigs roster = loadRoster();
+
+  private static final String SPRITE_DIR = "images/enemies/";
+  private static final String DEFAULT_SPRITE = SPRITE_DIR + "default.png";
 
   private static EnemyConfigs loadRoster() {
     EnemyConfigs configs = FileLoader.readClass(EnemyConfigs.class, "configs/enemies.json");
@@ -66,7 +70,28 @@ public class EnemyFactory {
   public static Entity create(EnemyConfig config) {
     return new Entity()
         .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
-        .addComponent(new EnemyBehaviourComponent(config.behaviour));
+        .addComponent(new EnemyBehaviourComponent(config.behaviour))
+        .addComponent(new TextureRenderComponent(spritePath(config)));
+  }
+
+  /**
+   * Resolves the texture path for an enemy.
+   *
+   * <p>An explicit {@link EnemyConfig#sprite} wins. Otherwise the path is {@code
+   * images/enemies/<id>.png} by convention, falling back to {@link #DEFAULT_SPRITE} when the id is
+   * missing.
+   *
+   * @param config enemy configuration
+   * @return an internal texture path
+   */
+  private static String spritePath(EnemyConfig config) {
+    if (config.sprite != null && !config.sprite.isBlank()) {
+      return config.sprite;
+    }
+    if (config.id != null && !config.id.isBlank() && !"unknown".equals(config.id)) {
+      return SPRITE_DIR + config.id + ".png";
+    }
+    return DEFAULT_SPRITE;
   }
 
   /**

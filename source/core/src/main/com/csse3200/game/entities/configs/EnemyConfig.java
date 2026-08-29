@@ -11,4 +11,10 @@ public class EnemyConfig extends BaseEntityConfig {
 
   /** Identifier of the behaviour pattern used each round. */
   public String behaviour = "cycle_attack_defend";
+
+  /**
+   * Optional texture path override. When left blank, the factory renders the enemy with {@code
+   * images/enemies/<id>.png} by convention, falling back to a shared default sprite.
+   */
+  public String sprite = "";
 }

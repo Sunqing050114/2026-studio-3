@@ -4,19 +4,43 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.extensions.GameExtension;
+import com.csse3200.game.rendering.DebugRenderer;
+import com.csse3200.game.rendering.RenderService;
+import com.csse3200.game.rendering.TextureRenderComponent;
+import com.csse3200.game.services.ResourceService;
+import com.csse3200.game.services.ServiceLocator;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(GameExtension.class)
 class EnemyFactoryTest {
+
+  @BeforeEach
+  void registerServices() {
+    // Headless tests have no real assets. Hand the factory a mocked ResourceService that returns a
+    // dummy texture for any request, so TextureRenderComponent can be constructed without a GPU.
+    ResourceService resourceService = mock(ResourceService.class);
+    when(resourceService.getAsset(anyString(), eq(Texture.class))).thenReturn(mock(Texture.class));
+    ServiceLocator.registerResourceService(resourceService);
+
+    RenderService renderService = new RenderService();
+    renderService.setDebug(mock(DebugRenderer.class));
+    ServiceLocator.registerRenderService(renderService);
+  }
 
   @Test
   void createAttachesStatsAndBehaviour() {
@@ -24,6 +48,13 @@ class EnemyFactoryTest {
 
     assertNotNull(enemy.getComponent(EnemyStatsComponent.class));
     assertNotNull(enemy.getComponent(EnemyBehaviourComponent.class));
+  }
+
+  @Test
+  void createAttachesRenderComponent() {
+    Entity enemy = EnemyFactory.create("lesser_shade");
+
+    assertNotNull(enemy.getComponent(TextureRenderComponent.class));
   }
 
   @Test
