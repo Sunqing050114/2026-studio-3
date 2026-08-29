@@ -26,6 +26,15 @@ import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.csse3200.game.cards.CardConfigLoader;
+import com.csse3200.game.cards.CardLibrary;
+import com.csse3200.game.cards.CardService;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.debug.CardEffectDebugComponent;
+import com.csse3200.game.cards.debug.CardEffectDebugDisplay;
+import com.csse3200.game.cards.debug.KeyboardCardEffectDebugInputComponent;
+import com.csse3200.game.cards.effects.CardEffectResolutionService;
+import java.util.List;
 
 /**
  * The game screen containing the main game.
@@ -128,16 +137,23 @@ public class MainGameScreen extends ScreenAdapter {
     logger.debug("Creating ui");
     Stage stage = ServiceLocator.getRenderService().getStage();
     InputComponent inputComponent =
-        ServiceLocator.getInputService().getInputFactory().createForTerminal();
+            ServiceLocator.getInputService().getInputFactory().createForTerminal();
+
+    List<CardConfig> cards = CardConfigLoader.loadCards();
+    CardService cardService = new CardLibrary(cards);
+    CardEffectResolutionService cardEffects = new CardEffectResolutionService(cardService);
 
     Entity ui = new Entity();
     ui.addComponent(new InputDecorator(stage, 10))
-        .addComponent(new PerformanceDisplay())
-        .addComponent(new MainGameActions(this.game))
-        .addComponent(new MainGameExitDisplay())
-        .addComponent(new Terminal())
-        .addComponent(inputComponent)
-        .addComponent(new TerminalDisplay());
+            .addComponent(new PerformanceDisplay())
+            .addComponent(new MainGameActions(this.game))
+            .addComponent(new MainGameExitDisplay())
+            .addComponent(new Terminal())
+            .addComponent(inputComponent)
+            .addComponent(new TerminalDisplay())
+            .addComponent(new CardEffectDebugComponent(cardEffects))
+            .addComponent(new KeyboardCardEffectDebugInputComponent())
+            .addComponent(new CardEffectDebugDisplay());
 
     ServiceLocator.getEntityService().register(ui);
   }
