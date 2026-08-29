@@ -2,10 +2,8 @@ package com.csse3200.game.components.combat;
 
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
-import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
-import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
 
@@ -101,8 +99,6 @@ public class BattleController {
       case ENEMY_DEFEND -> enterEnemyDefend();
       case ENEMY_OTHER -> enterEnemyOther();
       case ENEMY_RESOLVED -> enterEnemyResolved();
-      // Not too sure what this branch is?
-      // case NEXT_ENEMY -> enterNextEnemy();
 
       // Terminal States
       case VICTORY -> enterVictory();
@@ -133,6 +129,10 @@ public class BattleController {
 
   public int getCurrentEnemyIndex() {
     return currentEnemyIndex;
+  }
+
+  private void setEnemyIntent(EnemyIntent intent) {
+    this.currentEnemyIntent = intent;
   }
 
   /*------------------------- Helper functions ----------------------------*/
@@ -187,6 +187,14 @@ public class BattleController {
     return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
   }
 
+  /**
+   * Cleans up the variables after a round or the battle sequence is done.
+   */
+  private void cleanUp() {
+    this.setCurrentEnemyIndex(-1);
+    this.setEnemyIntent(null);
+  }
+
   /*------------------------- Stub functions ----------------------------*/
 
   private Entity getEnemy() {
@@ -199,9 +207,6 @@ public class BattleController {
 
   private void enterSetup() {
     // Coordinate battle setup.
-
-    // check for available enemies and change the list
-    // update the player private variable
     this.setCurrentEnemyIndex(0);
     handle(BattleEvent.SETUP_COMPLETE);
   }
@@ -262,7 +267,6 @@ public class BattleController {
 
     // execute the intent
     enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
-
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
@@ -281,31 +285,31 @@ public class BattleController {
 
     // execute the intent
     enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
-
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
-    private void enterEnemyResolved() {
-      if (currentEnemyIndex < enemies.size() - 1) {
-        targetNextEnemy();
+  private void enterEnemyResolved() {
+    if (currentEnemyIndex < enemies.size() - 1) {
+      targetNextEnemy();
 
-        Entity nextEnemy = getEnemy();
-        currentEnemyIntent =
-                nextEnemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+      Entity nextEnemy = getEnemy();
+      currentEnemyIntent =
+              nextEnemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
 
-        handle(BattleEvent.MORE_ENEMIES);
-      } else {
-        setCurrentEnemyIndex(-1);
-        currentEnemyIntent = null;
-        handle(BattleEvent.ENEMY_PHASE_COMPLETE);
-      }
+      handle(BattleEvent.MORE_ENEMIES);
+    } else {
+      this.cleanUp();
+      handle(BattleEvent.ENEMY_PHASE_COMPLETE);
     }
+  }
 
   private void enterVictory() {
     // Notify other systems that the battle was won.
+    this.cleanUp();
   }
 
   private void enterDefeat() {
     // Notify other systems that the battle was lost.
+    this.cleanUp();
   }
 }
