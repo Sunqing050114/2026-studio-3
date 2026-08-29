@@ -5,7 +5,10 @@ import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyConfigs;
+import com.csse3200.game.entities.configs.EnemyScaling;
+import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.files.FileLoader;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +40,21 @@ public class EnemyFactory {
    * @return the assembled enemy entity
    */
   public static Entity create(String id) {
-    EnemyConfig config = roster.get(id);
+    return create(resolve(id));
+  }
 
-    if (config == null) {
-      logger.warn("Unknown enemy id: {}", id);
-      config = new EnemyConfig();
-    }
-
-    return create(config);
+  /**
+   * Creates an enemy by id with stats scaled for the given floor.
+   *
+   * <p>Deeper floors produce tougher enemies through {@link EnemyScaling}. A floor of {@code 0}, or
+   * a negative floor, yields the enemy's base stats.
+   *
+   * @param id enemy id
+   * @param floor the current run floor, used as the scaling progression
+   * @return the assembled enemy entity
+   */
+  public static Entity create(String id, int floor) {
+    return create(EnemyScaling.scale(resolve(id), floor));
   }
 
   /**
@@ -64,6 +74,46 @@ public class EnemyFactory {
    */
   public static List<String> availableEnemies() {
     return roster.ids();
+  }
+
+  /**
+   * Returns the ids of every roster enemy belonging to the given tier.
+   *
+   * <p>Used by level design to pick enemies of a particular difficulty. Returns an empty list when
+   * nothing matches or the roster failed to load.
+   *
+   * @param tier the tier to filter by
+   * @return a new list of matching enemy ids
+   */
+  public static List<String> getIdsByTier(EnemyTier tier) {
+    List<String> matches = new ArrayList<>();
+
+    for (String id : roster.ids()) {
+      EnemyConfig config = roster.get(id);
+      if (config != null && config.tier == tier) {
+        matches.add(id);
+      }
+    }
+
+    return matches;
+  }
+
+  /**
+   * Looks up a config by id, returning a fresh default config (and logging a warning) when the id
+   * is unknown.
+   *
+   * @param id enemy id
+   * @return the matching config, or a default {@link EnemyConfig}
+   */
+  private static EnemyConfig resolve(String id) {
+    EnemyConfig config = roster.get(id);
+
+    if (config == null) {
+      logger.warn("Unknown enemy id: {}", id);
+      return new EnemyConfig();
+    }
+
+    return config;
   }
 
   private EnemyFactory() {
