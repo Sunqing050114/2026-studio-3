@@ -1,72 +1,103 @@
 package com.csse3200.game.cards.effects;
 
-import java.util.List;
+import com.csse3200.game.cards.EffectType;
+import com.csse3200.game.cards.TargetType;
+import com.csse3200.game.cards.configs.EffectConfig;
 
-/** Resolves one card effect according to Team 5's combat boundary. */
+/** Resolves one Team 6 effect config into a Team 5 card effect result. */
 public class EffectExecutor {
   /**
-   * Resolves one raw card effect.
+   * Resolves one effect from a card.
    *
-   * <p>Enemy effects are returned for the combat/enemy systems to apply. Player self effects are
-   * sent through {@link CharacterEffectGateway}, because the player stats system owns the actual
-   * player state.
-   *
-   * @return outgoing effects that still need to be applied by another system
+   * <p>This class does not mutate enemies or the player entity. It only updates Team 5 calculation
+   * state where needed, such as strength, and returns a resolved effect record.
    */
-  public List<ResolvedCardEffect> execute(
-      String cardId, CardEffect effect, TargetType target, CharacterEffectGateway playerStats) {
-    validate(cardId, effect, target, playerStats);
+  public ResolvedCardEffect resolve(
+      String cardId,
+      EffectConfig effect,
+      TargetType target,
+      int sequence,
+      PlayerEffectState playerState) {
+    validate(cardId, effect, target, sequence, playerState);
 
     if (target == TargetType.SELF) {
-      applySelfEffect(effect, playerStats);
-      return List.of();
+      return resolveSelfEffect(cardId, effect, sequence, playerState);
     }
 
-    return List.of(resolveEnemyEffect(cardId, effect, target, playerStats));
+    return resolveEnemyEffect(cardId, effect, target, sequence, playerState);
   }
 
   private void validate(
-      String cardId, CardEffect effect, TargetType target, CharacterEffectGateway playerStats) {
+      String cardId,
+      EffectConfig effect,
+      TargetType target,
+      int sequence,
+      PlayerEffectState playerState) {
     if (cardId == null || cardId.isBlank()) {
       throw new IllegalArgumentException("Card ID cannot be null or blank");
     }
     if (effect == null) {
-      throw new IllegalArgumentException("Effect cannot be null");
+      throw new IllegalArgumentException("Effect config cannot be null");
+    }
+    if (effect.type == null) {
+      throw new IllegalArgumentException("Effect type cannot be null");
     }
     if (target == null) {
       throw new IllegalArgumentException("Target type cannot be null");
     }
-    if (playerStats == null) {
-      throw new IllegalArgumentException("Player stats gateway cannot be null");
+    if (sequence < 0) {
+      throw new IllegalArgumentException("Effect sequence cannot be negative");
+    }
+    if (playerState == null) {
+      throw new IllegalArgumentException("Player effect state cannot be null");
+    }
+    if (effect.value <= 0) {
+      throw new IllegalArgumentException("Effect value must be positive");
+    }
+    if (effect.type.usesDuration() && effect.duration <= 0) {
+      throw new IllegalArgumentException("Ongoing effect duration must be positive");
+    }
+    if (!effect.type.usesDuration() && effect.duration != 0) {
+      throw new IllegalArgumentException("Instant or combat-long effect duration must be zero");
     }
   }
 
-  private void applySelfEffect(CardEffect effect, CharacterEffectGateway playerStats) {
-    switch (effect.type()) {
-      case BLOCK -> playerStats.gainBlock(effect.value());
-      case HEAL -> playerStats.heal(effect.value());
-      case STRENGTH -> playerStats.gainStrength(effect.value());
+  private ResolvedCardEffect resolveSelfEffect(
+      String cardId, EffectConfig effect, int sequence, PlayerEffectState playerState) {
+    switch (effect.type) {
+      case STRENGTH -> playerState.addStrength(effect.value);
+      case BLOCK, HEAL -> {
+        // These results are returned so another system can apply them to player stats later.
+      }
       case DAMAGE, POISON, VULNERABLE ->
           throw new IllegalArgumentException(
-              "Unsupported self-targeting effect type: " + effect.type());
+              "Unsupported self-targeting effect type: " + effect.type);
     }
+    return new ResolvedCardEffect(
+        cardId, effect.type, TargetType.SELF, effect.value, effect.duration, sequence);
   }
 
   private ResolvedCardEffect resolveEnemyEffect(
-      String cardId, CardEffect effect, TargetType target, CharacterEffectGateway playerStats) {
-    return switch (effect.type()) {
+      String cardId,
+      EffectConfig effect,
+      TargetType target,
+      int sequence,
+      PlayerEffectState playerState) {
+    return switch (effect.type) {
       case DAMAGE ->
           new ResolvedCardEffect(
               cardId,
               EffectType.DAMAGE,
               target,
-              Math.max(0, effect.value() + playerStats.getStrengthModifier()),
-              0);
+              Math.max(0, effect.value + playerState.getStrength()),
+              0,
+              sequence);
       case POISON, VULNERABLE ->
-          new ResolvedCardEffect(cardId, effect.type(), target, effect.value(), effect.duration());
+          new ResolvedCardEffect(
+              cardId, effect.type, target, effect.value, effect.duration, sequence);
       case BLOCK, HEAL, STRENGTH ->
           throw new IllegalArgumentException(
-              "Unsupported enemy-targeting effect type: " + effect.type());
+              "Unsupported enemy-targeting effect type: " + effect.type);
     };
   }
 }
