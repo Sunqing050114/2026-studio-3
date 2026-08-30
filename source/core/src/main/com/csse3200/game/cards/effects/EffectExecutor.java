@@ -64,15 +64,12 @@ public class EffectExecutor {
 
   private ResolvedCardEffect resolveSelfEffect(
       String cardId, EffectConfig effect, int sequence, PlayerEffectState playerState) {
-    switch (effect.type) {
-      case STRENGTH -> playerState.addStrength(effect.value);
-      case BLOCK, HEAL -> {
-        // These results are returned so another system can apply them to player stats later.
-      }
-      case DAMAGE, POISON, VULNERABLE ->
-          throw new IllegalArgumentException(
-              "Unsupported self-targeting effect type: " + effect.type);
+    if (effect.type == EffectType.STRENGTH) {
+      playerState.addStrength(effect.value);
+    } else if (effect.type != EffectType.BLOCK && effect.type != EffectType.HEAL) {
+      throw new IllegalArgumentException("Unsupported self-targeting effect type: " + effect.type);
     }
+
     return new ResolvedCardEffect(
         cardId, effect.type, TargetType.SELF, effect.value, effect.duration, sequence);
   }
@@ -83,21 +80,21 @@ public class EffectExecutor {
       TargetType target,
       int sequence,
       PlayerEffectState playerState) {
-    return switch (effect.type) {
-      case DAMAGE ->
-          new ResolvedCardEffect(
-              cardId,
-              EffectType.DAMAGE,
-              target,
-              Math.max(0, effect.value + playerState.getStrength()),
-              0,
-              sequence);
-      case POISON, VULNERABLE ->
-          new ResolvedCardEffect(
-              cardId, effect.type, target, effect.value, effect.duration, sequence);
-      case BLOCK, HEAL, STRENGTH ->
-          throw new IllegalArgumentException(
-              "Unsupported enemy-targeting effect type: " + effect.type);
-    };
+    if (effect.type == EffectType.DAMAGE) {
+      return new ResolvedCardEffect(
+          cardId,
+          EffectType.DAMAGE,
+          target,
+          Math.max(0, effect.value + playerState.getStrength()),
+          0,
+          sequence);
+    }
+
+    if (effect.type.usesDuration()) {
+      return new ResolvedCardEffect(
+          cardId, effect.type, target, effect.value, effect.duration, sequence);
+    }
+
+    throw new IllegalArgumentException("Unsupported enemy-targeting effect type: " + effect.type);
   }
 }
