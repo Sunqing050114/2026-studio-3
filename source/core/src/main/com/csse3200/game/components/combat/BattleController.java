@@ -58,10 +58,6 @@ public class BattleController {
   /**
    * Handles a single event atomically.
    *
-   * NOTE: This function shouldn't be used outside of this class.
-   * This function is public currently only for testing. If you
-   * need to start the state machine for testing, use start().
-   *
    * @param event The event within the Battle Loop to handle.
    */
   public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
