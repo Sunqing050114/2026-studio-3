@@ -60,7 +60,7 @@ public class BattleController {
    *
    * @param event The event within the Battle Loop to handle.
    */
-  public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
+  public void handle(BattleEvent event) {
     Objects.requireNonNull(event, "event cannot be null");
     this.eventQueue.addLast(event);
 
@@ -70,7 +70,6 @@ public class BattleController {
     }
     // pendingEvent keeps events atomic.
     this.pendingEvent = true;
-
     // Takes an event from the queue, attempts to process atomically
     try {
       while (!this.eventQueue.isEmpty()) {
@@ -155,6 +154,30 @@ public class BattleController {
     handle(BattleEvent.SETUP_COMPLETE);
   }
 
+    public void selectAttack() {
+        handle(BattleEvent.PLAYER_ATTACK_SELECTED);
+    }
+
+    public void selectDefend() {
+        handle(BattleEvent.PLAYER_DEFEND_SELECTED);
+    }
+
+    public void selectOther() {
+        handle(BattleEvent.PLAYER_OTHER_SELECTED);
+    }
+
+    public void endPlayerTurn() {
+        handle(BattleEvent.PLAYER_END_REQUESTED);
+    }
+
+    public void resetBattle() {
+        currentPhase = BattlePhase.SETUP;
+    }
+
+    public BattlePhase getCurrentPhase() {
+        return this.currentPhase;
+    }
+
   /**
    * Adds a listener to the event handler, which ultimately informs external
    * teams about a phase change.
@@ -186,9 +209,6 @@ public class BattleController {
 
   /*------------------------- Getters & Setters ----------------------------*/
 
-  public BattlePhase getCurrentPhase() {
-    return this.currentPhase;
-  }
 
   private void setCurrentPhase(BattlePhase nextPhase) {
     this.currentPhase = nextPhase;
@@ -197,7 +217,6 @@ public class BattleController {
   private void setCurrentEnemyIndex(int currentEnemyIndex) {
     this.currentEnemyIndex = currentEnemyIndex;
   }
-
 
   private void setEnemyIntent(EnemyIntent intent) {
     this.currentEnemyIntent = intent;
