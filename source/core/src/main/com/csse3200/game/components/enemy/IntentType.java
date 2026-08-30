@@ -5,10 +5,14 @@ public enum IntentType {
   ATTACK,
   DEFEND,
   BUFF,
-  /** Weakens the player. */
+  /**
+   * Weakens the player.
+   */
   DEBUFF,
-  /** Intent is hidden or not yet decided. */
-  UNKNOWN,
-  DEAD,
+  /**
+   * Intent is hidden or not yet decided.
+   */
+
+
   RETREAT
 }
