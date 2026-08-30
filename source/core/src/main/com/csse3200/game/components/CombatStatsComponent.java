@@ -283,6 +283,20 @@ public class CombatStatsComponent extends Component {
   }
 
   /**
+   * Returns the outgoing damage modifier based on active status effects.
+   * FEEBLE reduces outgoing damage by 25% while active
+   * And the current stack count is ignored, so any active FEEBLE
+   * effect results in a modifier of 0.75
+   * @return outgoing damage modifier
+   */
+  public float getOutgoingDamamgedModifier(){
+    if (hasStatusEffect("FEEBLE")){
+      return 0.75f;
+    }
+    return 1.0f;
+  }
+
+  /**
    * Explicitly removes a status effect from this entity, if present.
    *
    * @param type status effect type identifier
