@@ -84,14 +84,10 @@ public class EnemyDropTargetComponent extends Component {
             public void drop(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
                 Object obj = payload.getObject();
                 if (!(obj instanceof TriggerPayload triggerPayload)) {
-                    Gdx.app.error("DropTarget", "Dropped payload was not a TriggerPayload: " + obj);
                     return;
                 }
 
                 fireTrigger(triggerPayload);
-
-                Gdx.app.log("DropTarget", "Fired '" + triggerPayload.trigger()
-                        + "' with " + triggerPayload.args().length + " arg(s)");
             }
         });
     }

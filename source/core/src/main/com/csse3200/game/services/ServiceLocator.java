@@ -1,6 +1,7 @@
 package com.csse3200.game.services;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.csse3200.game.cards.CardLibrary;
 import com.csse3200.game.entities.EntityService;
 import com.csse3200.game.input.InputService;
 import com.csse3200.game.physics.PhysicsService;
@@ -26,7 +27,8 @@ public class ServiceLocator {
     private static ResourceService resourceService;
     private static DragNDropService dragNDropService;
     private static Camera camera;
-    private static CardService cardService;
+    private static CardLibrary cardLibrary;
+
 
     public static EntityService getEntityService() {
         return entityService;
@@ -60,9 +62,6 @@ public class ServiceLocator {
         return camera;
     }
 
-    public static CardService getCardService() {
-        return cardService;
-    }
 
     public static void registerEntityService(EntityService service) {
         logger.debug("Registering entity service {}", service);
@@ -103,10 +102,17 @@ public class ServiceLocator {
         camera = cam;
     }
 
-    public static void registerCardService(CardService service) {
-        logger.debug("Registering card service {}", service);
-        cardService = service;
+
+
+    public static CardLibrary getCardLibrary() {
+        return cardLibrary;
     }
+
+    public static void registerCardLibrary(CardLibrary library) {
+        logger.debug("Registering card library {}", library);
+        cardLibrary = library;
+    }
+
 
     public static void clear() {
         entityService = null;
@@ -117,7 +123,7 @@ public class ServiceLocator {
         resourceService = null;
         dragNDropService = null;
         camera = null;
-        cardService = null;
+        cardLibrary = null;
     }
 
     private ServiceLocator() {
