@@ -1,0 +1,70 @@
+{
+  "cards": [
+    {
+      "id": "strike",
+      "name": "Strike",
+      "description": "Deal 10 damage",
+      "trigger": "damage",
+      "args": [10],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    },
+    {
+      "id": "heavy_strike",
+      "name": "Heavy Strike",
+      "description": "Deal 18 damage",
+      "trigger": "damage",
+      "args": [18],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    },
+    {
+      "id": "bandage",
+      "name": "Bandage",
+      "description": "Restore 12 health",
+      "trigger": "heal",
+      "args": [12],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    },
+    {
+      "id": "regen",
+      "name": "Regenerate",
+      "description": "Restore 20 health",
+      "trigger": "heal",
+      "args": [20],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    },
+    {
+      "id": "jab",
+      "name": "Jab",
+      "description": "Deal 5 damage",
+      "trigger": "damage",
+      "args": [5],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    },
+    {
+      "id": "first_aid",
+      "name": "First Aid",
+      "description": "Restore 8 health",
+      "trigger": "heal",
+      "args": [8],
+      "skinFile": "sprites/cards/cardExample.json",
+      "skinAtlas": "sprites/cards/cardExample.atlas",
+      "styleName": "cardStyle",
+      "size": [300, 456]
+    }
+  ]
+}

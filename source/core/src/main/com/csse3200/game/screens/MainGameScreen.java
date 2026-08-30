@@ -143,7 +143,7 @@ public class MainGameScreen extends ScreenAdapter {
         .addComponent(inputComponent)
         .addComponent(new TerminalDisplay())
         .addComponent(new DebugShortcutInputComponent(this.game))
-        .addComponent(new ClickableFactory(Path.of("sprites/example.json")));
+        .addComponent(new ClickableFactory(Path.of("sprites/BattleUi.json")));
 
     ServiceLocator.getEntityService().register(ui);
   }
