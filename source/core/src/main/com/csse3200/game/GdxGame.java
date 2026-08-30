@@ -53,9 +53,7 @@ public class GdxGame extends Game {
     setScreen(newScreen(screenType));
   }
 
-  /// Method used to test to start battle scene to see if code is working!
-  /// will probably  be used by other methods eg when cliked on top of a map to trigger battle with
-  // stage varible
+  /** Opens the battle screen. Used by encounter navigation and the temporary debug shortcut. */
   public void startBattle() {
     setScreen(ScreenType.BATTLE_SCREEN);
   }

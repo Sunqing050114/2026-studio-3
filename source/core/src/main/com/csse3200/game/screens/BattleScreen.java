@@ -13,12 +13,15 @@ import com.csse3200.game.cards.CardLibrary;
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.configs.EffectConfig;
 import com.csse3200.game.components.battle.*;
+import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableFactory;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableRecord;
 import com.csse3200.game.components.spritedisplay.displaying.CardDisplay;
 import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
+import com.csse3200.game.entities.configs.EnemyConfig;
+import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.RenderFactory;
 import com.csse3200.game.input.InputDecorator;
 import com.csse3200.game.input.InputService;
@@ -68,6 +71,7 @@ public class BattleScreen extends ScreenAdapter {
 
     private final PhysicsEngine physicsEngine;
     private static final Map<String, Skin> textureSkinCache = new HashMap<>();
+    private final BattleController controller;
 
     public BattleScreen(GdxGame game) {
         this.game = game;
@@ -86,6 +90,10 @@ public class BattleScreen extends ScreenAdapter {
 
         ServiceLocator.registerEntityService(new EntityService());
         ServiceLocator.registerRenderService(new RenderService());
+
+        Entity player = new Entity();
+        List<Entity> enemies = List.of(EnemyFactory.create(new EnemyConfig()));
+        controller = new BattleController(player, enemies);
 
 
         renderer = RenderFactory.createRenderer();
@@ -145,11 +153,10 @@ public class BattleScreen extends ScreenAdapter {
         Stage stage = ServiceLocator.getRenderService().getStage();
         Entity battleUi =
                 new Entity()
-                        .addComponent(new BattleDisplay())
                         .addComponent(new InputDecorator(stage, 10))
-                        .addComponent(new BattleActions(game))
                         .addComponent(new ClickableFactory(records))
-                        .addComponent(new CardDisplay(cardLabelRecord));
+                        .addComponent(new CardDisplay(cardLabelRecord))
+                        .addComponent(new BattleActions(controller, game));
 
         gameArea.displayUI(battleUi);
 
