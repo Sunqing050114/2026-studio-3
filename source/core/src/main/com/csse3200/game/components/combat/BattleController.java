@@ -1,7 +1,9 @@
 package com.csse3200.game.components.combat;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
+import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
@@ -161,9 +163,23 @@ public class BattleController {
     this.currentEnemyIndex = currentEnemyIndex;
   }
 
-  private void targetNextEnemy() {
-    // TODO: Should probably guard here by the size of the enemy array
-    this.currentEnemyIndex++;
+  /**
+   * Targets the next available enemy within the enemy array.
+   *
+   * @return True if a new target has been chosen. False if all enemies
+   * are dead.
+   */
+  private boolean targetNextEnemy() {
+    // Starts from index after currently targeted enemy.
+    for (int i = this.currentEnemyIndex + 1; i < this.enemies.size(); i++) {
+      Entity currentEnemy = this.enemies.get(i);
+      // Checks status of each enemy
+      if (isEnemyAlive(currentEnemy)) {
+        this.setCurrentEnemyIndex(i);
+        return true;
+      }
+    }
+    return false;
   }
 
   private void setEnemyIntent(EnemyIntent intent) {
@@ -201,14 +217,44 @@ public class BattleController {
     );
   }
 
+  /**
+   * Returns if the enemy is alive.
+   * NOTE: I couldn't find an existing helper/API for this,
+   * but in the future this should probably be put in another module.
+   *
+   * @param enemy The enemy to be checked.
+   * @return True if the enemy is alive, False if not.
+   */
+  private boolean isEnemyAlive(Entity enemy) {
+    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+    return stats.isAlive();
+  }
 
+  /**
+   * Checks the outcome of the battle.
+   * @return True if the battle is over, False if it isn't.
+   */
+  private boolean isBattleOver() {
+    CombatStatsComponent playerStats = this.player.getComponent(CombatStatsComponent.class);
+    boolean allEnemiesDead = this.enemies.stream().noneMatch(this::isEnemyAlive);
+
+    if (playerStats.isDead()) {
+      handle(BattleEvent.PLAYER_DEFEATED);
+      return true;
+    }
+
+    if (allEnemiesDead) {
+      handle(BattleEvent.ENEMIES_DEFEATED);
+      return true;
+    }
+    return false;
+  }
 
   /**
    * Cleans up the variables after a round or the battle sequence is done.
    */
   private void cleanUp() {
     this.setCurrentEnemyIndex(-1);
-    this.setEnemyIntent(null);
   }
 
   /*------------------------- Stub functions ----------------------------*/
@@ -305,18 +351,19 @@ public class BattleController {
   }
 
   private void enterEnemyResolved() {
-    if (currentEnemyIndex < enemies.size() - 1) {
-      targetNextEnemy();
-
-      Entity nextEnemy = getEnemy();
-      currentEnemyIntent =
-              nextEnemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
-
-      handle(BattleEvent.MORE_ENEMIES);
-    } else {
-      this.cleanUp();
-      handle(BattleEvent.ENEMY_PHASE_COMPLETE);
+    // If the battle is over, abort and head straight to ending
+    if (this.isBattleOver()) {
+     return;
     }
+
+    // If another enemy is successfully targeted.
+    if (this.targetNextEnemy()) {
+      handle(BattleEvent.MORE_ENEMIES);
+      return;
+    }
+
+    this.cleanUp();
+    handle(BattleEvent.ENEMY_PHASE_COMPLETE);
   }
 
   private void enterVictory() {
