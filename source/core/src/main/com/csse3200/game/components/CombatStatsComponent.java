@@ -32,8 +32,27 @@ public class CombatStatsComponent extends Component {
   private int block = 0;
   private final Map<String, StatusEffect> statusEffects = new HashMap<>();
 
+  /**
+   * Entity's base constructor
+   *
+   * @param health entity's health
+   * @param baseAttack entity's base attack
+   */
   public CombatStatsComponent(int health, int baseAttack) {
     setMaxHealth(health);
+    setHealth(health);
+    setBaseAttack(baseAttack);
+  }
+
+  /**
+   * Overload constructor with maxHealth as the third param
+   *
+   * @param health entity's health
+   * @param baseAttack entity's base attack
+   * @param maxHealth entity's max Health
+   */
+  public CombatStatsComponent(int health, int baseAttack, int maxHealth) {
+    setMaxHealth(maxHealth);
     setHealth(health);
     setBaseAttack(baseAttack);
   }
@@ -170,22 +189,21 @@ public class CombatStatsComponent extends Component {
   }
 
   /**
-   * Returns the entity's base attack damage. Unused will remove in later sprint
+   * Unused will remove in later sprint
    *
-   * @return base attack damage
+   * @param health entity's health
    */
   public void addHealth(int health) {
     setHealth(this.health + health);
   }
 
   /**
-   * Returns the entity's base attack damage. Unused will remove in later sprint
+   * Unused will remove in later sprint
    *
-   * @return base attack damage
+   * @param attacker attacker parameter
    */
   public void hit(CombatStatsComponent attacker) {
-    int newHealth = getHealth() - attacker.getBaseAttack();
-    setHealth(newHealth);
+    takeDamage(attacker.getBaseAttack());
   }
 
   /**

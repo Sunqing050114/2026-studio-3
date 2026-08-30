@@ -4,5 +4,6 @@ package com.csse3200.game.entities.configs;
 public class PlayerConfig extends BaseEntityConfig {
   public int gold = 1;
   public int maxEnergy = 3;
+  public int maxHealth = 100;
   public String favouriteColour = "none";
 }
