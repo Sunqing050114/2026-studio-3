@@ -54,7 +54,7 @@ public class BattleController {
    * @param event The event to be handled.
    * @throws IllegalStateException When the given transition isn't allowed.
    */
-  public void handle(BattleEvent event) { // TODO: I think it should be private?
+  public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
     Objects.requireNonNull(event, "event cannot be null");
     BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
     this.validateEventTransition(event, nextPhase);
@@ -108,6 +108,45 @@ public class BattleController {
 
   /*--------------------------- Public Methods -----------------------------*/
 
+  /**
+   * Starts the battle encounter.
+   */
+  public void start() throws IllegalStateException {
+    if (this.getCurrentPhase() != BattlePhase.SETUP) {
+      throw new IllegalStateException("The battle has already begun!");
+    }
+    handle(BattleEvent.SETUP_COMPLETE);
+  }
+
+  /**
+   * Adds a listener to the event handler, which ultimately informs external
+   * teams about a phase change.
+   *
+   * @param listener The instantiated external listener.
+   */
+  public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
+  }
+
+  /**
+   * Returns the current targeted enemy.
+   * @return An int representing the targeted entity within the array.
+   */
+  public int getCurrentEnemyIndex() {
+    return this.currentEnemyIndex;
+  }
+
+  /**
+   * Convenience function for returning if a given event can be handled within a state.
+   *
+   * @param event The event to check.
+   * @return True if the event is valid to be applied. False if not.
+   */
+  public boolean canHandle(BattleEvent event) {
+    return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
+  }
+
   /*------------------------- Getters & Setters ----------------------------*/
 
   public BattlePhase getCurrentPhase() {
@@ -125,10 +164,6 @@ public class BattleController {
   private void targetNextEnemy() {
     // TODO: Should probably guard here by the size of the enemy array
     this.currentEnemyIndex++;
-  }
-
-  public int getCurrentEnemyIndex() {
-    return currentEnemyIndex;
   }
 
   private void setEnemyIntent(EnemyIntent intent) {
@@ -166,26 +201,7 @@ public class BattleController {
     );
   }
 
-  /**
-   * Adds a listener to the event handler, which ultimately informs external
-   * teams about a phase change.
-   *
-   * @param listener The instantiated external listener.
-   */
-  public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
-    Objects.requireNonNull(listener, "Listener must not be null.");
-    eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
-  }
 
-  /**
-   * Convenience function for returning if a given event can be handled within a state.
-   *
-   * @param event The event to check.
-   * @return True if the event is valid to be applied. False if not.
-   */
-  public boolean canHandle(BattleEvent event) {
-    return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
-  }
 
   /**
    * Cleans up the variables after a round or the battle sequence is done.
