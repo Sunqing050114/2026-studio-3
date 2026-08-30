@@ -4,17 +4,17 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableRecord;
 
 /**
- * Immutable definition of a single card: what it's called, what event it fires when played
- * (and with what arguments), and how it should look as a draggable button.
+ * Immutable definition of a single card: what it's called, what event it fires when played (and
+ * with what arguments), and how it should look as a draggable button.
  *
- * <p>A Card doesn't know how to render or drag itself — {@link #toClickableRecord(float, float, Skin)}
- * builds a {@link ClickableRecord} (variant "drag") that the existing Clickable/DragNDrop
- * machinery already knows how to handle. This keeps card *data* (loaded from
- * configs/cards.json via {@link CardService}) separate from the generic UI plumbing.
+ * <p>A Card doesn't know how to render or drag itself — {@link #toClickableRecord(float, float,
+ * Skin)} builds a {@link ClickableRecord} (variant "drag") that the existing Clickable/DragNDrop
+ * machinery already knows how to handle. This keeps card *data* (loaded from configs/cards.json via
+ * {@link CardService}) separate from the generic UI plumbing.
  *
  * <p>The Skin itself isn't resolved here — CardService caches Skin instances per skinFile/
- * skinAtlas pair (the same way ClickableFactory does) and passes the resolved Skin in, so
- * repeated calls don't reload the same texture atlas from disk.
+ * skinAtlas pair (the same way ClickableFactory does) and passes the resolved Skin in, so repeated
+ * calls don't reload the same texture atlas from disk.
  *
  * @param id unique identifier, e.g. "strike". Used for lookups, not shown to the player.
  * @param name display name, e.g. "Strike". Shown as the label in UI feedback ("Strike played").

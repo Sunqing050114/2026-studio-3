@@ -2,10 +2,13 @@ package com.csse3200.game.entities.factories;
 
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
+import com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyConfigs;
 import com.csse3200.game.files.FileLoader;
+import com.csse3200.game.rendering.TextureRenderComponent;
+import com.csse3200.game.services.ServiceLocator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +58,13 @@ public class EnemyFactory {
    */
   public static Entity create(EnemyConfig config) {
     return new Entity()
+        .addComponent(new TextureRenderComponent("images/heart.png")) //place holder image
         .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
-        .addComponent(new EnemyBehaviourComponent(config.behaviour));
+        .addComponent(new EnemyBehaviourComponent(config.behaviour))
+        .addComponent(
+            new EnemyDropTargetComponent(
+                ServiceLocator.getDragAndDropService().getDragAndDrop(),
+                ServiceLocator.getCamera())); //allow the user to drag a card on it
   }
 
   /**

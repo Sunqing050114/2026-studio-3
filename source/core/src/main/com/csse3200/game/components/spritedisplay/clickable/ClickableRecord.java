@@ -102,7 +102,10 @@ public record ClickableRecord(
       return this;
     }
 
-    /** Human-readable label for UI feedback (e.g. shown when the card is played). Defaults to trigger. */
+    /**
+     * Human-readable label for UI feedback (e.g. shown when the card is played). Defaults to
+     * trigger.
+     */
     public Builder label(String label) {
       this.label = label;
       return this;

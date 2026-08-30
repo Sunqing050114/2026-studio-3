@@ -1,17 +1,17 @@
 package com.csse3200.game.components.spritedisplay.clickable;
 
 /**
- * Everything a drop target needs to fire the right event when something is dropped on it:
- * the event name to trigger, the arguments to trigger it with, and a human-readable label
- * for UI feedback (e.g. "Strike played").
+ * Everything a drop target needs to fire the right event when something is dropped on it: the event
+ * name to trigger, the arguments to trigger it with, and a human-readable label for UI feedback
+ * (e.g. "Strike played").
  *
  * <p>This is intentionally generic — it has no knowledge of cards, health, or any other game
  * concept. {@link com.csse3200.game.components.spritedisplay.clickable.DragNDrop} packs one of
- * these into the drag payload from whatever {@link ClickableRecord} it was built from, and
- * {@link com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent} unpacks
- * it and fires {@code trigger(...)} on the drop target. Neither of those classes needs to know
- * *what* trigger/args mean — that's entirely up to whoever defined the card/button (e.g. via
- * JSON) and whoever listens for the resulting event (e.g. PlayerActions).
+ * these into the drag payload from whatever {@link ClickableRecord} it was built from, and {@link
+ * com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent} unpacks it and
+ * fires {@code trigger(...)} on the drop target. Neither of those classes needs to know *what*
+ * trigger/args mean — that's entirely up to whoever defined the card/button (e.g. via JSON) and
+ * whoever listens for the resulting event (e.g. PlayerActions).
  *
  * <p>{@code args} supports 0–3 elements, matching the arities EventHandler natively supports.
  */
