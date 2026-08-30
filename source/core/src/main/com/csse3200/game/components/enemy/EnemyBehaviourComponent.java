@@ -54,10 +54,9 @@ public class EnemyBehaviourComponent extends Component {
   }
 
   private void attack(Entity target) {
-    if (target == null) {
-      return;
-    }
-    EnemyStatsComponent targetStats = target.getComponent(EnemyStatsComponent.class);
+    if (target == null) return;
+
+    CombatStatsComponent targetStats = target.getComponent(CombatStatsComponent.class);
     if (targetStats != null) {
       targetStats.takeDamage(currentIntent.getValue());
     }
