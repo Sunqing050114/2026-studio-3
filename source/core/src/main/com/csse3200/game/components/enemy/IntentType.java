@@ -12,6 +12,7 @@ public enum IntentType {
   /**
    * Intent is hidden or not yet decided.
    */
+ Unknown,
 
 
   RETREAT

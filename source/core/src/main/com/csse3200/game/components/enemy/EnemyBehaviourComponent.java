@@ -2,7 +2,7 @@ package com.csse3200.game.components.enemy;
 
 import com.csse3200.game.components.Component;
 import com.csse3200.game.entities.Entity;
-
+import com.csse3200.game.components.CombatStatsComponent;
 /**
  * Decides and telegraphs an enemy's action each round, then resolves it.
  *
