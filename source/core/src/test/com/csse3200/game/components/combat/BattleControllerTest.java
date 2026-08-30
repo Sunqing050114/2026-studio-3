@@ -312,4 +312,110 @@ class BattleControllerTest {
     currentIntent.setAccessible(true);
     currentIntent.set(behaviour, intent);
   }
+
+  @Test
+  void shouldEnterEnemyAttackForAttackIntent() {
+    EnemyBehaviourComponent attackingBehaviour = mock(EnemyBehaviourComponent.class);
+    Entity attackingEnemy = mock(Entity.class);
+    EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
+
+    EnemyIntent attackIntent = EnemyIntent.attack(5);
+
+    when(attackingEnemy.getComponent(EnemyBehaviourComponent.class))
+            .thenReturn(attackingBehaviour);
+    when(attackingEnemy.getComponent(EnemyStatsComponent.class))
+            .thenReturn(stats);
+    when(stats.isAlive()).thenReturn(true);
+    when(attackingBehaviour.rollIntent()).thenReturn(attackIntent);
+    when(attackingBehaviour.getCurrentIntent()).thenReturn(attackIntent);
+
+    controller = new BattleController(player, List.of(attackingEnemy));
+
+    AtomicReference<BattlePhase> attackPhase = new AtomicReference<>();
+
+    controller.addPhaseChangeListener(
+            (previousPhase, nextPhase) -> {
+              if (nextPhase == BattlePhase.ENEMY_ATTACK) {
+                attackPhase.set(nextPhase);
+              }
+            });
+
+    controller.start();
+    completePlayerTurn();
+
+    assertEquals(BattlePhase.ENEMY_ATTACK, attackPhase.get());
+  }
+
+  @Test
+  void shouldExecuteAttackIntent() {
+    EnemyBehaviourComponent attackingBehaviour = mock(EnemyBehaviourComponent.class);
+    Entity attackingEnemy = mock(Entity.class);
+    EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
+
+    EnemyIntent attackIntent = EnemyIntent.attack(5);
+
+    when(attackingEnemy.getComponent(EnemyBehaviourComponent.class))
+            .thenReturn(attackingBehaviour);
+    when(attackingEnemy.getComponent(EnemyStatsComponent.class))
+            .thenReturn(stats);
+    when(stats.isAlive()).thenReturn(true);
+    when(attackingBehaviour.rollIntent()).thenReturn(attackIntent);
+    when(attackingBehaviour.getCurrentIntent()).thenReturn(attackIntent);
+
+    controller = new BattleController(player, List.of(attackingEnemy));
+
+    controller.start();
+    completePlayerTurn();
+
+    verify(attackingBehaviour).executeIntent(player);
+  }
+
+  @Test
+  void shouldEnterEnemyOtherForOtherIntent() {
+    EnemyBehaviourComponent behaviour = mock(EnemyBehaviourComponent.class);
+    Entity enemy = mock(Entity.class);
+    EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
+
+    EnemyIntent otherIntent = EnemyIntent.unknown();
+
+    when(enemy.getComponent(EnemyBehaviourComponent.class)).thenReturn(behaviour);
+    when(enemy.getComponent(EnemyStatsComponent.class)).thenReturn(stats);
+    when(stats.isAlive()).thenReturn(true);
+    when(behaviour.rollIntent()).thenReturn(otherIntent);
+    when(behaviour.getCurrentIntent()).thenReturn(otherIntent);
+
+    controller = new BattleController(player, List.of(enemy));
+
+    AtomicReference<BattlePhase> otherPhase = new AtomicReference<>();
+
+    controller.addPhaseChangeListener(
+            (previousPhase, nextPhase) -> {
+              if (nextPhase == BattlePhase.ENEMY_OTHER) {
+                otherPhase.set(nextPhase);
+              }
+            });
+
+    controller.start();
+    completePlayerTurn();
+
+    assertEquals(BattlePhase.ENEMY_OTHER, otherPhase.get());
+  }
+
+  @Test
+  void shouldMoveToNextEnemyAfterFirstEnemyResolves() {
+    AtomicReference<Integer> enemyIndexWhenSecondEnemyStarts = new AtomicReference<>();
+
+    controller.addPhaseChangeListener(
+            (previousPhase, nextPhase) -> {
+              if (nextPhase == BattlePhase.ENEMY_TURN
+                      && controller.getCurrentEnemyIndex() == 1) {
+                enemyIndexWhenSecondEnemyStarts.set(controller.getCurrentEnemyIndex());
+              }
+            });
+
+    controller.start();
+    completePlayerTurn();
+
+    assertEquals(1, enemyIndexWhenSecondEnemyStarts.get());
+  }
 }
