@@ -133,7 +133,6 @@ class BattleControllerTest {
   }
 
   @Test
-  @Disabled("Dead enemies are not yet skipped during initial targeting")
   void shouldSkipDeadEnemies() {
     EnemyBehaviourComponent deadEnemyBehaviour = mock(EnemyBehaviourComponent.class);
     controller =
@@ -152,7 +151,6 @@ class BattleControllerTest {
   }
 
   @Test
-  @Disabled("All living intents are not yet rolled before the player turn")
   void shouldRollLivingIntents() {
     controller.start();
 
@@ -162,7 +160,6 @@ class BattleControllerTest {
   }
 
   @Test
-  @Disabled("Victory is not yet checked when the player turn begins")
   void shouldEnterVictoryWhenAllEnemiesAreDead() {
     controller =
         new BattleController(
@@ -177,7 +174,6 @@ class BattleControllerTest {
   }
 
   @Test
-  @Disabled("Defeat is not yet checked when the player turn begins")
   void shouldEnterDefeatWhenPlayerIsDead() {
     player = new Entity().addComponent(new CombatStatsComponent(0, 0));
     controller = new BattleController(player, enemies);

@@ -55,6 +55,15 @@ public class BattleController {
     this.eventQueue = new ArrayDeque<>();
   }
 
+  /**
+   * Handles a single event atomically.
+   *
+   * NOTE: This function shouldn't be used outside of this class.
+   * This function is public currently only for testing. If you
+   * need to start the state machine for testing, use start().
+   *
+   * @param event The event within the Battle Loop to handle.
+   */
   public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
     Objects.requireNonNull(event, "event cannot be null");
     this.eventQueue.addLast(event);
@@ -314,12 +323,16 @@ public class BattleController {
   }
 
   private void enterPlayerStart() {
+    if (this.isBattleOver()) {
+      return;
+    }
     // Coordinate start-of-turn operations.
     handle(BattleEvent.PLAYER_TURN_STARTED);
   }
 
   private void enterPlayerTurn() {
     // Enable or accept player actions.
+    this.isBattleOver();
   }
 
   private void enterPlayerAttack() {
@@ -336,10 +349,12 @@ public class BattleController {
 
   private void enterPlayerEnd() {
     // Coordinate end-of-turn operations.
+    this.isBattleOver();
   }
 
   private void enterPlayerResolved() {
     // Check battle outcome before allowing another action.
+    this.isBattleOver();
   }
 
   private void enterEnemyTurn() {
@@ -383,13 +398,16 @@ public class BattleController {
   private void enterEnemyResolved() {
     // If the battle is over, abort and head straight to ending
     if (this.isBattleOver()) {
-     return;
+      return;
     }
 
     // If another enemy is successfully targeted.
     if (this.targetNextEnemy()) {
       this.setEnemyIntent(
-          this.getEnemy().getComponent(EnemyBehaviourComponent.class).rollIntent());
+             this.getEnemy()
+                     .getComponent(EnemyBehaviourComponent.class)
+                     .getCurrentIntent()
+      );
       handle(BattleEvent.MORE_ENEMIES);
       return;
     }

@@ -2,6 +2,7 @@ package com.csse3200.game.components.battle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.combat.BattleEvent;
 import com.csse3200.game.components.combat.BattlePhase;
@@ -20,6 +21,7 @@ class BattleActionsTest {
   @BeforeEach
   void setUp() {
     Entity player = new Entity();
+    player.addComponent(new CombatStatsComponent(20, 0));
     Entity enemy = EnemyFactory.create(new EnemyConfig());
     controller = new BattleController(player, List.of(enemy));
     entity = new Entity().addComponent(new BattleActions(controller));
