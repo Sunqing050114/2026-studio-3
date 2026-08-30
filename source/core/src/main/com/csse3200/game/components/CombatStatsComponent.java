@@ -317,4 +317,12 @@ public class CombatStatsComponent extends Component {
     }
     return rawDamage;
   }
+  public int applyOutgoingStatusEffectDamagedModifier(int rawDamage){
+    StatusEffect feeble=statusEffects.get("feeble");
+    if(feeble!=null){
+      rawDamage=Math.round(rawDamage*(1-feeble.getEffectValue())
+      );
+    }
+    return rawDamage;
+  }
 }

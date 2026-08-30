@@ -164,4 +164,21 @@ class ArmorAndStatusEffectTest {
     assertEquals(0, combat.getArmor());
     assertEquals(90, combat.getHealth());
   }
+
+  @Test
+  void feebleStatusEffectShouldReduceOutgoingDamage(){
+    CombatStatsComponent combat=new CombatStatsComponent(100,20);
+    combat.applyStatusEffect(new StatusEffect("feeble",0.25f,2));
+    int modifierDamage=combat.applyOutgoingStatusEffectDamagedModifier(20);
+    assertEquals(15,modifierDamage);
+  }
+
+  @Test
+  void feebleShouldApplyWhileStatusIsActive(){
+    CombatStatsComponent combat=new CombatStatsComponent(100,20);
+    combat.applyStatusEffect(new StatusEffect("feeble",0.25f,1));
+    assertEquals(15,combat.applyOutgoingStatusEffectDamagedModifier(20));
+    combat.updateStatusEffects();
+    assertEquals(20,combat.applyOutgoingStatusEffectDamagedModifier(20));
+  }
 }
