@@ -54,23 +54,24 @@ class EffectExecutorTest {
   }
 
   @Test
-  void shouldReturnEnemyStatusEffectsForOtherSystemsToApply() {
-    assertEquals(
-        new ResolvedCardEffect("toxin", EffectType.POISON, TargetType.ALL_ENEMIES, 3, 2, 0),
-        executor.resolve(
-            "toxin",
-            new EffectConfig(EffectType.POISON, 3, 2),
-            TargetType.ALL_ENEMIES,
-            0,
-            playerState));
-    assertEquals(
-        new ResolvedCardEffect("expose", EffectType.VULNERABLE, TargetType.SINGLE_ENEMY, 2, 1, 1),
-        executor.resolve(
-            "expose",
-            new EffectConfig(EffectType.VULNERABLE, 2, 1),
-            TargetType.SINGLE_ENEMY,
-            1,
-            playerState));
+  void shouldReturnEveryOngoingEnemyStatusForOtherSystemsToApply() {
+    int sequence = 0;
+    for (EffectType effectType : EffectType.values()) {
+      if (!effectType.usesDuration()) {
+        continue;
+      }
+
+      String cardId = effectType.name().toLowerCase();
+      assertEquals(
+          new ResolvedCardEffect(cardId, effectType, TargetType.SINGLE_ENEMY, 3, 2, sequence),
+          executor.resolve(
+              cardId,
+              new EffectConfig(effectType, 3, 2),
+              TargetType.SINGLE_ENEMY,
+              sequence,
+              playerState));
+      sequence++;
+    }
   }
 
   @Test
