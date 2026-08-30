@@ -3,6 +3,7 @@ package com.csse3200.game.components.cards;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -10,10 +11,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.csse3200.game.ui.UIComponent;
 import java.util.List;
 
-/** Displays a small toggle button and a demo hand of cards for Team 5 deck UI work. */
+/** Displays a card-library style overlay for Team 5 deck UI work. */
 public class CardHandDisplay extends UIComponent {
-  private static final float CARD_WIDTH = 112f;
-  private static final float CARD_HEIGHT = 168f;
+  private static final int CARDS_PER_ROW = 3;
+  private static final float CARD_WIDTH = 150f;
+  private static final float CARD_HEIGHT = 214f;
   private static final List<DemoCard> DEMO_HAND =
       List.of(
           new DemoCard("Strike", "1", "Deal 6 damage.", new Color(0.74f, 0.18f, 0.16f, 1f)),
@@ -31,9 +33,9 @@ public class CardHandDisplay extends UIComponent {
           new DemoCard("Inner Focus", "2", "Gain 2 strength.", new Color(0.47f, 0.28f, 0.73f, 1f)),
           new DemoCard("Bandage", "1", "Heal 6 health.", new Color(0.78f, 0.32f, 0.48f, 1f)));
 
-  private Table rootTable;
-  private Table handPanel;
-  private boolean handVisible;
+  private Table buttonTable;
+  private Table libraryOverlay;
+  private boolean libraryVisible;
 
   @Override
   public void create() {
@@ -42,45 +44,77 @@ public class CardHandDisplay extends UIComponent {
   }
 
   private void addActors() {
-    rootTable = new Table();
-    rootTable.setFillParent(true);
-    rootTable.top().right();
-    rootTable.padTop(56f).padRight(10f);
+    buttonTable = new Table();
+    buttonTable.setFillParent(true);
+    buttonTable.top().right();
+    buttonTable.padTop(56f).padRight(10f);
 
     TextButton cardsButton = new TextButton("Cards", skin);
     cardsButton.addListener(
         new ChangeListener() {
           @Override
           public void changed(ChangeEvent event, Actor actor) {
-            toggleHand();
+            toggleLibrary();
           }
         });
 
-    handPanel = createHandPanel();
-    handPanel.setVisible(false);
+    buttonTable.add(cardsButton).width(96f).height(40f).right();
 
-    rootTable.add(cardsButton).width(96f).height(40f).right();
-    rootTable.row();
-    rootTable.add(handPanel).right().padTop(8f);
+    libraryOverlay = createLibraryOverlay();
+    libraryOverlay.setVisible(false);
 
-    stage.addActor(rootTable);
+    stage.addActor(buttonTable);
+    stage.addActor(libraryOverlay);
   }
 
-  private Table createHandPanel() {
-    Table panel = new Table();
-    panel.defaults().pad(6f);
-    panel.setBackground(skin.newDrawable("white", new Color(0.08f, 0.07f, 0.06f, 0.88f)));
+  private Table createLibraryOverlay() {
+    Table overlay = new Table();
+    overlay.setFillParent(true);
+    overlay.setTouchable(Touchable.enabled);
+    overlay.setBackground(skin.newDrawable("white", new Color(0.02f, 0.02f, 0.02f, 0.76f)));
+    overlay.pad(34f);
 
-    Label title = new Label("Current Hand", skin, "large");
+    Table libraryPanel = new Table();
+    libraryPanel.top();
+    libraryPanel.defaults().pad(6f);
+    libraryPanel.setBackground(skin.newDrawable("white", new Color(0.10f, 0.08f, 0.06f, 0.95f)));
+    libraryPanel.pad(18f);
+
+    Table header = new Table();
+    Label title = new Label("Card Library", skin, "title");
     title.setColor(Color.WHITE);
-    panel.add(title).left().colspan(DEMO_HAND.size());
-    panel.row();
+    TextButton closeButton = new TextButton("Close", skin);
+    closeButton.addListener(
+        new ChangeListener() {
+          @Override
+          public void changed(ChangeEvent event, Actor actor) {
+            hideLibrary();
+          }
+        });
 
-    for (DemoCard card : DEMO_HAND) {
-      panel.add(createCard(card)).width(CARD_WIDTH).height(CARD_HEIGHT);
+    header.add(title).left().expandX().fillX();
+    header.add(closeButton).width(94f).height(38f).right();
+    libraryPanel.add(header).expandX().fillX();
+    libraryPanel.row();
+
+    Label sectionTitle = new Label("Current Hand", skin, "large");
+    sectionTitle.setColor(Color.WHITE);
+    libraryPanel.add(sectionTitle).left().expandX().fillX().padTop(6f);
+    libraryPanel.row();
+
+    Table cardGrid = new Table();
+    cardGrid.defaults().pad(10f);
+
+    for (int i = 0; i < DEMO_HAND.size(); i++) {
+      cardGrid.add(createCard(DEMO_HAND.get(i))).width(CARD_WIDTH).height(CARD_HEIGHT);
+      if ((i + 1) % CARDS_PER_ROW == 0) {
+        cardGrid.row();
+      }
     }
 
-    return panel;
+    libraryPanel.add(cardGrid).center().padTop(10f);
+    overlay.add(libraryPanel).center();
+    return overlay;
   }
 
   private Table createCard(DemoCard card) {
@@ -117,9 +151,14 @@ public class CardHandDisplay extends UIComponent {
     return cardTable;
   }
 
-  private void toggleHand() {
-    handVisible = !handVisible;
-    handPanel.setVisible(handVisible);
+  private void toggleLibrary() {
+    libraryVisible = !libraryVisible;
+    libraryOverlay.setVisible(libraryVisible);
+  }
+
+  private void hideLibrary() {
+    libraryVisible = false;
+    libraryOverlay.setVisible(false);
   }
 
   @Override
@@ -134,8 +173,11 @@ public class CardHandDisplay extends UIComponent {
 
   @Override
   public void dispose() {
-    if (rootTable != null) {
-      rootTable.remove();
+    if (buttonTable != null) {
+      buttonTable.remove();
+    }
+    if (libraryOverlay != null) {
+      libraryOverlay.remove();
     }
     super.dispose();
   }
