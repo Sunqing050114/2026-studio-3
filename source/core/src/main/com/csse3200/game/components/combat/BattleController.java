@@ -202,13 +202,6 @@ public class BattleController {
     this.currentEnemyIndex = currentEnemyIndex;
   }
 
-
-  private void setEnemyIntent(EnemyIntent intent) {
-    this.currentEnemyIntent = intent;
-  }
-
-  /*------------------------- Helper functions ----------------------------*/
-
   /**
    * Targets the next available enemy within the enemy array.
    *
@@ -227,6 +220,12 @@ public class BattleController {
     }
     return false;
   }
+
+  private void setEnemyIntent(EnemyIntent intent) {
+    this.currentEnemyIntent = intent;
+  }
+
+  /*------------------------- Helper functions ----------------------------*/
 
   /**
    * A helper function that validates whether a transition is allowed.
@@ -257,12 +256,24 @@ public class BattleController {
     );
   }
 
+  /**
+   * Retrieves the current active enemy instance from the list of available enemies
+   * @return the current active enemy instance in the battle
+   */
   private Entity getEnemy() {
     if (this.currentEnemyIndex < 0
             || this.currentEnemyIndex >= enemies.size()) {
       throw new IllegalStateException("No active enemy.");
     }
     return this.enemies.get(this.currentEnemyIndex);
+  }
+
+  /**
+   * Retrieves the player's in-game statistics
+   * @return the player's statistic information
+   */
+  private CombatStatsComponent getPlayerStats() {
+      return this.player.getComponent(CombatStatsComponent.class);
   }
 
   /**
@@ -283,7 +294,7 @@ public class BattleController {
    * @return True if the battle is over, False if it isn't.
    */
   private boolean isBattleOver() {
-    CombatStatsComponent playerStats = this.player.getComponent(CombatStatsComponent.class);
+    CombatStatsComponent playerStats = getPlayerStats();
     boolean allEnemiesDead = this.enemies.stream().noneMatch(this::isEnemyAlive);
 
     if (playerStats.isDead()) {
@@ -305,7 +316,7 @@ public class BattleController {
     this.setCurrentEnemyIndex(-1);
   }
 
-  /*------------------------- Possible Action Branches ----------------------------*/
+  /*------------------------- Phase functions ----------------------------*/
 
   private void enterSetup() {
     // Coordinate battle setup.
@@ -314,26 +325,12 @@ public class BattleController {
   }
 
   private void enterRevealIntents() {
-    this.setCurrentEnemyIndex(-1); // TODO: Probably a better way to do this.
-
-    // Rolls intent for alive each enemy.
-    for (Entity enemy : this.enemies) {
-      if (this.isEnemyAlive(enemy)) {
-        enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
-      }
+    if (this.currentEnemyIndex == -1) {
+      this.setCurrentEnemyIndex(0);
     }
-
-    // If an enemy is alive set it to the current intent
-    if (this.targetNextEnemy()) {
-      this.setEnemyIntent(
-              this.getEnemy()
-                      .getComponent(EnemyBehaviourComponent.class)
-                      .getCurrentIntent()
-      );
-    } else {
-      // If no enemies are alive - remove stale intent
-      this.setEnemyIntent(null);
-    }
+    // Ask the enemy system to reveal intents.
+    Entity enemy = getEnemy();
+    currentEnemyIntent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
     handle(BattleEvent.INTENTS_REVEALED);
   }
 
@@ -347,15 +344,21 @@ public class BattleController {
 
   private void enterPlayerTurn() {
     // Enable or accept player actions.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    // has to work with Aki on his BattleActions class
   }
 
   private void enterPlayerAttack() {
     // Ask the relevant system to execute the submitted attack.
+    CombatStatsComponent playerStats = getPlayerStats();
   }
 
   private void enterPlayerDefend() {
     // Ask the relevant system to execute the submitted defence.
+    CombatStatsComponent playerStats = getPlayerStats();
+    // playerStats.takeDamage();
   }
 
   private void enterPlayerOther() {
@@ -364,12 +367,18 @@ public class BattleController {
 
   private void enterPlayerEnd() {
     // Coordinate end-of-turn operations.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    handle(BattleEvent.PLAYER_TURN_ENDED);
   }
 
   private void enterPlayerResolved() {
     // Check battle outcome before allowing another action.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    handle(BattleEvent.PLAYER_CONTINUES);
   }
 
   private void enterEnemyTurn() {
