@@ -110,7 +110,10 @@ public abstract class Clickable extends Component {
     return trigger;
   }
 
-  /** Arguments this clickable was configured with (e.g. a card's damage amount). May be empty, never null. */
+  /**
+   * Arguments this clickable was configured with (e.g. a card's damage amount). May be empty, never
+   * null.
+   */
   public Object[] getArgs() {
     return args;
   }

@@ -1,6 +1,5 @@
 package com.csse3200.game.components.battle;
 
-import com.badlogic.gdx.Gdx;
 import com.csse3200.game.GdxGame;
 import com.csse3200.game.components.Component;
 import com.csse3200.game.components.combat.BattleController;
@@ -23,8 +22,8 @@ public class BattleActions extends Component {
 
   @Override
   public void create() {
-      entity.getEvents().addListener("battle", this::onStart);
-      entity.getEvents().addListener("exit", this::onExit);
+    entity.getEvents().addListener("battle", this::onStart);
+    entity.getEvents().addListener("exit", this::onExit);
     entity.getEvents().addListener(ATTACK_SELECTED_EVENT, this::selectAttack);
 
     entity.getEvents().addListener(DEFEND_SELECTED_EVENT, this::selectDefend);
@@ -52,11 +51,11 @@ public class BattleActions extends Component {
     }
   }
 
-    private void onStart() {
-        game.setScreen(GdxGame.ScreenType.BATTLE_SCREEN);
-    }
+  private void onStart() {
+    game.setScreen(GdxGame.ScreenType.BATTLE_SCREEN);
+  }
 
-    private void onExit() {
-        game.setScreen(GdxGame.ScreenType.MAIN_MENU);
-    }
+  private void onExit() {
+    game.setScreen(GdxGame.ScreenType.MAIN_MENU);
+  }
 }

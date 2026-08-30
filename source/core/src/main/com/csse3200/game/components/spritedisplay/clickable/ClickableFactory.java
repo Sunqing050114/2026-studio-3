@@ -32,8 +32,8 @@ public class ClickableFactory extends UIComponent {
   }
 
   /**
-   * Parses a Clickable JSON file into records without constructing any components. Useful when
-   * you want to merge JSON-defined buttons with records built programmatically elsewhere (e.g.
+   * Parses a Clickable JSON file into records without constructing any components. Useful when you
+   * want to merge JSON-defined buttons with records built programmatically elsewhere (e.g.
    * CardService-driven cards) before handing the combined list to a single ClickableFactory.
    */
   public static List<ClickableRecord> loadRecordsFromJson(Path file) {
@@ -93,7 +93,8 @@ public class ClickableFactory extends UIComponent {
     return result;
   }
 
-  private static Skin getOrLoadSkin(Map<String, Skin> skinCache, String skinFile, String skinAtlas) {
+  private static Skin getOrLoadSkin(
+      Map<String, Skin> skinCache, String skinFile, String skinAtlas) {
     if (skinFile == null && skinAtlas == null) {
       return null;
     }

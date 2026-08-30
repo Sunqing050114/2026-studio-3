@@ -8,10 +8,9 @@ import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
-
-import java.util.List;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -31,8 +30,7 @@ public class BattleController {
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
   private boolean pendingEvent;
 
-  public BattleController(Entity player, List<Entity> enemies)
-          throws IllegalArgumentException {
+  public BattleController(Entity player, List<Entity> enemies) throws IllegalArgumentException {
 
     this.player = player;
     if (player == null) {
@@ -81,7 +79,7 @@ public class BattleController {
       this.eventQueue.clear();
       throw e;
     } finally {
-     this.pendingEvent = false;
+      this.pendingEvent = false;
     }
   }
 
@@ -144,9 +142,7 @@ public class BattleController {
 
   /*--------------------------- Public Methods -----------------------------*/
 
-  /**
-   * Starts the battle encounter.
-   */
+  /** Starts the battle encounter. */
   public void start() throws IllegalStateException {
     if (this.getCurrentPhase() != BattlePhase.SETUP) {
       throw new IllegalStateException("The battle has already begun!");
@@ -192,8 +188,8 @@ public class BattleController {
     }
 
   /**
-   * Adds a listener to the event handler, which ultimately informs external
-   * teams about a phase change.
+   * Adds a listener to the event handler, which ultimately informs external teams about a phase
+   * change.
    *
    * @param listener The instantiated external listener.
    */
@@ -204,6 +200,7 @@ public class BattleController {
 
   /**
    * Returns the current targeted enemy.
+   *
    * @return An int representing the targeted entity within the array.
    */
   public int getCurrentEnemyIndex() {
@@ -239,8 +236,7 @@ public class BattleController {
   /**
    * Targets the next available enemy within the enemy array.
    *
-   * @return True if a new target has been chosen. False if all enemies
-   * are dead.
+   * @return True if a new target has been chosen. False if all enemies are dead.
    */
   private boolean targetNextEnemy() {
     // Starts from index after currently targeted enemy.
@@ -277,25 +273,19 @@ public class BattleController {
    * @param nextPhase The phase that is being entered.
    */
   private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
-    eventHandler.trigger(
-            PHASE_CHANGED_EVENT,
-            previousPhase,
-            nextPhase
-    );
+    eventHandler.trigger(PHASE_CHANGED_EVENT, previousPhase, nextPhase);
   }
 
   private Entity getEnemy() {
-    if (this.currentEnemyIndex < 0
-            || this.currentEnemyIndex >= enemies.size()) {
+    if (this.currentEnemyIndex < 0 || this.currentEnemyIndex >= enemies.size()) {
       throw new IllegalStateException("No active enemy.");
     }
     return this.enemies.get(this.currentEnemyIndex);
   }
 
   /**
-   * Returns if the enemy is alive.
-   * NOTE: I couldn't find an existing helper/API for this,
-   * but in the future this should probably be put in another module.
+   * Returns if the enemy is alive. NOTE: I couldn't find an existing helper/API for this, but in
+   * the future this should probably be put in another module.
    *
    * @param enemy The enemy to be checked.
    * @return True if the enemy is alive, False if not.
@@ -307,6 +297,7 @@ public class BattleController {
 
   /**
    * Checks the outcome of the battle.
+   *
    * @return True if the battle is over, False if it isn't.
    */
   private boolean isBattleOver() {
@@ -325,9 +316,7 @@ public class BattleController {
     return false;
   }
 
-  /**
-   * Cleans up the variables after a round or the battle sequence is done.
-   */
+  /** Cleans up the variables after a round or the battle sequence is done. */
   private void cleanUp() {
     this.setCurrentEnemyIndex(-1);
   }
@@ -353,10 +342,7 @@ public class BattleController {
     // If an enemy is alive set it to the current intent
     if (this.targetNextEnemy()) {
       this.setEnemyIntent(
-              this.getEnemy()
-                      .getComponent(EnemyBehaviourComponent.class)
-                      .getCurrentIntent()
-      );
+          this.getEnemy().getComponent(EnemyBehaviourComponent.class).getCurrentIntent());
     } else {
       // If no enemies are alive - remove stale intent
       this.setEnemyIntent(null);
@@ -446,10 +432,7 @@ public class BattleController {
     // If another enemy is successfully targeted.
     if (this.targetNextEnemy()) {
       this.setEnemyIntent(
-             this.getEnemy()
-                     .getComponent(EnemyBehaviourComponent.class)
-                     .getCurrentIntent()
-      );
+          this.getEnemy().getComponent(EnemyBehaviourComponent.class).getCurrentIntent());
       handle(BattleEvent.MORE_ENEMIES);
       return;
     }
