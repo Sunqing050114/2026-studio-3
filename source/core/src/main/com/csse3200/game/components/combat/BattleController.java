@@ -171,7 +171,20 @@ public class BattleController {
     }
 
     public void resetBattle() {
-        currentPhase = BattlePhase.SETUP;
+     if (this.pendingEvent) {
+         throw new IllegalStateException("There is an event in progress.");
+     }
+
+     // Saving the previous phase to inform the event listeners
+     BattlePhase previousPhase = this.currentPhase;
+
+     // Normal housekeeping for resetting the state machine.
+     this.eventQueue.clear();
+     this.setCurrentEnemyIndex(-1);
+     this.setEnemyIntent(null);
+     this.setCurrentPhase(BattlePhase.SETUP);
+
+     this.notifyPhaseChange(previousPhase, BattlePhase.SETUP);
     }
 
     public BattlePhase getCurrentPhase() {
@@ -207,8 +220,7 @@ public class BattleController {
     return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
   }
 
-  /*------------------------- Getters & Setters ----------------------------*/
-
+  /*------------------------- Setters ----------------------------*/
 
   private void setCurrentPhase(BattlePhase nextPhase) {
     this.currentPhase = nextPhase;
