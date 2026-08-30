@@ -13,8 +13,8 @@ public class EnemyConfig extends BaseEntityConfig {
   public String behaviour = "cycle_attack_defend";
 
   /**
-   * Optional texture path override. When left blank, the factory renders the enemy with {@code
-   * images/enemies/<id>.png} by convention, falling back to a shared default sprite.
+   * Optional texture atlas path override. When left blank, the factory renders the enemy with
+   * {@code images/enemies/<id>.atlas} by convention, falling back to a shared default atlas.
    */
   public String sprite = "";
 }

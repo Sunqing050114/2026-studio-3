@@ -1,26 +1,31 @@
 package com.csse3200.game.entities.factories;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.csse3200.game.components.enemy.EnemyAnimationController;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
+import com.csse3200.game.components.enemy.IntentIcons;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.extensions.GameExtension;
+import com.csse3200.game.rendering.AnimationRenderComponent;
 import com.csse3200.game.rendering.DebugRenderer;
 import com.csse3200.game.rendering.RenderService;
-import com.csse3200.game.rendering.TextureRenderComponent;
+import com.csse3200.game.services.GameTime;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import java.util.Arrays;
@@ -39,14 +44,17 @@ class EnemyFactoryTest {
   @BeforeEach
   void registerServices() {
     // Headless tests have no real assets. Hand the factory a mocked ResourceService that returns a
-    // dummy texture for any request, so TextureRenderComponent can be constructed without a GPU.
+    // dummy atlas for any request, so AnimationRenderComponent can be built without a GPU.
     resourceService = mock(ResourceService.class);
-    when(resourceService.getAsset(anyString(), eq(Texture.class))).thenReturn(mock(Texture.class));
+    when(resourceService.getAsset(anyString(), eq(TextureAtlas.class)))
+        .thenReturn(mock(TextureAtlas.class));
     ServiceLocator.registerResourceService(resourceService);
 
     RenderService renderService = new RenderService();
     renderService.setDebug(mock(DebugRenderer.class));
     ServiceLocator.registerRenderService(renderService);
+
+    ServiceLocator.registerTimeSource(mock(GameTime.class));
   }
 
   @Test
@@ -58,10 +66,18 @@ class EnemyFactoryTest {
   }
 
   @Test
-  void createAttachesRenderComponent() {
+  void createAttachesAnimationComponents() {
     Entity enemy = EnemyFactory.create("lesser_shade");
 
-    assertNotNull(enemy.getComponent(TextureRenderComponent.class));
+    assertNotNull(enemy.getComponent(AnimationRenderComponent.class));
+    assertNotNull(enemy.getComponent(EnemyAnimationController.class));
+  }
+
+  @Test
+  void createdEnemyLifecycleDoesNotThrow() {
+    Entity enemy = EnemyFactory.create("lesser_shade");
+
+    assertDoesNotThrow(enemy::create);
   }
 
   @Test
@@ -133,36 +149,41 @@ class EnemyFactoryTest {
   }
 
   @Test
-  void getTexturePathsIncludesDefaultAndRosterSprites() {
-    List<String> paths = Arrays.asList(EnemyFactory.getTexturePaths());
+  void getAtlasPathsCoversDefaultAndRosterEnemies() {
+    List<String> paths = Arrays.asList(EnemyFactory.getAtlasPaths());
 
-    assertTrue(paths.contains("images/enemies/default.png"));
-    assertTrue(paths.contains("images/enemies/lesser_shade.png"));
-    assertTrue(paths.contains("images/enemies/void_knight.png"));
+    assertTrue(paths.contains("images/enemies/default.atlas"));
+    assertTrue(paths.contains("images/enemies/lesser_shade.atlas"));
+    assertTrue(paths.contains("images/enemies/void_knight.atlas"));
   }
 
   @Test
-  void getTexturePathsHasNoDuplicates() {
-    String[] paths = EnemyFactory.getTexturePaths();
+  void getAtlasPathsHasNoDuplicates() {
+    String[] paths = EnemyFactory.getAtlasPaths();
 
     assertEquals(paths.length, new HashSet<>(Arrays.asList(paths)).size());
   }
 
   @Test
-  void loadAssetsQueuesEnemyTextures() {
+  void loadAssetsQueuesEnemyAtlasesAndIntentIcons() {
     EnemyFactory.loadAssets();
 
-    ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
-    verify(resourceService).loadTextures(captor.capture());
-    assertArrayEquals(EnemyFactory.getTexturePaths(), captor.getValue());
+    ArgumentCaptor<String[]> atlases = ArgumentCaptor.forClass(String[].class);
+    verify(resourceService).loadTextureAtlases(atlases.capture());
+    assertArrayEquals(EnemyFactory.getAtlasPaths(), atlases.getValue());
+
+    verify(resourceService).loadTextures(IntentIcons.all());
   }
 
   @Test
-  void unloadAssetsReleasesEnemyTextures() {
+  void unloadAssetsReleasesEnemyAtlasesAndIntentIcons() {
     EnemyFactory.unloadAssets();
 
-    ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
-    verify(resourceService).unloadAssets(captor.capture());
-    assertArrayEquals(EnemyFactory.getTexturePaths(), captor.getValue());
+    ArgumentCaptor<String[]> released = ArgumentCaptor.forClass(String[].class);
+    verify(resourceService, atLeastOnce()).unloadAssets(released.capture());
+
+    List<String[]> calls = released.getAllValues();
+    assertTrue(calls.stream().anyMatch(a -> Arrays.equals(a, EnemyFactory.getAtlasPaths())));
+    assertTrue(calls.stream().anyMatch(a -> Arrays.equals(a, IntentIcons.all())));
   }
 }

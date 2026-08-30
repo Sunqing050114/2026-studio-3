@@ -1,14 +1,18 @@
 package com.csse3200.game.entities.factories;
 
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.csse3200.game.components.enemy.EnemyAnimationController;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
+import com.csse3200.game.components.enemy.IntentIcons;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyConfigs;
 import com.csse3200.game.entities.configs.EnemyScaling;
 import com.csse3200.game.entities.configs.EnemyTier;
 import com.csse3200.game.files.FileLoader;
-import com.csse3200.game.rendering.TextureRenderComponent;
+import com.csse3200.game.rendering.AnimationRenderComponent;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import java.util.ArrayList;
@@ -28,7 +32,9 @@ public class EnemyFactory {
   private static final EnemyConfigs roster = loadRoster();
 
   private static final String SPRITE_DIR = "images/enemies/";
-  private static final String DEFAULT_SPRITE = SPRITE_DIR + "default.png";
+  private static final String DEFAULT_ATLAS = SPRITE_DIR + "default.atlas";
+  private static final float IDLE_FRAME_DURATION = 0.5f;
+  private static final float HURT_FRAME_DURATION = 0.15f;
 
   private static EnemyConfigs loadRoster() {
     EnemyConfigs configs = FileLoader.readClass(EnemyConfigs.class, "configs/enemies.json");
@@ -72,30 +78,37 @@ public class EnemyFactory {
    * @return the assembled enemy entity
    */
   public static Entity create(EnemyConfig config) {
+    AnimationRenderComponent animator =
+        new AnimationRenderComponent(
+            ServiceLocator.getResourceService().getAsset(atlasPath(config), TextureAtlas.class));
+    animator.addAnimation("idle", IDLE_FRAME_DURATION, Animation.PlayMode.LOOP);
+    animator.addAnimation("hurt", HURT_FRAME_DURATION, Animation.PlayMode.NORMAL);
+
     return new Entity()
         .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
-        .addComponent(new TextureRenderComponent(spritePath(config)));
+        .addComponent(animator)
+        .addComponent(new EnemyAnimationController());
   }
 
   /**
-   * Resolves the texture path for an enemy.
+   * Resolves the texture atlas path for an enemy.
    *
    * <p>An explicit {@link EnemyConfig#sprite} wins. Otherwise the path is {@code
-   * images/enemies/<id>.png} by convention, falling back to {@link #DEFAULT_SPRITE} when the id is
+   * images/enemies/<id>.atlas} by convention, falling back to {@link #DEFAULT_ATLAS} when the id is
    * missing.
    *
    * @param config enemy configuration
-   * @return an internal texture path
+   * @return an internal texture atlas path
    */
-  private static String spritePath(EnemyConfig config) {
+  private static String atlasPath(EnemyConfig config) {
     if (config.sprite != null && !config.sprite.isBlank()) {
       return config.sprite;
     }
     if (config.id != null && !config.id.isBlank() && !"unknown".equals(config.id)) {
-      return SPRITE_DIR + config.id + ".png";
+      return SPRITE_DIR + config.id + ".atlas";
     }
-    return DEFAULT_SPRITE;
+    return DEFAULT_ATLAS;
   }
 
   /**
@@ -106,37 +119,40 @@ public class EnemyFactory {
   }
 
   /**
-   * Returns every texture path the factory may render, so a game area can queue them for loading.
+   * Returns every texture atlas path the factory may render, so a game area can queue them for
+   * loading.
    *
-   * <p>Always includes the shared default sprite. The result has no duplicates.
+   * <p>Covers the shared default atlas and every roster enemy atlas. The result has no duplicates.
    *
-   * @return the internal texture paths used by roster enemies
+   * @return the internal atlas paths used by enemies
    */
-  public static String[] getTexturePaths() {
+  public static String[] getAtlasPaths() {
     Set<String> paths = new LinkedHashSet<>();
-    paths.add(DEFAULT_SPRITE);
+    paths.add(DEFAULT_ATLAS);
 
     for (String id : roster.ids()) {
-      paths.add(spritePath(roster.get(id)));
+      paths.add(atlasPath(roster.get(id)));
     }
 
     return paths.toArray(new String[0]);
   }
 
   /**
-   * Queues every enemy texture with the resource service. The caller is responsible for pumping the
-   * load (e.g. {@code ResourceService.loadForMillis}) and for calling {@link #unloadAssets()} on
-   * teardown.
+   * Queues every enemy atlas and intent icon with the resource service. The caller is responsible
+   * for pumping the load (e.g. {@code ResourceService.loadForMillis}) and for calling {@link
+   * #unloadAssets()} on teardown.
    */
   public static void loadAssets() {
     ResourceService resourceService = ServiceLocator.getResourceService();
-    resourceService.loadTextures(getTexturePaths());
+    resourceService.loadTextureAtlases(getAtlasPaths());
+    resourceService.loadTextures(IntentIcons.all());
   }
 
-  /** Releases every enemy texture previously queued by {@link #loadAssets()}. */
+  /** Releases every enemy atlas and intent icon previously queued by {@link #loadAssets()}. */
   public static void unloadAssets() {
     ResourceService resourceService = ServiceLocator.getResourceService();
-    resourceService.unloadAssets(getTexturePaths());
+    resourceService.unloadAssets(getAtlasPaths());
+    resourceService.unloadAssets(IntentIcons.all());
   }
 
   /**
