@@ -1,14 +1,17 @@
 package com.csse3200.game.components.combat;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.entities.Entity;
-import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
+
 import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Objects;
 
 /**
@@ -19,28 +22,68 @@ import java.util.Objects;
 public class BattleController {
   private BattlePhase currentPhase;
   private int currentEnemyIndex;
+  private EnemyIntent currentEnemyIntent;
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
+  private final Deque<BattleEvent> eventQueue;
+  private final Entity player;
+  private final List<Entity> enemies;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
+  private boolean pendingEvent;
 
-  public BattleController() {
+  public BattleController(Entity player, List<Entity> enemies)
+          throws IllegalArgumentException {
+
+    this.player = player;
+    if (player == null) {
+      throw new IllegalArgumentException("Player cannot be null.");
+    }
+
+    // Guards against empty list or null enemies.
+    this.enemies = enemies;
+    if (this.enemies == null || this.enemies.isEmpty()) {
+      throw new IllegalArgumentException("Enemies array cannot be empty.");
+    } else if (!this.enemies.stream().allMatch(Objects::nonNull)) {
+      throw new IllegalArgumentException("One or more enemies are null.");
+    }
+
     this.battleTransitions = new BattleTransitions();
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
+    this.currentEnemyIntent = null;
     this.eventHandler = new EventHandler();
+    this.eventQueue = new ArrayDeque<>();
   }
 
   /**
-   * Handles an individual event that occurs within a battle loop.
+   * Handles a single event atomically.
    *
-   * @param event The event to be handled.
-   * @throws IllegalStateException When the given transition isn't allowed.
+   * @param event The event within the Battle Loop to handle.
    */
-  public void handle(BattleEvent event) { // TODO: I think it should be private?
+  public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
     Objects.requireNonNull(event, "event cannot be null");
-    BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
-    this.validateEventTransition(event, nextPhase);
-    this.transition(nextPhase);
+    this.eventQueue.addLast(event);
+
+    // Guards against recursion impacting order of events.
+    if (this.pendingEvent) {
+      return;
+    }
+    // pendingEvent keeps events atomic.
+    this.pendingEvent = true;
+
+    // Takes an event from the queue, attempts to process atomically
+    try {
+      while (!this.eventQueue.isEmpty()) {
+        BattleEvent currentEvent = this.eventQueue.removeFirst();
+        this.processEvent(currentEvent);
+      }
+    } catch (RuntimeException e) {
+      // If something goes wrong, makes sure that invalid events aren't kept in queue
+      this.eventQueue.clear();
+      throw e;
+    } finally {
+     this.pendingEvent = false;
+    }
   }
 
   /**
@@ -53,6 +96,18 @@ public class BattleController {
     this.setCurrentPhase(nextPhase);
     this.notifyPhaseChange(previousPhase, this.getCurrentPhase());
     this.phaseChange(nextPhase);
+  }
+
+  /**
+   * Handles an individual event that occurs within a battle loop.
+   *
+   * @param event The event to be handled.
+   * @throws IllegalStateException When the given transition isn't allowed.
+   */
+  private void processEvent(BattleEvent event) {
+    BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
+    this.validateEventTransition(event, nextPhase);
+    this.transition(nextPhase);
   }
 
   /**
@@ -81,7 +136,6 @@ public class BattleController {
       case ENEMY_DEFEND -> enterEnemyDefend();
       case ENEMY_OTHER -> enterEnemyOther();
       case ENEMY_RESOLVED -> enterEnemyResolved();
-      case NEXT_ENEMY -> enterNextEnemy();
 
       // Terminal States
       case VICTORY -> enterVictory();
@@ -91,64 +145,33 @@ public class BattleController {
 
   /*--------------------------- Public Methods -----------------------------*/
 
-  /*------------------------- Getters & Setters ----------------------------*/
-
-  public BattlePhase getCurrentPhase() {
-    return this.currentPhase;
-  }
-
-  private void setCurrentPhase(BattlePhase nextPhase) {
-    // TODO: defensive check here
-    this.currentPhase = nextPhase;
-  }
-
-  private void setCurrentEnemyIndex(int currentEnemyIndex) {
-    this.currentEnemyIndex = currentEnemyIndex;
-  }
-
-  public int getCurrentEnemyIndex() {
-    return currentEnemyIndex;
-  }
-
-  /*------------------------- Helper functions ----------------------------*/
-
   /**
-   * A helper function that validates whether a transition is allowed.
-   *
-   * @param event The currently executing event.
-   * @param nextPhase The speculative next phase to transition to.
-   * @throws IllegalStateException Throws when the state transition is deemed illegal.
+   * Starts the battle encounter.
    */
-  private void validateEventTransition(BattleEvent event, BattlePhase nextPhase)
-      throws IllegalStateException {
-    if (Objects.isNull(nextPhase)) {
-      throw new IllegalStateException(
-          "Invalid battle transition: "
-              + this.currentPhase
-              + String.format("----%s---->", event)
-              + "null");
+  public void start() throws IllegalStateException {
+    if (this.getCurrentPhase() != BattlePhase.SETUP) {
+      throw new IllegalStateException("The battle has already begun!");
     }
+    handle(BattleEvent.SETUP_COMPLETE);
   }
 
   /**
-   * Stub function for notifying UI or any listeners about a phase change.
-   *
-   * @param previousPhase The phase that is being left.
-   * @param nextPhase The phase that is being entered.
-   */
-  private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
-    eventHandler.trigger(PHASE_CHANGED_EVENT, previousPhase, nextPhase);
-  }
-
-  /**
-   * Adds a listener to the event handler, which ultimately informs external teams about a phase
-   * change.
+   * Adds a listener to the event handler, which ultimately informs external
+   * teams about a phase change.
    *
    * @param listener The instantiated external listener.
    */
   public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
     Objects.requireNonNull(listener, "Listener must not be null.");
     eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
+  }
+
+  /**
+   * Returns the current targeted enemy.
+   * @return An int representing the targeted entity within the array.
+   */
+  public int getCurrentEnemyIndex() {
+    return this.currentEnemyIndex;
   }
 
   /**
@@ -161,22 +184,166 @@ public class BattleController {
     return this.battleTransitions.getNextPhase(this.currentPhase, event) != null;
   }
 
-  /*------------------------- Stub functions ----------------------------*/
+  /*------------------------- Getters & Setters ----------------------------*/
+
+  public BattlePhase getCurrentPhase() {
+    return this.currentPhase;
+  }
+
+  private void setCurrentPhase(BattlePhase nextPhase) {
+    this.currentPhase = nextPhase;
+  }
+
+  private void setCurrentEnemyIndex(int currentEnemyIndex) {
+    this.currentEnemyIndex = currentEnemyIndex;
+  }
+
+
+  private void setEnemyIntent(EnemyIntent intent) {
+    this.currentEnemyIntent = intent;
+  }
+
+  /*------------------------- Helper functions ----------------------------*/
+
+  /**
+   * Targets the next available enemy within the enemy array.
+   *
+   * @return True if a new target has been chosen. False if all enemies
+   * are dead.
+   */
+  private boolean targetNextEnemy() {
+    // Starts from index after currently targeted enemy.
+    for (int i = this.currentEnemyIndex + 1; i < this.enemies.size(); i++) {
+      Entity currentEnemy = this.enemies.get(i);
+      // Checks status of each enemy
+      if (isEnemyAlive(currentEnemy)) {
+        this.setCurrentEnemyIndex(i);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * A helper function that validates whether a transition is allowed.
+   *
+   * @param event The currently executing event.
+   * @param nextPhase The speculative next phase to transition to.
+   * @throws IllegalStateException Throws when the state transition is deemed illegal.
+   */
+  private void validateEventTransition(BattleEvent event, BattlePhase nextPhase)
+      throws IllegalStateException {
+    if (Objects.isNull(nextPhase)) {
+      throw new IllegalStateException(
+          "Invalid battle transition: " + this.currentPhase + "-->" + event);
+    }
+  }
+
+  /**
+   * Stub function for notifying UI or any listeners about a phase change.
+   *
+   * @param previousPhase The phase that is being left.
+   * @param nextPhase The phase that is being entered.
+   */
+  private void notifyPhaseChange(BattlePhase previousPhase, BattlePhase nextPhase) {
+    eventHandler.trigger(
+            PHASE_CHANGED_EVENT,
+            previousPhase,
+            nextPhase
+    );
+  }
+
+  private Entity getEnemy() {
+    if (this.currentEnemyIndex < 0
+            || this.currentEnemyIndex >= enemies.size()) {
+      throw new IllegalStateException("No active enemy.");
+    }
+    return this.enemies.get(this.currentEnemyIndex);
+  }
+
+  /**
+   * Returns if the enemy is alive.
+   * NOTE: I couldn't find an existing helper/API for this,
+   * but in the future this should probably be put in another module.
+   *
+   * @param enemy The enemy to be checked.
+   * @return True if the enemy is alive, False if not.
+   */
+  private boolean isEnemyAlive(Entity enemy) {
+    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+    return stats.isAlive();
+  }
+
+  /**
+   * Checks the outcome of the battle.
+   * @return True if the battle is over, False if it isn't.
+   */
+  private boolean isBattleOver() {
+    CombatStatsComponent playerStats = this.player.getComponent(CombatStatsComponent.class);
+    boolean allEnemiesDead = this.enemies.stream().noneMatch(this::isEnemyAlive);
+
+    if (playerStats.isDead()) {
+      handle(BattleEvent.PLAYER_DEFEATED);
+      return true;
+    }
+
+    if (allEnemiesDead) {
+      handle(BattleEvent.ENEMIES_DEFEATED);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Cleans up the variables after a round or the battle sequence is done.
+   */
+  private void cleanUp() {
+    this.setCurrentEnemyIndex(-1);
+  }
+
+  /*------------------------- Possible Action Branches ----------------------------*/
 
   private void enterSetup() {
     // Coordinate battle setup.
+    this.setCurrentEnemyIndex(0);
+    handle(BattleEvent.SETUP_COMPLETE);
   }
 
   private void enterRevealIntents() {
-    // Ask the enemy system to reveal intents.
+    this.setCurrentEnemyIndex(-1); // TODO: Probably a better way to do this.
+
+    // Rolls intent for alive each enemy.
+    for (Entity enemy : this.enemies) {
+      if (this.isEnemyAlive(enemy)) {
+        enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+      }
+    }
+
+    // If an enemy is alive set it to the current intent
+    if (this.targetNextEnemy()) {
+      this.setEnemyIntent(
+              this.getEnemy()
+                      .getComponent(EnemyBehaviourComponent.class)
+                      .getCurrentIntent()
+      );
+    } else {
+      // If no enemies are alive - remove stale intent
+      this.setEnemyIntent(null);
+    }
+    handle(BattleEvent.INTENTS_REVEALED);
   }
 
   private void enterPlayerStart() {
+    if (this.isBattleOver()) {
+      return;
+    }
     // Coordinate start-of-turn operations.
+    handle(BattleEvent.PLAYER_TURN_STARTED);
   }
 
   private void enterPlayerTurn() {
     // Enable or accept player actions.
+    this.isBattleOver();
   }
 
   private void enterPlayerAttack() {
@@ -193,23 +360,19 @@ public class BattleController {
 
   private void enterPlayerEnd() {
     // Coordinate end-of-turn operations.
+    this.isBattleOver();
   }
 
   private void enterPlayerResolved() {
     // Check battle outcome before allowing another action.
+    this.isBattleOver();
   }
 
   private void enterEnemyTurn() {
     // Begin the current enemy's action.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy =
-        EnemyFactory.create(ids.get(this.currentEnemyIndex)); // not too sure if this is how
-    // we're indexing
-
-    EnemyIntent intent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
-    if (intent.getType() == IntentType.ATTACK) {
+    if (currentEnemyIntent.getType() == IntentType.ATTACK) {
       handle(BattleEvent.ENEMY_ATTACK_SELECTED);
-    } else if (intent.getType() == IntentType.DEFEND) {
+    } else if (currentEnemyIntent.getType() == IntentType.DEFEND) {
       handle(BattleEvent.ENEMY_DEFEND_SELECTED);
     } else {
       handle(BattleEvent.ENEMY_OTHER_SELECTED);
@@ -218,50 +381,59 @@ public class BattleController {
 
   private void enterEnemyAttack() {
     // Ask the enemy system to execute its attack intent.
-    List<String> ids = EnemyFactory.availableEnemies();
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
+    Entity enemy = getEnemy();
 
     // execute the intent
-    // enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(/*playerEntity*/);
-
+    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyDefend() {
     // Ask the enemy system to execute its defend intent.
+    Entity enemy = getEnemy();
+
+    // execute the intent
+    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyOther() {
     // Ask the enemy system to execute its other intent.
+    Entity enemy = getEnemy();
+
+    // execute the intent
+    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
+    handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyResolved() {
-    // Check the outcome after the enemy action.
-    List<String> ids = EnemyFactory.availableEnemies(); // maybe there's a more efficient way idk
-    Entity enemy = EnemyFactory.create(ids.get(this.currentEnemyIndex));
-
-    // if player is not alive, enter player defeat
-
-    if (enemy.getComponent(EnemyStatsComponent.class).isAlive()) {
-      handle(BattleEvent.ADVANCE_ENEMY);
-    } else if (this.currentEnemyIndex < ids.size() - 1) {
-      handle(BattleEvent.MORE_ENEMIES);
-    } else if (this.currentEnemyIndex == ids.size() - 1) {
-      handle(BattleEvent.ENEMIES_DEFEATED);
+    // If the battle is over, abort and head straight to ending
+    if (this.isBattleOver()) {
+      return;
     }
-  }
 
-  private void enterNextEnemy() {
-    // Advance to the next eligible enemy.
-    this.currentEnemyIndex++;
+    // If another enemy is successfully targeted.
+    if (this.targetNextEnemy()) {
+      this.setEnemyIntent(
+             this.getEnemy()
+                     .getComponent(EnemyBehaviourComponent.class)
+                     .getCurrentIntent()
+      );
+      handle(BattleEvent.MORE_ENEMIES);
+      return;
+    }
+
+    this.cleanUp();
     handle(BattleEvent.ENEMY_PHASE_COMPLETE);
   }
 
   private void enterVictory() {
     // Notify other systems that the battle was won.
+    this.cleanUp();
   }
 
   private void enterDefeat() {
     // Notify other systems that the battle was lost.
+    this.cleanUp();
   }
 }

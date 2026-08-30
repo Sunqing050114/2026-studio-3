@@ -85,12 +85,10 @@ public class BattleTransitions {
         BattlePhase.ENEMY_RESOLVED, BattleEvent.ENEMIES_DEFEATED, BattlePhase.VICTORY);
 
     this.addTransition(
-        BattlePhase.ENEMY_RESOLVED, BattleEvent.ADVANCE_ENEMY, BattlePhase.NEXT_ENEMY);
-
-    this.addTransition(BattlePhase.NEXT_ENEMY, BattleEvent.MORE_ENEMIES, BattlePhase.ENEMY_TURN);
+        BattlePhase.ENEMY_RESOLVED, BattleEvent.MORE_ENEMIES, BattlePhase.ENEMY_TURN);
 
     this.addTransition(
-        BattlePhase.NEXT_ENEMY, BattleEvent.ENEMY_PHASE_COMPLETE, BattlePhase.PLAYER_START);
+        BattlePhase.ENEMY_RESOLVED, BattleEvent.ENEMY_PHASE_COMPLETE, BattlePhase.REVEAL_INTENTS);
   }
 
   /** Helper function that adds allowed transitions to the transition table. */
