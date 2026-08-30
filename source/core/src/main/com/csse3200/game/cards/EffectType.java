@@ -16,6 +16,8 @@ public enum EffectType {
   POISON(true),
   /** Increases damage the target receives while active. */
   VULNERABLE(true),
+  /** Decreases 25% the damage output to target while active. */
+  FEEBLE(true),
   /** Increases damage the target deals for the rest of the combat. */
   STRENGTH(false);
 
