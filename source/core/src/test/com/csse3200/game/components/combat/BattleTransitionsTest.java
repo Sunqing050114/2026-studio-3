@@ -106,7 +106,7 @@ class BattleTransitionsTest {
         transition(
             BattlePhase.ENEMY_RESOLVED,
             BattleEvent.ENEMY_PHASE_COMPLETE,
-            BattlePhase.PLAYER_START));
+            BattlePhase.REVEAL_INTENTS));
   }
 
   private static Transition transition(

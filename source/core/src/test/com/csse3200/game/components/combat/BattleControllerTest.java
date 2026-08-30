@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
@@ -26,7 +28,7 @@ class BattleControllerTest {
 
   @BeforeEach
   void setUp() {
-    player = new Entity();
+    player = new Entity().addComponent(new CombatStatsComponent(20, 0));
     firstEnemyBehaviour = mock(EnemyBehaviourComponent.class);
     secondEnemyBehaviour = mock(EnemyBehaviourComponent.class);
     enemies =
@@ -107,8 +109,8 @@ class BattleControllerTest {
     advanceToEnemyTurn();
 
     assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
-    assertEquals(-1, controller.getCurrentEnemyIndex());
-    verify(firstEnemyBehaviour).rollIntent();
+    assertEquals(0, controller.getCurrentEnemyIndex());
+    verify(firstEnemyBehaviour, times(2)).rollIntent();
     verify(firstEnemyBehaviour).executeIntent(player);
     verify(secondEnemyBehaviour).rollIntent();
     verify(secondEnemyBehaviour).executeIntent(player);

@@ -358,6 +358,8 @@ public class BattleController {
 
     // If another enemy is successfully targeted.
     if (this.targetNextEnemy()) {
+      this.setEnemyIntent(
+          this.getEnemy().getComponent(EnemyBehaviourComponent.class).rollIntent());
       handle(BattleEvent.MORE_ENEMIES);
       return;
     }
