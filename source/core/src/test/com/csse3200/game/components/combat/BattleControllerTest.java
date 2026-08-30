@@ -115,8 +115,8 @@ class BattleControllerTest {
     assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
     assertEquals(0, controller.getCurrentEnemyIndex());
     verify(firstEnemyBehaviour, times(2)).rollIntent();
-    verify(secondEnemyBehaviour, times(2)).rollIntent();
     verify(firstEnemyBehaviour).executeIntent(player);
+    verify(secondEnemyBehaviour).rollIntent();
     verify(secondEnemyBehaviour).executeIntent(player);
   }
 
@@ -296,12 +296,9 @@ class BattleControllerTest {
   private Entity createDefendingEnemy(EnemyBehaviourComponent behaviour, boolean alive) {
     Entity enemy = mock(Entity.class);
     EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
-    EnemyIntent intent = EnemyIntent.defend(1);
-
     when(enemy.getComponent(EnemyBehaviourComponent.class)).thenReturn(behaviour);
     when(enemy.getComponent(EnemyStatsComponent.class)).thenReturn(stats);
-    when(behaviour.rollIntent()).thenReturn(intent);
-    when(behaviour.getCurrentIntent()).thenReturn(intent);
+    when(behaviour.rollIntent()).thenReturn(EnemyIntent.defend(1));
     when(stats.isAlive()).thenReturn(alive);
     return enemy;
   }
