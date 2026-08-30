@@ -10,6 +10,8 @@ import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
 
 import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Objects;
 
 /**
@@ -23,9 +25,11 @@ public class BattleController {
   private EnemyIntent currentEnemyIntent;
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
+  private final Deque<BattleEvent> eventQueue;
   private final Entity player;
   private final List<Entity> enemies;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
+  private boolean pendingEvent;
 
   public BattleController(Entity player, List<Entity> enemies)
           throws IllegalArgumentException {
@@ -48,19 +52,33 @@ public class BattleController {
     this.currentEnemyIndex = -1;
     this.currentEnemyIntent = null;
     this.eventHandler = new EventHandler();
+    this.eventQueue = new ArrayDeque<>();
   }
 
-  /**
-   * Handles an individual event that occurs within a battle loop.
-   *
-   * @param event The event to be handled.
-   * @throws IllegalStateException When the given transition isn't allowed.
-   */
   public void handle(BattleEvent event) { // TODO: This is public for the sake of tests
     Objects.requireNonNull(event, "event cannot be null");
-    BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
-    this.validateEventTransition(event, nextPhase);
-    this.transition(nextPhase);
+    this.eventQueue.addLast(event);
+
+    // Guards against recursion impacting order of events.
+    if (this.pendingEvent) {
+      return;
+    }
+    // pendingEvent keeps events atomic.
+    this.pendingEvent = true;
+
+    // Takes an event from the queue, attempts to process atomically
+    try {
+      while (!this.eventQueue.isEmpty()) {
+        BattleEvent currentEvent = this.eventQueue.removeFirst();
+        this.processEvent(currentEvent);
+      }
+    } catch (RuntimeException e) {
+      // If something goes wrong, makes sure that invalid events aren't kept in queue
+      this.eventQueue.clear();
+      throw e;
+    } finally {
+     this.pendingEvent = false;
+    }
   }
 
   /**
@@ -73,6 +91,18 @@ public class BattleController {
     this.setCurrentPhase(nextPhase);
     this.notifyPhaseChange(previousPhase, this.getCurrentPhase());
     this.phaseChange(nextPhase);
+  }
+
+  /**
+   * Handles an individual event that occurs within a battle loop.
+   *
+   * @param event The event to be handled.
+   * @throws IllegalStateException When the given transition isn't allowed.
+   */
+  private void processEvent(BattleEvent event) {
+    BattlePhase nextPhase = battleTransitions.getNextPhase(this.getCurrentPhase(), event);
+    this.validateEventTransition(event, nextPhase);
+    this.transition(nextPhase);
   }
 
   /**
@@ -217,6 +247,14 @@ public class BattleController {
     );
   }
 
+  private Entity getEnemy() {
+    if (this.currentEnemyIndex < 0
+            || this.currentEnemyIndex >= enemies.size()) {
+      throw new IllegalStateException("No active enemy.");
+    }
+    return this.enemies.get(this.currentEnemyIndex);
+  }
+
   /**
    * Returns if the enemy is alive.
    * NOTE: I couldn't find an existing helper/API for this,
@@ -258,14 +296,6 @@ public class BattleController {
   }
 
   /*------------------------- Stub functions ----------------------------*/
-
-  private Entity getEnemy() {
-    if (this.currentEnemyIndex < 0
-            || this.currentEnemyIndex >= enemies.size()) {
-      throw new IllegalStateException("No active enemy.");
-    }
-    return this.enemies.get(this.currentEnemyIndex);
-  }
 
   private void enterSetup() {
     // Coordinate battle setup.
