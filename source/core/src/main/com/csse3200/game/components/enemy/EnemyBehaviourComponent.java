@@ -1,8 +1,9 @@
 package com.csse3200.game.components.enemy;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.Component;
 import com.csse3200.game.entities.Entity;
-import com.csse3200.game.components.CombatStatsComponent;
+
 /**
  * Decides and telegraphs an enemy's action each round, then resolves it.
  *
@@ -58,17 +59,16 @@ public class EnemyBehaviourComponent extends Component {
       return;
     }
 
-    CombatStatsComponent targetStats =
-            target.getComponent(CombatStatsComponent.class);
+    CombatStatsComponent targetStats = target.getComponent(CombatStatsComponent.class);
 
-    EnemyStatsComponent attackerStats =
-            entity.getComponent(EnemyStatsComponent.class);
+    EnemyStatsComponent attackerStats = entity.getComponent(EnemyStatsComponent.class);
 
     if (targetStats != null && attackerStats != null) {
       targetStats.hit(attackerStats);
     }
   }
-//use the combatstatscomponent to update the attack
+
+  // use the combatstatscomponent to update the attack
 
   private void defend() {
     EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
