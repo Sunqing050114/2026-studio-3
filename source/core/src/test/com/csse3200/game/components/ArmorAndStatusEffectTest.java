@@ -18,17 +18,26 @@ class ArmorAndStatusEffectTest {
 
     @Test
     void shouldStoreInitialStatusEffectValues() {
-        StatusEffect effect = new StatusEffect("vulnerable", 0.5f, 2);
-        assertEquals("vulnerable", effect.getEffectId());
-        assertEquals(0.5f, effect.getEffectValue());
+        StatusEffect effect = new StatusEffect("VULNERABLE", 2, 2);
+        assertEquals("VULNERABLE", effect.getType());
+        assertEquals(2, effect.getValue());
         assertEquals(2, effect.getDuration());
     }
 
     @Test
     void statusEffectShouldExpireAfterDurationReachesZero() {
-        StatusEffect effect = new StatusEffect("vulnerable", 0.5f, 2);
+        StatusEffect effect = new StatusEffect("VULNERABLE", 2, 2);
         assertFalse(effect.tickAndCheckExpired());
         assertTrue(effect.tickAndCheckExpired());
+    }
+
+    @Test
+    void statusEffectWithZeroDurationShouldBePermanent() {
+        // e.g. STRENGTH, which Team 6 defines with duration=0 and lasts the whole combat.
+        StatusEffect effect = new StatusEffect("STRENGTH", 2, 0);
+        assertFalse(effect.tickAndCheckExpired());
+        assertFalse(effect.tickAndCheckExpired());
+        assertEquals(0, effect.getDuration());
     }
 
     // -----------------------------------------------------------------
@@ -96,34 +105,44 @@ class ArmorAndStatusEffectTest {
     @Test
     void shouldApplyAndQueryStatusEffect() {
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-        assertFalse(combat.hasStatusEffect("vulnerable"));
+        assertFalse(combat.hasStatusEffect("VULNERABLE"));
 
-        StatusEffect vulnerable = new StatusEffect("vulnerable", 0.5f, 2);
+        StatusEffect vulnerable = new StatusEffect("VULNERABLE", 2, 2);
         combat.applyStatusEffect(vulnerable);
 
-        assertTrue(combat.hasStatusEffect("vulnerable"));
-        assertEquals(vulnerable, combat.getStatusEffect("vulnerable"));
+        assertTrue(combat.hasStatusEffect("VULNERABLE"));
+        assertEquals(vulnerable, combat.getStatusEffect("VULNERABLE"));
     }
 
     @Test
-    void applyingSameEffectIdShouldOverwritePrevious() {
-        // Design decision: overwrite, not stack. See applyStatusEffect() javadoc -
-        // pending confirmation with Team 5/6 if card design expects stacking instead.
+    void shouldApplyStatusEffectUsingThreeArgOverload() {
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-        combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
-        combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 5));
+        combat.applyStatusEffect("VULNERABLE", 2, 2);
 
-        assertEquals(5, combat.getStatusEffect("vulnerable").getDuration());
+        assertTrue(combat.hasStatusEffect("VULNERABLE"));
+        assertEquals(2, combat.getStatusEffect("VULNERABLE").getValue());
+        assertEquals(2, combat.getStatusEffect("VULNERABLE").getDuration());
+    }
+
+    @Test
+    void applyingSameTypeShouldOverwritePrevious() {
+        // Design decision: overwrite, not stack. See applyStatusEffect() javadoc -
+        // pending confirmation with Team 5/6 if card design expects stacking behaviour instead.
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
+        combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 5));
+
+        assertEquals(5, combat.getStatusEffect("VULNERABLE").getDuration());
     }
 
     @Test
     void shouldExplicitlyRemoveStatusEffect() {
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-        combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
-        combat.removeStatusEffect("vulnerable");
+        combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
+        combat.removeStatusEffect("VULNERABLE");
 
-        assertFalse(combat.hasStatusEffect("vulnerable"));
-        assertNull(combat.getStatusEffect("vulnerable"));
+        assertFalse(combat.hasStatusEffect("VULNERABLE"));
+        assertNull(combat.getStatusEffect("VULNERABLE"));
     }
 
     @Test
@@ -132,13 +151,26 @@ class ArmorAndStatusEffectTest {
         // NOTE: actually wiring this to a real turn event depends on Team 3 (not done yet) -
         // this test only verifies the tick/expire mechanism itself works correctly.
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-        combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
+        combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
 
         combat.updateStatusEffects();
-        assertTrue(combat.hasStatusEffect("vulnerable"));
+        assertTrue(combat.hasStatusEffect("VULNERABLE"));
 
         combat.updateStatusEffects();
-        assertFalse(combat.hasStatusEffect("vulnerable"));
+        assertFalse(combat.hasStatusEffect("VULNERABLE"));
+    }
+
+    @Test
+    void permanentStatusEffectShouldNotBeRemovedByUpdateStatusEffects() {
+        // e.g. STRENGTH, which Team 6 defines with duration=0 and lasts the whole combat.
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.applyStatusEffect(new StatusEffect("STRENGTH", 2, 0));
+
+        combat.updateStatusEffects();
+        assertTrue(combat.hasStatusEffect("STRENGTH"));
+
+        combat.updateStatusEffects();
+        assertTrue(combat.hasStatusEffect("STRENGTH"));
     }
 
     // NOTE: tests that previously verified a specific effect (e.g. "vulnerable" modifying

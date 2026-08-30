@@ -244,40 +244,52 @@ public class CombatStatsComponent extends Component {
     if (effect == null) {
       return;
     }
-    statusEffects.put(effect.getEffectId(), effect);
+    statusEffects.put(effect.getType(), effect);
     if (entity != null) {
-      entity.getEvents().trigger("statusEffectApplied", effect.getEffectId());
+      entity.getEvents().trigger("statusEffectApplied", effect.getType());
     }
   }
+    /**
+     * Convenience overload of applyStatusEffect that constructs the StatusEffect internally.
+     * Provided so callers can apply a status effect without constructing a StatusEffect object
+     * themselves.
+     *
+     * @param type identifier for the effect, e.g. "VULNERABLE"
+     * @param value magnitude of the effect
+     * @param duration number of turns the effect remains active for; 0 or fewer means permanent
+     */
+    public void applyStatusEffect(String type, int value, int duration) {
+        applyStatusEffect(new StatusEffect(type, value, duration));
+    }
 
-  /**
-   * Returns the active status effect with the given id, or null if not present.
-   *
-   * @param effectId status effect identifier
-   * @return active StatusEffect, or null
-   */
-  public StatusEffect getStatusEffect(String effectId) {
-    return statusEffects.get(effectId);
+    /**
+     * Returns the active status effect with the given type, or null if not present.
+     *
+     * @param type status effect type identifier
+     * @return active StatusEffect, or null
+     */
+  public StatusEffect getStatusEffect(String type) {
+    return statusEffects.get(type);
   }
 
-  /**
-   * Returns true if a status effect with the given id is currently active.
-   *
-   * @param effectId status effect identifier
-   * @return whether the effect is active
-   */
-  public boolean hasStatusEffect(String effectId) {
-    return statusEffects.containsKey(effectId);
+    /**
+     * Returns true if a status effect with the given type is currently active.
+     *
+     * @param type status effect type identifier
+     * @return whether the effect is active
+     */
+  public boolean hasStatusEffect(String type) {
+    return statusEffects.containsKey(type);
   }
 
   /**
    * Explicitly removes a status effect from this entity, if present.
    *
-   * @param effectId status effect identifier
+   * @param type status effect type identifier
    */
-  public void removeStatusEffect(String effectId) {
-    if (statusEffects.remove(effectId) != null && entity != null) {
-      entity.getEvents().trigger("statusEffectRemoved", effectId);
+  public void removeStatusEffect(String type){
+    if (statusEffects.remove(type) != null && entity != null) {
+      entity.getEvents().trigger("statusEffectRemoved", type);
     }
   }
 
