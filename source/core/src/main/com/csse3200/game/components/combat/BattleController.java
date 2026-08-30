@@ -202,6 +202,13 @@ public class BattleController {
     this.currentEnemyIndex = currentEnemyIndex;
   }
 
+
+  private void setEnemyIntent(EnemyIntent intent) {
+    this.currentEnemyIntent = intent;
+  }
+
+  /*------------------------- Helper functions ----------------------------*/
+
   /**
    * Targets the next available enemy within the enemy array.
    *
@@ -220,12 +227,6 @@ public class BattleController {
     }
     return false;
   }
-
-  private void setEnemyIntent(EnemyIntent intent) {
-    this.currentEnemyIntent = intent;
-  }
-
-  /*------------------------- Helper functions ----------------------------*/
 
   /**
    * A helper function that validates whether a transition is allowed.
@@ -304,7 +305,7 @@ public class BattleController {
     this.setCurrentEnemyIndex(-1);
   }
 
-  /*------------------------- Stub functions ----------------------------*/
+  /*------------------------- Possible Action Branches ----------------------------*/
 
   private void enterSetup() {
     // Coordinate battle setup.
@@ -313,12 +314,26 @@ public class BattleController {
   }
 
   private void enterRevealIntents() {
-    if (this.currentEnemyIndex == -1) {
-      this.setCurrentEnemyIndex(0);
+    this.setCurrentEnemyIndex(-1); // TODO: Probably a better way to do this.
+
+    // Rolls intent for alive each enemy.
+    for (Entity enemy : this.enemies) {
+      if (this.isEnemyAlive(enemy)) {
+        enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+      }
     }
-    // Ask the enemy system to reveal intents.
-    Entity enemy = getEnemy();
-    currentEnemyIntent = enemy.getComponent(EnemyBehaviourComponent.class).rollIntent();
+
+    // If an enemy is alive set it to the current intent
+    if (this.targetNextEnemy()) {
+      this.setEnemyIntent(
+              this.getEnemy()
+                      .getComponent(EnemyBehaviourComponent.class)
+                      .getCurrentIntent()
+      );
+    } else {
+      // If no enemies are alive - remove stale intent
+      this.setEnemyIntent(null);
+    }
     handle(BattleEvent.INTENTS_REVEALED);
   }
 
