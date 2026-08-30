@@ -1,5 +1,7 @@
 package com.csse3200.game.components.battle;
 
+import com.badlogic.gdx.Gdx;
+import com.csse3200.game.GdxGame;
 import com.csse3200.game.components.Component;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.combat.BattleEvent;
@@ -12,13 +14,17 @@ public class BattleActions extends Component {
   static final String PHASE_CHANGED_EVENT = "phaseChange";
 
   private final BattleController controller;
+  private GdxGame game;
 
-  public BattleActions(BattleController controller) {
+  public BattleActions(BattleController controller, GdxGame game) {
     this.controller = controller;
+    this.game = game;
   }
 
   @Override
   public void create() {
+      entity.getEvents().addListener("battle", this::onStart);
+      entity.getEvents().addListener("exit", this::onExit);
     entity.getEvents().addListener(ATTACK_SELECTED_EVENT, this::selectAttack);
 
     entity.getEvents().addListener(DEFEND_SELECTED_EVENT, this::selectDefend);
@@ -45,4 +51,12 @@ public class BattleActions extends Component {
       controller.handle(event);
     }
   }
+
+    private void onStart() {
+        game.setScreen(GdxGame.ScreenType.BATTLE_SCREEN);
+    }
+
+    private void onExit() {
+        game.setScreen(GdxGame.ScreenType.MAIN_MENU);
+    }
 }

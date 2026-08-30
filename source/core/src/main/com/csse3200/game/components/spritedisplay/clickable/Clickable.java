@@ -24,6 +24,8 @@ public abstract class Clickable extends Component {
   String trigger;
   float width;
   float height;
+  Object[] args;
+  String label;
 
   private static Skin getDefaultSkin() {
     if (defaultSkin == null) {
@@ -38,6 +40,8 @@ public abstract class Clickable extends Component {
     this.width = record.width();
     this.height = record.height();
     this.btnSkin = (record.btnSkin() != null) ? record.btnSkin() : getDefaultSkin();
+    this.args = record.args();
+    this.label = record.label();
 
     String text = record.text();
     String styleName = record.styleName();
@@ -59,7 +63,7 @@ public abstract class Clickable extends Component {
     init(record.trigger());
   }
 
-  private void init(String trigger) {
+  protected void init(String trigger) {
     this.trigger = trigger;
     btn.addListener(
         new InputListener() {
@@ -104,6 +108,16 @@ public abstract class Clickable extends Component {
 
   public String getTrigger() {
     return trigger;
+  }
+
+  /** Arguments this clickable was configured with (e.g. a card's damage amount). May be empty, never null. */
+  public Object[] getArgs() {
+    return args;
+  }
+
+  /** Human-readable label for UI feedback. Defaults to the trigger name if not set. */
+  public String getLabel() {
+    return label;
   }
 
   public float getY() {

@@ -12,8 +12,8 @@ public class InOutOnTrigger extends Clickable {
   private static final Logger logger = LoggerFactory.getLogger(InOutOnTrigger.class);
 
   // Store the target position (where the button should rest when visible)
-  private float targetX;
-  private float targetY;
+  protected float targetX;
+  protected float targetY;
 
   // Off-screen position (below the screen)
   private float offScreenY;
@@ -22,7 +22,7 @@ public class InOutOnTrigger extends Clickable {
   private static final float ANIMATION_DURATION = 0.5f;
 
   // Track whether the button is currently animating
-  private boolean isAnimating = false;
+  protected boolean isAnimating = false;
 
   public InOutOnTrigger(ClickableRecord record) {
     super(record);
@@ -81,7 +81,7 @@ public class InOutOnTrigger extends Clickable {
   /**
    * Slides the button out from its target position to off-screen. Triggered by the "down" event.
    */
-  private void slideDown() {
+  protected void slideDown() {
     logger.info("down");
     btn.clearActions();
     isAnimating = false; // reset flag

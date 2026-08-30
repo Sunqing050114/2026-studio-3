@@ -19,7 +19,7 @@ public class EnemyConfigs {
   }
 
   public List<String> ids() {
-    return new ArrayList<>(index.keySet());
+    return new ArrayList<>(index().keySet());
   }
 
   private Map<String, EnemyConfig> index() {

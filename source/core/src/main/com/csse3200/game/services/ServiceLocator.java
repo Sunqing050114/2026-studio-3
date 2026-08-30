@@ -1,5 +1,7 @@
 package com.csse3200.game.services;
 
+import com.badlogic.gdx.graphics.Camera;
+import com.csse3200.game.cards.CardLibrary;
 import com.csse3200.game.entities.EntityService;
 import com.csse3200.game.input.InputService;
 import com.csse3200.game.physics.PhysicsService;
@@ -16,78 +18,115 @@ import org.slf4j.LoggerFactory;
  * (https://github.com/UQcsse3200/game-engine/wiki/Service-Locator).
  */
 public class ServiceLocator {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceLocator.class);
-  private static EntityService entityService;
-  private static RenderService renderService;
-  private static PhysicsService physicsService;
-  private static GameTime timeSource;
-  private static InputService inputService;
-  private static ResourceService resourceService;
+    private static final Logger logger = LoggerFactory.getLogger(ServiceLocator.class);
+    private static EntityService entityService;
+    private static RenderService renderService;
+    private static PhysicsService physicsService;
+    private static GameTime timeSource;
+    private static InputService inputService;
+    private static ResourceService resourceService;
+    private static DragNDropService dragNDropService;
+    private static Camera camera;
+    private static CardLibrary cardLibrary;
 
-  public static EntityService getEntityService() {
-    return entityService;
-  }
 
-  public static RenderService getRenderService() {
-    return renderService;
-  }
+    public static EntityService getEntityService() {
+        return entityService;
+    }
 
-  public static PhysicsService getPhysicsService() {
-    return physicsService;
-  }
+    public static RenderService getRenderService() {
+        return renderService;
+    }
 
-  public static GameTime getTimeSource() {
-    return timeSource;
-  }
+    public static PhysicsService getPhysicsService() {
+        return physicsService;
+    }
 
-  public static InputService getInputService() {
-    return inputService;
-  }
+    public static GameTime getTimeSource() {
+        return timeSource;
+    }
 
-  public static ResourceService getResourceService() {
-    return resourceService;
-  }
+    public static InputService getInputService() {
+        return inputService;
+    }
 
-  public static void registerEntityService(EntityService service) {
-    logger.debug("Registering entity service {}", service);
-    entityService = service;
-  }
+    public static ResourceService getResourceService() {
+        return resourceService;
+    }
 
-  public static void registerRenderService(RenderService service) {
-    logger.debug("Registering render service {}", service);
-    renderService = service;
-  }
+    public static DragNDropService getDragAndDropService() {
+        return dragNDropService;
+    }
 
-  public static void registerPhysicsService(PhysicsService service) {
-    logger.debug("Registering physics service {}", service);
-    physicsService = service;
-  }
+    public static Camera getCamera() {
+        return camera;
+    }
 
-  public static void registerTimeSource(GameTime source) {
-    logger.debug("Registering time source {}", source);
-    timeSource = source;
-  }
 
-  public static void registerInputService(InputService source) {
-    logger.debug("Registering input service {}", source);
-    inputService = source;
-  }
+    public static void registerEntityService(EntityService service) {
+        logger.debug("Registering entity service {}", service);
+        entityService = service;
+    }
 
-  public static void registerResourceService(ResourceService source) {
-    logger.debug("Registering resource service {}", source);
-    resourceService = source;
-  }
+    public static void registerRenderService(RenderService service) {
+        logger.debug("Registering render service {}", service);
+        renderService = service;
+    }
 
-  public static void clear() {
-    entityService = null;
-    renderService = null;
-    physicsService = null;
-    timeSource = null;
-    inputService = null;
-    resourceService = null;
-  }
+    public static void registerPhysicsService(PhysicsService service) {
+        logger.debug("Registering physics service {}", service);
+        physicsService = service;
+    }
 
-  private ServiceLocator() {
-    throw new IllegalStateException("Instantiating static util class");
-  }
+    public static void registerTimeSource(GameTime source) {
+        logger.debug("Registering time source {}", source);
+        timeSource = source;
+    }
+
+    public static void registerInputService(InputService source) {
+        logger.debug("Registering input service {}", source);
+        inputService = source;
+    }
+
+    public static void registerResourceService(ResourceService source) {
+        logger.debug("Registering resource service {}", source);
+        resourceService = source;
+    }
+
+    public static void registerDragNDropService(DragNDropService service) {
+        dragNDropService = service;
+    }
+
+    public static void registerCamera(Camera cam) {
+        logger.debug("Registering camera {}", cam);
+        camera = cam;
+    }
+
+
+
+    public static CardLibrary getCardLibrary() {
+        return cardLibrary;
+    }
+
+    public static void registerCardLibrary(CardLibrary library) {
+        logger.debug("Registering card library {}", library);
+        cardLibrary = library;
+    }
+
+
+    public static void clear() {
+        entityService = null;
+        renderService = null;
+        physicsService = null;
+        timeSource = null;
+        inputService = null;
+        resourceService = null;
+        dragNDropService = null;
+        camera = null;
+        cardLibrary = null;
+    }
+
+    private ServiceLocator() {
+        throw new IllegalStateException("Instantiating static util class");
+    }
 }
