@@ -37,7 +37,7 @@ public final class IntentIcons {
       case BUFF -> BUFF;
       case DEBUFF -> DEBUFF;
       case UNKNOWN -> UNKNOWN;
-      case RETREAT -> UNKNOWN;
+
     };
   }
 
