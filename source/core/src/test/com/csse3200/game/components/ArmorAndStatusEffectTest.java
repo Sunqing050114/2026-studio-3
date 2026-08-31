@@ -40,8 +40,31 @@ class ArmorAndStatusEffectTest {
         assertEquals(0, effect.getDuration());
     }
 
+    @Test
+    void shouldSetValueDirectly() {
+        StatusEffect effect = new StatusEffect("POISON", 3, 3);
+        effect.setValue(5);
+        assertEquals(5, effect.getValue());
+    }
+
+    @Test
+    void shouldAddPositiveAmountToValue() {
+        // e.g. stacking more Poison onto an already-active effect
+        StatusEffect effect = new StatusEffect("POISON", 3, 3);
+        effect.addValue(2);
+        assertEquals(5, effect.getValue());
+    }
+
+    @Test
+    void shouldAddNegativeAmountToValue() {
+        // e.g. a card that removes some stacks
+        StatusEffect effect = new StatusEffect("POISON", 5, 3);
+        effect.addValue(-2);
+        assertEquals(3, effect.getValue());
+    }
+
     // -----------------------------------------------------------------
-    // Armor on CombatStatsComponent
+    // Armor on CombatStatsComponent (permanent pool)
     // -----------------------------------------------------------------
 
     @Test
@@ -73,7 +96,6 @@ class ArmorAndStatusEffectTest {
 
     @Test
     void armorShouldAbsorbDamageBeforeHealth() {
-        // Example from the issue: 5 armor, then 8 damage -> armor 0, health -3 from 100 = 97
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
         combat.addArmor(5);
         combat.takeDamage(8);
@@ -91,11 +113,86 @@ class ArmorAndStatusEffectTest {
     }
 
     @Test
-    void damageShouldHitHealthDirectlyWhenNoArmor() {
+    void damageShouldHitHealthDirectlyWhenNoArmorOrBlock() {
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
         combat.takeDamage(30);
         assertEquals(0, combat.getArmor());
         assertEquals(70, combat.getHealth());
+    }
+
+    // -----------------------------------------------------------------
+    // Block on CombatStatsComponent (per-turn pool)
+    // -----------------------------------------------------------------
+
+    @Test
+    void shouldSetGetBlock() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        assertEquals(0, combat.getBlock());
+        combat.setBlock(10);
+        assertEquals(10, combat.getBlock());
+        combat.setBlock(-5);
+        assertEquals(0, combat.getBlock());
+    }
+
+    @Test
+    void shouldAddBlock() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(5);
+        assertEquals(5, combat.getBlock());
+        combat.addBlock(-100);
+        assertEquals(5, combat.getBlock());
+    }
+
+    @Test
+    void resetBlockShouldClearBlockRegardlessOfValue() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(15);
+        combat.resetBlock();
+        assertEquals(0, combat.getBlock());
+    }
+
+    @Test
+    void blockShouldAbsorbDamageBeforeHealthWhenNoArmor() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(5);
+        combat.takeDamage(8);
+        assertEquals(0, combat.getBlock());
+        assertEquals(97, combat.getHealth());
+    }
+
+    @Test
+    void blockShouldFullyAbsorbDamageWhenSufficient() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(10);
+        combat.takeDamage(6);
+        assertEquals(4, combat.getBlock());
+        assertEquals(100, combat.getHealth());
+    }
+
+    // -----------------------------------------------------------------
+    // Block + Armor combined in takeDamage()
+    // -----------------------------------------------------------------
+
+    @Test
+    void blockShouldAbsorbBeforeArmor() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(3);
+        combat.addArmor(4);
+        combat.takeDamage(10);
+        assertEquals(0, combat.getBlock());
+        assertEquals(0, combat.getArmor());
+        assertEquals(97, combat.getHealth());
+    }
+
+    @Test
+    void blockAndArmorTogetherShouldFullyAbsorbDamageWhenSufficient() {
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.addBlock(5);
+        combat.addArmor(10);
+        combat.takeDamage(8);
+        assertEquals(0, combat.getBlock());
+        assertEquals(7, combat.getArmor());
+        assertEquals(100, combat.getHealth());
     }
 
     // -----------------------------------------------------------------
@@ -126,13 +223,28 @@ class ArmorAndStatusEffectTest {
 
     @Test
     void applyingSameTypeShouldOverwritePrevious() {
-        // Design decision: overwrite, not stack. See applyStatusEffect() javadoc -
-        // pending confirmation with Team 5/6 if card design expects stacking behaviour instead.
+        // Design decision: applyStatusEffect() itself overwrites, not stacks, by default.
+        // Callers that want stacking behaviour (e.g. Poison) should read the existing effect via
+        // getStatusEffect() and call addValue() on it themselves before re-applying, or call
+        // addValue() directly on the existing instance.
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
         combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
         combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 5));
 
         assertEquals(5, combat.getStatusEffect("VULNERABLE").getDuration());
+    }
+
+    @Test
+    void callerCanStackByMutatingExistingEffect() {
+        // Demonstrates how a caller (e.g. the teammate implementing Poison) can achieve stacking
+        // using the mutable value, without CombatStatsComponent needing to know about stacking.
+        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+        combat.applyStatusEffect(new StatusEffect("POISON", 3, 3));
+
+        StatusEffect existing = combat.getStatusEffect("POISON");
+        existing.addValue(2);
+
+        assertEquals(5, combat.getStatusEffect("POISON").getValue());
     }
 
     @Test
@@ -147,9 +259,6 @@ class ArmorAndStatusEffectTest {
 
     @Test
     void statusEffectShouldBeAutoRemovedAfterDurationExpires() {
-        // Simulates updateStatusEffects() being called once per turn.
-        // NOTE: actually wiring this to a real turn event depends on Team 3 (not done yet) -
-        // this test only verifies the tick/expire mechanism itself works correctly.
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
         combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
 
@@ -162,7 +271,6 @@ class ArmorAndStatusEffectTest {
 
     @Test
     void permanentStatusEffectShouldNotBeRemovedByUpdateStatusEffects() {
-        // e.g. STRENGTH, which Team 6 defines with duration=0 and lasts the whole combat.
         CombatStatsComponent combat = new CombatStatsComponent(100, 20);
         combat.applyStatusEffect(new StatusEffect("STRENGTH", 2, 0));
 
