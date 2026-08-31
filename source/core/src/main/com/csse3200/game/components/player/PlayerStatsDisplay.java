@@ -40,7 +40,7 @@ public class PlayerStatsDisplay extends UIComponent {
    */
   private void addActors() {
     table = new Table();
-    table.top().left();
+    table.left();
     table.setFillParent(true);
     table.padTop(45f).padLeft(5f);
 
@@ -68,14 +68,14 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/piety.png", Texture.class));
 
     //Piety text
-    pietyLabel = new Label("Piety: 1", skin, "large");
+    pietyLabel = new Label("Level: 1", skin, "large");
 
     //Money image
     moneyImage =
         new Image(ServiceLocator.getResourceService().getAsset("images/money.png", Texture.class));
 
     //Money text
-    moneyLabel = new Label("Money: $0", skin, "large");
+    moneyLabel = new Label("Gold: $0", skin, "large");
 
     table.add(heartImage).size(imageSideLength).pad(5);
     table.add(healthLabel);
@@ -120,7 +120,7 @@ public class PlayerStatsDisplay extends UIComponent {
   }
 
   /**
-   * Updates the player's piety on the ui.
+   s* Updates the player's piety on the ui.
    *
    * @param piety player piety
    */

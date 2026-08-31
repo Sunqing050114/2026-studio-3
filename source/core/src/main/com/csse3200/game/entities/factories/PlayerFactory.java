@@ -4,6 +4,7 @@ package com.csse3200.game.entities.factories;
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.player.PlayerActions;
+import com.csse3200.game.components.player.PlayerStatsDisplay;
 import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
 import com.csse3200.game.components.spritedisplay.displaying.HealthDisplay;
 import com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent;
@@ -27,13 +28,6 @@ public class PlayerFactory {
     InputComponent inputComponent =
         ServiceLocator.getInputService().getInputFactory().createForPlayer();
 
-    DisplayingRecord healthRecord =
-        DisplayingRecord.builder("Health: 100")
-            .trigger("updateHealth") // Listens for this event
-            .variant("health") // Uses HealthDisplay class
-            .position(20, 60) // Position on screen
-            .build();
-
     Entity player =
         new Entity()
             .addComponent(new TextureRenderComponent("images/star_player.png"))
@@ -44,7 +38,7 @@ public class PlayerFactory {
             .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack))
             .addComponent(new InventoryComponent(stats.gold))
             .addComponent(inputComponent)
-            .addComponent(new HealthDisplay(healthRecord))
+            .addComponent(new PlayerStatsDisplay())
             .addComponent(
                 new EnemyDropTargetComponent(
                     ServiceLocator.getDragAndDropService().getDragAndDrop(),
