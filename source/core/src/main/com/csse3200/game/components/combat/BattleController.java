@@ -5,9 +5,12 @@ import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
+import com.csse3200.game.components.player.PlayerActions;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
+
+import java.lang.ref.SoftReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -150,42 +153,50 @@ public class BattleController {
     handle(BattleEvent.SETUP_COMPLETE);
   }
 
-    public void selectAttack() {
-        handle(BattleEvent.PLAYER_ATTACK_SELECTED);
+  public void selectAttack() {
+    if (canHandle(BattleEvent.PLAYER_ATTACK_SELECTED)) {
+      handle(BattleEvent.PLAYER_ATTACK_SELECTED);
     }
+  }
 
-    public void selectDefend() {
-        handle(BattleEvent.PLAYER_DEFEND_SELECTED);
+  public void selectDefend() {
+    if (canHandle(BattleEvent.PLAYER_DEFEND_SELECTED)) {
+      handle(BattleEvent.PLAYER_DEFEND_SELECTED);
     }
+  }
 
-    public void selectOther() {
-        handle(BattleEvent.PLAYER_OTHER_SELECTED);
+  public void selectOther() {
+    if (canHandle(BattleEvent.PLAYER_OTHER_SELECTED)) {
+      handle(BattleEvent.PLAYER_OTHER_SELECTED);
     }
+  }
 
-    public void endPlayerTurn() {
-        handle(BattleEvent.PLAYER_END_REQUESTED);
+  public void endPlayerTurn() {
+    if (canHandle(BattleEvent.PLAYER_END_REQUESTED)) {
+      handle(BattleEvent.PLAYER_END_REQUESTED);
     }
+  }
 
-    public void resetBattle() {
-     if (this.pendingEvent) {
-         throw new IllegalStateException("There is an event in progress.");
+  public void resetBattle() {
+    if (this.pendingEvent) {
+       throw new IllegalStateException("There is an event in progress.");
      }
 
-     // Saving the previous phase to inform the event listeners
-     BattlePhase previousPhase = this.currentPhase;
+    // Saving the previous phase to inform the event listeners
+    BattlePhase previousPhase = this.currentPhase;
 
-     // Normal housekeeping for resetting the state machine.
-     this.eventQueue.clear();
-     this.setCurrentEnemyIndex(-1);
-     this.setEnemyIntent(null);
-     this.setCurrentPhase(BattlePhase.SETUP);
+    // Normal housekeeping for resetting the state machine.
+    this.eventQueue.clear();
+    this.setCurrentEnemyIndex(-1);
+    this.setEnemyIntent(null);
+    this.setCurrentPhase(BattlePhase.SETUP);
 
-     this.notifyPhaseChange(previousPhase, BattlePhase.SETUP);
-    }
+    this.notifyPhaseChange(previousPhase, BattlePhase.SETUP);
+  }
 
-    public BattlePhase getCurrentPhase() {
-        return this.currentPhase;
-    }
+  public BattlePhase getCurrentPhase() {
+    return this.currentPhase;
+  }
 
   /**
    * Adds a listener to the event handler, which ultimately informs external teams about a phase
@@ -369,9 +380,7 @@ public class BattleController {
 
   private void enterPlayerAttack() {
     // Ask the relevant system to execute the submitted attack.
-    Entity enemy = getEnemy();
-    // TODO: figure out what card was applied
-    // enemy.getComponent(EnemyStatsComponent.class).takeDamage(0);
+    player.getComponent(PlayerActions.class).attack();
     handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
