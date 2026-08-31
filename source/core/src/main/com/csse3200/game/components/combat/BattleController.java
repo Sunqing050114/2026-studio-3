@@ -369,14 +369,22 @@ public class BattleController {
 
   private void enterPlayerAttack() {
     // Ask the relevant system to execute the submitted attack.
+    Entity enemy = getEnemy();
+    // TODO: figure out what card was applied
+    // enemy.getComponent(EnemyStatsComponent.class).takeDamage(0);
+    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
   private void enterPlayerDefend() {
     // Ask the relevant system to execute the submitted defence.
+    // TODO: figure out how much armor is added on
+    // player.getComponent(CombatStatsComponent.class).addArmor(0);
+    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
   private void enterPlayerOther() {
     // Ask the relevant system to execute the submitted action.
+    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
   private void enterPlayerEnd() {
