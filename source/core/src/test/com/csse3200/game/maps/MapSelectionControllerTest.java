@@ -1,8 +1,12 @@
 package com.csse3200.game.maps;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.csse3200.game.extensions.GameExtension;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class MapSelectionControllerTest {
 
-  private MapGraph mapGraph;
+  private MapGraph graph;
   private MapSelectionController controller;
   private AtomicReference<Integer> selected;
   private AtomicReference<Integer> locked;
@@ -22,35 +26,35 @@ class MapSelectionControllerTest {
    * Creates a node with the given id, room type and state.
    *
    * @param id node identifier
-   * @param roomType room type
-   * @param nodeState initial node state
+   * @param type room type
+   * @param state initial node state
    * @return the created node
    */
-  private MapNode node(Integer id, RoomType roomType, NodeState nodeState) {
-    MapNode n = new MapNode(id, roomType);
-    n.setState(nodeState);
+  private MapNode node(int id, RoomType type, NodeState state) {
+    MapNode n = new MapNode(id, type);
+    n.setState(state);
     return n;
   }
 
   @BeforeEach
   void setUp() {
-    mapGraph = new MapGraph();
+    graph = new MapGraph();
 
     // 0 (CURRENT) -- 1 (AVAILABLE) -- 3 (LOCKED) -- 4 (LOCKED)
     //             \- 2 (AVAILABLE) -/
-    mapGraph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
-    mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
-    mapGraph.addNode(node(2, RoomType.SHOP, NodeState.AVAILABLE));
-    mapGraph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
-    mapGraph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
+    graph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
+    graph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
+    graph.addNode(node(2, RoomType.SHOP, NodeState.AVAILABLE));
+    graph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
+    graph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
 
-    mapGraph.connectNodes(0, 1);
-    mapGraph.connectNodes(0, 2);
-    mapGraph.connectNodes(1, 3);
-    mapGraph.connectNodes(2, 3);
-    mapGraph.connectNodes(3, 4);
+    graph.connectNodes(0, 1);
+    graph.connectNodes(0, 2);
+    graph.connectNodes(1, 3);
+    graph.connectNodes(2, 3);
+    graph.connectNodes(3, 4);
 
-    controller = new MapSelectionController(mapGraph);
+    controller = new MapSelectionController(graph);
 
     selected = new AtomicReference<>();
     locked = new AtomicReference<>();
@@ -62,12 +66,12 @@ class MapSelectionControllerTest {
 
   @Test
   void lockedNodeSendsNoMoveAndFiresLocked() {
-    boolean accepted = controller.onNodeClicked(3); // LOCKED at start
+    boolean accepted = controller.onNodeClicked(3);
 
     assertFalse(accepted);
     assertEquals(3, locked.get());
     assertNull(selected.get());
-    assertEquals(NodeState.LOCKED, mapGraph.getNode(3).getState(), "player should not have moved");
+    assertEquals(NodeState.LOCKED, graph.getNode(3).getState());
   }
 
   @Test
@@ -88,7 +92,7 @@ class MapSelectionControllerTest {
 
   @Test
   void completedNodeFiresCompletedNotLocked() {
-    mapGraph.getNode(1).setState(NodeState.COMPLETED);
+    graph.getNode(1).setState(NodeState.COMPLETED);
 
     boolean accepted = controller.onNodeClicked(1);
 
@@ -100,10 +104,29 @@ class MapSelectionControllerTest {
 
   @Test
   void roomTypeIsExposedForBossNode() {
-    assertEquals(RoomType.FINAL, mapGraph.getNode(4).getRoomType());
+    assertEquals(RoomType.FINAL, graph.getNode(4).getRoomType());
   }
 
-  // Blocked until MapGraph can seed a starting CURRENT node:
+  @Test
+  void getSelectableNodeIdsReturnsOnlyAvailable() {
+    List<Integer> selectable = controller.getSelectableNodeIds();
+
+    assertEquals(2, selectable.size());
+    assertTrue(selectable.contains(1));
+    assertTrue(selectable.contains(2));
+    assertFalse(selectable.contains(0));
+    assertFalse(selectable.contains(3));
+  }
+
+  @Test
+  void isSelectableMatchesNodeState() {
+    assertTrue(controller.isSelectable(1));
+    assertFalse(controller.isSelectable(3));
+    assertFalse(controller.isSelectable(999));
+    assertFalse(controller.isSelectable(null));
+  }
+
+  // BLOCKED until map generation (#15) seeds a starting CURRENT node:
   // - selectableNodeCommitsMoveAndFiresSelected
   // - lockedNodeBecomesSelectableAfterEncounterCompletes
 }

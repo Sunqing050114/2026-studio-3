@@ -3,8 +3,8 @@ package com.csse3200.game.maps;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.csse3200.game.extensions.GameExtension;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,10 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+/** Tests for MapInputHandler, checking clicks are routed to the correct node id. */
 @ExtendWith(GameExtension.class)
 class MapInputHandlerTest {
 
-  private MapGraph mapGraph;
+  private MapGraph graph;
   private MapSelectionController controller;
   private MapInputHandler inputHandler;
   private AtomicReference<Integer> selected;
@@ -27,23 +28,29 @@ class MapInputHandlerTest {
     return n;
   }
 
+  /**
+   * Fires a touchDown on the given actor's first listener, same as scene2d would when the actor is
+   * actually clicked on stage.
+   *
+   * @param actor actor to click
+   */
   private void click(NodeActor actor) {
     InputListener listener = (InputListener) actor.getListeners().get(0);
-    listener.touchDown(new InputEvent(), 0,0,0,0);
+    listener.touchDown(new InputEvent(), 0, 0, 0, 0);
   }
 
   @BeforeEach
   void setUp() {
-    mapGraph = new MapGraph();
+    graph = new MapGraph();
 
-    mapGraph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
-    mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
-    mapGraph.addNode(node(2, RoomType.SHOP, NodeState.LOCKED));
+    graph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
+    graph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
+    graph.addNode(node(2, RoomType.SHOP, NodeState.LOCKED));
 
-    mapGraph.connectNodes(0, 1);
-    mapGraph.connectNodes(0, 2);
+    graph.connectNodes(0, 1);
+    graph.connectNodes(0, 2);
 
-    controller = new MapSelectionController(mapGraph);
+    controller = new MapSelectionController(graph);
     inputHandler = new MapInputHandler(controller);
 
     selected = new AtomicReference<>();
@@ -75,6 +82,29 @@ class MapInputHandlerTest {
     assertNull(selected.get());
   }
 
+  @Test
+  void attachAllWiresLockedActorCorrectly() {
+    NodeActor available = new NodeActor(1, 0, 0, 50, 50);
+    NodeActor lockedActor = new NodeActor(2, 60, 0, 50, 50);
+    inputHandler.attachAll(List.of(available, lockedActor));
+
+    click(lockedActor);
+    assertEquals(2, locked.get());
+  }
+
+  @Test
+  void hoveringActorFiresNodeHovered() {
+    AtomicReference<Integer> hovered = new AtomicReference<>();
+    controller.getEvents().addListener("nodeHovered", (Integer id) -> hovered.set(id));
+
+    NodeActor actor = new NodeActor(1, 0, 0, 50, 50);
+    inputHandler.attach(actor);
+
+    InputListener listener = (InputListener) actor.getListeners().get(0);
+    listener.enter(new InputEvent(), 0, 0, 0, null);
+
+    assertEquals(1, hovered.get());
+  }
 
   // BLOCKED: same start-node seeding gap as above (#15) — the "available"
   // half of this test needs a successful move.
