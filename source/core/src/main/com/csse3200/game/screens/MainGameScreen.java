@@ -1,5 +1,8 @@
 package com.csse3200.game.screens;
 
+import java.util.List;
+import java.util.Map;
+import com.csse3200.game.maps.*;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -26,6 +29,7 @@ import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * The game screen containing the main game.
@@ -131,12 +135,17 @@ public class MainGameScreen extends ScreenAdapter {
         ServiceLocator.getInputService().getInputFactory().createForTerminal();
 
     Entity ui = new Entity();
+    Map<Integer, MapNode> nodePool = NodePoolGenerator.generate(new RoomDistributionConfig(20,5,3,2));
+    MapGraph map = new MapGraph();
+    map.addNodes(nodePool);
+    MapDisplay map22 = new MapDisplay(map);
     ui.addComponent(new InputDecorator(stage, 10))
         .addComponent(new PerformanceDisplay())
         .addComponent(new MainGameActions(this.game))
         .addComponent(new MainGameExitDisplay())
         .addComponent(new Terminal())
         .addComponent(inputComponent)
+        .addComponent(map22) // DELETE JUST FOR TESTING
         .addComponent(new TerminalDisplay());
 
     ServiceLocator.getEntityService().register(ui);

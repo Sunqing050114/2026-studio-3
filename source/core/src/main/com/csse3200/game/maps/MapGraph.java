@@ -16,15 +16,6 @@ public class MapGraph implements EncounterCallback {
   }
 
   /**
-   * Creates a graph containing an existing node pool.
-   *
-   * @param nodes nodes keyed by their unique identifiers
-   */
-  public MapGraph(Map<Integer, MapNode> nodes) {
-    this.nodes = new HashMap<>(nodes);
-  }
-
-  /**
    * Adds a node to the graph.
    *
    * @param node node to add
@@ -32,6 +23,17 @@ public class MapGraph implements EncounterCallback {
   public void addNode(MapNode node) {
     nodes.put(node.getNodeId(), node);
   }
+
+  /** 
+   * Adds a list of nodes to the graph. TO BE DELETED, JUST FOR TESTING
+   *
+   * @param nodeList nodes to add to the graph
+   */
+   public void addNodes(Map<Integer, MapNode> nodeList) {
+     for (MapNode node : nodeList.values()) {
+       addNode(node); 
+      }
+    }
 
   /**
    * Gets a node by its id.

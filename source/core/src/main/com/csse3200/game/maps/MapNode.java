@@ -2,6 +2,7 @@ package com.csse3200.game.maps;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /** Represents a single node in the map graph. */
 public class MapNode {
@@ -28,8 +29,8 @@ public class MapNode {
     this.roomType = roomType;
 
     this.state = NodeState.LOCKED;
-
-    this.height = 0;
+    Random random = new Random();
+    this.height = random.nextInt(10);
     this.connections = new ArrayList<>();
   }
 
