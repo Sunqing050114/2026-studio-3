@@ -1,76 +1,75 @@
 package com.csse3200.game.cards.effects;
 
-import com.csse3200.game.cards.config.CardConfig;
-import com.csse3200.game.cards.config.EffectConfig;
-import java.util.Collections;
+import com.csse3200.game.cards.CardService;
+import com.csse3200.game.cards.CardValidator;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
+import java.util.ArrayList;
 import java.util.List;
 
-/** Resolves card effect target declarations into concrete runtime targets and executes them. */
+/** Resolves Team 6 card configs into Team 5 card effect results. */
 public class CardEffectResolver {
+  private final CardService cardService;
   private final EffectExecutor effectExecutor;
 
   public CardEffectResolver() {
-    this(new EffectExecutor());
+    this(null, new EffectExecutor());
+  }
+
+  public CardEffectResolver(CardService cardService) {
+    this(cardService, new EffectExecutor());
   }
 
   public CardEffectResolver(EffectExecutor effectExecutor) {
+    this(null, effectExecutor);
+  }
+
+  public CardEffectResolver(CardService cardService, EffectExecutor effectExecutor) {
     if (effectExecutor == null) {
       throw new IllegalArgumentException("Effect executor cannot be null");
     }
+    this.cardService = cardService;
     this.effectExecutor = effectExecutor;
   }
 
-  public void resolve(
-      CardConfig card,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    if (card == null) {
-      throw new IllegalArgumentException("Card cannot be null");
-    }
-    if (card.effects == null) {
-      return;
-    }
+  /** Resolves a card that has already been retrieved from Team 6's card library. */
+  public CardEffectResolution resolve(CardConfig card, PlayerEffectState playerState) {
+    validate(card, playerState);
 
+    List<ResolvedCardEffect> results = new ArrayList<>();
+    for (int i = 0; i < card.effects.length; i++) {
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, playerState));
+    }
+    return new CardEffectResolution(card.id, results);
+  }
+
+  /** Resolves a card by ID through the Team 6 card service supplied to this resolver. */
+  public CardEffectResolution resolve(String cardId, PlayerEffectState playerState) {
+    if (cardService == null) {
+      throw new IllegalStateException("Card service is required to resolve by card ID");
+    }
+    if (cardId == null || cardId.isBlank()) {
+      throw new IllegalArgumentException("Card ID cannot be null or blank");
+    }
+    CardConfig card =
+        cardService
+            .getCard(cardId)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown card ID: " + cardId));
+    return resolve(card, playerState);
+  }
+
+  private void validate(CardConfig card, PlayerEffectState playerState) {
+    if (playerState == null) {
+      throw new IllegalArgumentException("Player effect state cannot be null");
+    }
+    List<String> errors = CardValidator.validate(card);
+    if (!errors.isEmpty()) {
+      throw new IllegalArgumentException("Invalid card config: " + String.join("; ", errors));
+    }
     for (EffectConfig effect : card.effects) {
-      for (CharacterEffectGateway target :
-          resolveTargets(effect, self, selectedEnemy, safeEnemies(allEnemies))) {
-        effectExecutor.execute(effect, target);
+      if (effect == null) {
+        throw new IllegalArgumentException("Card effects cannot contain null");
       }
     }
-  }
-
-  private List<CharacterEffectGateway> resolveTargets(
-      EffectConfig effect,
-      CharacterEffectGateway self,
-      CharacterEffectGateway selectedEnemy,
-      List<CharacterEffectGateway> allEnemies) {
-    if (effect == null) {
-      throw new IllegalArgumentException("Effect cannot be null");
-    }
-    if (effect.target == null) {
-      throw new IllegalArgumentException("Effect target type cannot be null");
-    }
-
-    switch (effect.target) {
-      case SELF:
-        if (self == null) {
-          throw new IllegalArgumentException("Self target cannot be null");
-        }
-        return Collections.singletonList(self);
-      case SINGLE_ENEMY:
-        if (selectedEnemy == null) {
-          throw new IllegalArgumentException("Selected enemy target cannot be null");
-        }
-        return Collections.singletonList(selectedEnemy);
-      case ALL_ENEMIES:
-        return allEnemies;
-      default:
-        throw new IllegalArgumentException("Unsupported target type: " + effect.target);
-    }
-  }
-
-  private List<CharacterEffectGateway> safeEnemies(List<CharacterEffectGateway> allEnemies) {
-    return allEnemies == null ? Collections.emptyList() : allEnemies;
   }
 }

@@ -3,83 +3,124 @@ package com.csse3200.game.cards.effects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.csse3200.game.cards.config.CardConfig;
-import com.csse3200.game.cards.config.EffectConfig;
-import com.csse3200.game.cards.config.EffectType;
-import com.csse3200.game.cards.config.TargetType;
+import com.csse3200.game.cards.CardLibrary;
+import com.csse3200.game.cards.CardType;
+import com.csse3200.game.cards.EffectType;
+import com.csse3200.game.cards.Rarity;
+import com.csse3200.game.cards.TargetType;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CardEffectResolverTest {
-  private final CardEffectResolver resolver = new CardEffectResolver();
-
   @Test
-  void shouldResolveSelfEffects() {
-    RecordingCharacterEffectGateway self = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway enemy = new RecordingCharacterEffectGateway();
-    CardConfig card = card(new EffectConfig(EffectType.BLOCK, TargetType.SELF, 5));
-
-    resolver.resolve(card, self, enemy, List.of(enemy));
-
-    assertEquals(5, self.block);
-    assertEquals(0, enemy.block);
-  }
-
-  @Test
-  void shouldResolveSingleEnemyEffects() {
-    RecordingCharacterEffectGateway self = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway selectedEnemy = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway otherEnemy = new RecordingCharacterEffectGateway();
-    CardConfig card = card(new EffectConfig(EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 6));
-
-    resolver.resolve(card, self, selectedEnemy, List.of(selectedEnemy, otherEnemy));
-
-    assertEquals(6, selectedEnemy.damage);
-    assertEquals(0, otherEnemy.damage);
-    assertEquals(0, self.damage);
-  }
-
-  @Test
-  void shouldResolveAllEnemyEffects() {
-    RecordingCharacterEffectGateway self = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway firstEnemy = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway secondEnemy = new RecordingCharacterEffectGateway();
-    CardConfig card = card(new EffectConfig(EffectType.POISON, TargetType.ALL_ENEMIES, 3));
-
-    resolver.resolve(card, self, firstEnemy, List.of(firstEnemy, secondEnemy));
-
-    assertEquals(3, firstEnemy.poison);
-    assertEquals(3, secondEnemy.poison);
-    assertEquals(0, self.poison);
-  }
-
-  @Test
-  void shouldResolveMultipleEffectsInOrder() {
-    RecordingCharacterEffectGateway self = new RecordingCharacterEffectGateway();
-    RecordingCharacterEffectGateway enemy = new RecordingCharacterEffectGateway();
-    CardConfig card =
+  void shouldResolveTeamSixCardConfigEffectsInOrder() {
+    CardConfig poisonDagger =
         card(
-            new EffectConfig(EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 8),
-            new EffectConfig(EffectType.VULNERABLE, TargetType.SINGLE_ENEMY, 2),
-            new EffectConfig(EffectType.STRENGTH, TargetType.SELF, 1));
+            "poison_dagger",
+            TargetType.SINGLE_ENEMY,
+            new EffectConfig(EffectType.DAMAGE, 4),
+            new EffectConfig(EffectType.POISON, 3, 3));
+    CardEffectResolver resolver = new CardEffectResolver();
 
-    resolver.resolve(card, self, enemy, List.of(enemy));
+    CardEffectResolution result = resolver.resolve(poisonDagger, new PlayerEffectState(2));
 
-    assertEquals(8, enemy.damage);
-    assertEquals(2, enemy.vulnerable);
-    assertEquals(1, self.strength);
+    assertEquals("poison_dagger", result.cardId());
+    assertEquals(
+        List.of(
+            new ResolvedCardEffect(
+                "poison_dagger", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 6, 0, 0),
+            new ResolvedCardEffect(
+                "poison_dagger", EffectType.POISON, TargetType.SINGLE_ENEMY, 3, 3, 1)),
+        result.effects());
   }
 
   @Test
-  void shouldRequireSelectedEnemyForSingleEnemyEffects() {
-    RecordingCharacterEffectGateway self = new RecordingCharacterEffectGateway();
-    CardConfig card = card(new EffectConfig(EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 6));
+  void shouldResolveByCardIdThroughTeamSixCardService() {
+    CardConfig strike =
+        card("strike", TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+    CardEffectResolver resolver = new CardEffectResolver(new CardLibrary(List.of(strike)));
 
-    assertThrows(
-        IllegalArgumentException.class, () -> resolver.resolve(card, self, null, List.of()));
+    CardEffectResolution result = resolver.resolve("strike", new PlayerEffectState(3));
+
+    assertEquals(
+        List.of(
+            new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 9, 0, 0)),
+        result.enemyEffects());
   }
 
-  private CardConfig card(EffectConfig... effects) {
-    return new CardConfig("test", "Test", "Test card", 1, effects);
+  @Test
+  void shouldReturnPlayerEffectsAndUpdateStrengthForLaterCards() {
+    CardEffectResolver resolver = new CardEffectResolver();
+    PlayerEffectState playerState = new PlayerEffectState();
+    CardConfig innerFocus =
+        card("inner_focus", TargetType.SELF, new EffectConfig(EffectType.STRENGTH, 2));
+    CardConfig strike =
+        card("strike", TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+
+    CardEffectResolution focusResult = resolver.resolve(innerFocus, playerState);
+    CardEffectResolution strikeResult = resolver.resolve(strike, playerState);
+
+    assertEquals(
+        List.of(
+            new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0)),
+        focusResult.playerEffects());
+    assertEquals(2, playerState.getStrength());
+    assertEquals(
+        List.of(
+            new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 8, 0, 0)),
+        strikeResult.enemyEffects());
+  }
+
+  @Test
+  void shouldSplitEnemyAndPlayerEffects() {
+    CardEffectResolution enemyResolution =
+        new CardEffectResolution(
+            "strike",
+            List.of(
+                new ResolvedCardEffect(
+                    "strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 6, 0, 0)));
+    CardEffectResolution playerResolution =
+        new CardEffectResolution(
+            "defend",
+            List.of(new ResolvedCardEffect("defend", EffectType.BLOCK, TargetType.SELF, 5, 0, 0)));
+
+    assertEquals(1, enemyResolution.enemyEffects().size());
+    assertEquals(0, enemyResolution.playerEffects().size());
+    assertEquals(0, playerResolution.enemyEffects().size());
+    assertEquals(1, playerResolution.playerEffects().size());
+  }
+
+  @Test
+  void shouldRejectInvalidResolverInputs() {
+    CardEffectResolver resolver = new CardEffectResolver();
+    CardConfig strike =
+        card("strike", TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+
+    assertThrows(IllegalArgumentException.class, () -> resolver.resolve(strike, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> resolver.resolve((CardConfig) null, new PlayerEffectState()));
+    assertThrows(
+        IllegalStateException.class, () -> resolver.resolve("strike", new PlayerEffectState()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CardEffectResolver(new CardLibrary()).resolve("missing", new PlayerEffectState()));
+  }
+
+  private static CardConfig card(String id, TargetType target, EffectConfig... effects) {
+    CardConfig card = new CardConfig();
+    card.id = id;
+    card.name = id;
+    card.description = "Test card";
+    card.cost = 1;
+    card.type = CardType.SKILL;
+    card.rarity = Rarity.COMMON;
+    card.target = target;
+    card.effects = effects;
+    card.texturePath = "images/cards/" + id + ".png";
+    return card;
   }
 }
