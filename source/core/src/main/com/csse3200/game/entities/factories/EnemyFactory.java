@@ -64,7 +64,7 @@ public class EnemyFactory {
         .addComponent(
             new EnemyDropTargetComponent(
                 ServiceLocator.getDragAndDropService().getDragAndDrop(),
-                ServiceLocator.getCamera())); //allow the user to drag a card on it
+                ServiceLocator.getCamera(), config.id)); //allow the user to drag a card on it
   }
 
   /**

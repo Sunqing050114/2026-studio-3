@@ -1,6 +1,5 @@
 package com.csse3200.game.areas;
 
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
@@ -11,7 +10,6 @@ import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
-import com.csse3200.game.entities.factories.TestDropTargetFactory;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.utils.math.GridPoint2Utils;
@@ -47,8 +45,8 @@ public class ForestGameArea extends GameArea {
     "images/terrain_iso_grass.atlas", "images/ghost.atlas", "images/ghostKing.atlas"
   };
   private static final String[] forestSounds = {"sounds/Impact4.ogg"};
-  private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
-  private static final String[] forestMusic = {backgroundMusic};
+  //private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
+  //private static final String[] forestMusic = {backgroundMusic};
 
   private final TerrainFactory terrainFactory;
 
@@ -74,7 +72,7 @@ public class ForestGameArea extends GameArea {
     spawnEnemy();
     player = spawnPlayer();
 
-    playMusic();
+    //playMusic();
   }
 
   public void displayUI(Entity ui) {
@@ -139,18 +137,7 @@ public class ForestGameArea extends GameArea {
     spawnEntityAt(newEnemy, ENEMY_SPAWN, true, true);
     return newEnemy;
   }
-
-  /**
-   * TEMP: spawns a static, non-moving entity purely to validate that EnemyDropTargetComponent's
-   * drop zone visually and functionally lines up with where a card is dragged. Offset from
-   * PLAYER_SPAWN so it's a distinct, easy-to-target entity separate from the (currently stationary)
-   * player. Remove this method and its call site once drag-and-drop is confirmed working.
-   */
-  private void spawnTestDropTarget() {
-    Entity testTarget = TestDropTargetFactory.createTestTarget();
-    GridPoint2 testSpawn = new GridPoint2(PLAYER_SPAWN.x + 3, PLAYER_SPAWN.y);
-    spawnEntityAt(testTarget, testSpawn, true, true);
-  }
+  
 
   private void spawnGhosts() {
     GridPoint2 minPos = new GridPoint2(0, 0);
@@ -172,12 +159,12 @@ public class ForestGameArea extends GameArea {
     spawnEntityAt(ghostKing, randomPos, true, true);
   }
 
-  private void playMusic() {
-    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
-    music.setLooping(true);
-    music.setVolume(0.3f);
-    music.play();
-  }
+//  private void playMusic() {
+//    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
+//    music.setLooping(true);
+//    music.setVolume(0.3f);
+//    music.play();
+//  }
 
   private void loadAssets() {
     logger.debug("Loading assets");
@@ -185,7 +172,7 @@ public class ForestGameArea extends GameArea {
     resourceService.loadTextures(forestTextures);
     resourceService.loadTextureAtlases(forestTextureAtlases);
     resourceService.loadSounds(forestSounds);
-    resourceService.loadMusic(forestMusic);
+    //resourceService.loadMusic(forestMusic);
 
     while (!resourceService.loadForMillis(10)) {
       // This could be upgraded to a loading screen
@@ -199,13 +186,13 @@ public class ForestGameArea extends GameArea {
     resourceService.unloadAssets(forestTextures);
     resourceService.unloadAssets(forestTextureAtlases);
     resourceService.unloadAssets(forestSounds);
-    resourceService.unloadAssets(forestMusic);
+    //resourceService.unloadAssets(forestMusic);
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
+    //ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
     this.unloadAssets();
   }
 }
