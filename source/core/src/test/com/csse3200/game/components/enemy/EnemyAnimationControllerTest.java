@@ -16,73 +16,73 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class EnemyAnimationControllerTest {
 
-    private AnimationRenderComponent animator;
-    private Entity enemy;
+  private AnimationRenderComponent animator;
+  private Entity enemy;
 
-    @BeforeEach
-    void setUp() {
-        animator = mock(AnimationRenderComponent.class);
-        enemy = new Entity();
-        enemy.addComponent(animator);
-        enemy.addComponent(new EnemyAnimationController());
-        enemy.create();
-    }
+  @BeforeEach
+  void setUp() {
+    animator = mock(AnimationRenderComponent.class);
+    enemy = new Entity();
+    enemy.addComponent(animator);
+    enemy.addComponent(new EnemyAnimationController());
+    enemy.create();
+  }
 
-    @Test
-    void shouldStartIdleOnCreate() {
-        verify(animator).startAnimation("idle");
-    }
+  @Test
+  void shouldStartIdleOnCreate() {
+    verify(animator).startAnimation("idle");
+  }
 
-    @Test
-    void shouldPlayHurtWhenDamaged() {
-        enemy.getEvents().trigger("enemyDamaged", 5);
+  @Test
+  void shouldPlayHurtWhenDamaged() {
+    enemy.getEvents().trigger("enemyDamaged", 5);
 
-        verify(animator).startAnimation("hurt");
-    }
+    verify(animator).startAnimation("hurt");
+  }
 
-    @Test
-    void shouldPlayHurtWhenDefeated() {
-        enemy.getEvents().trigger("enemyDefeated");
+  @Test
+  void shouldPlayHurtWhenDefeated() {
+    enemy.getEvents().trigger("enemyDefeated");
 
-        verify(animator).startAnimation("hurt");
-    }
+    verify(animator).startAnimation("hurt");
+  }
 
-    @Test
-    void shouldReturnToIdleAfterHurtFinishes() {
-        when(animator.getCurrentAnimation()).thenReturn("hurt");
-        when(animator.isFinished()).thenReturn(true);
+  @Test
+  void shouldReturnToIdleAfterHurtFinishes() {
+    when(animator.getCurrentAnimation()).thenReturn("hurt");
+    when(animator.isFinished()).thenReturn(true);
 
-        enemy.update();
+    enemy.update();
 
-        verify(animator, times(2)).startAnimation("idle");
-    }
+    verify(animator, times(2)).startAnimation("idle");
+  }
 
-    @Test
-    void shouldStayOnHurtWhileItIsStillPlaying() {
-        when(animator.getCurrentAnimation()).thenReturn("hurt");
-        when(animator.isFinished()).thenReturn(false);
+  @Test
+  void shouldStayOnHurtWhileItIsStillPlaying() {
+    when(animator.getCurrentAnimation()).thenReturn("hurt");
+    when(animator.isFinished()).thenReturn(false);
 
-        enemy.update();
+    enemy.update();
 
-        verify(animator, times(1)).startAnimation("idle");
-    }
+    verify(animator, times(1)).startAnimation("idle");
+  }
 
-    @Test
-    void shouldNotRestartIdleWhileIdleIsPlaying() {
-        when(animator.getCurrentAnimation()).thenReturn("idle");
-        when(animator.isFinished()).thenReturn(true);
+  @Test
+  void shouldNotRestartIdleWhileIdleIsPlaying() {
+    when(animator.getCurrentAnimation()).thenReturn("idle");
+    when(animator.isFinished()).thenReturn(true);
 
-        enemy.update();
+    enemy.update();
 
-        verify(animator, times(1)).startAnimation("idle");
-    }
+    verify(animator, times(1)).startAnimation("idle");
+  }
 
-    @Test
-    void shouldTolerateANullCurrentAnimation() {
-        when(animator.getCurrentAnimation()).thenReturn(null);
+  @Test
+  void shouldTolerateANullCurrentAnimation() {
+    when(animator.getCurrentAnimation()).thenReturn(null);
 
-        enemy.update();
+    enemy.update();
 
-        verify(animator, never()).startAnimation("hurt");
-    }
+    verify(animator, never()).startAnimation("hurt");
+  }
 }
