@@ -276,6 +276,10 @@ public class BattleController {
     eventHandler.trigger(PHASE_CHANGED_EVENT, previousPhase, nextPhase);
   }
 
+  /**
+   * Retrieves the current active enemy instance from the list of available enemies
+   * @return the current active enemy instance in the battle
+   */
   private Entity getEnemy() {
     if (this.currentEnemyIndex < 0 || this.currentEnemyIndex >= enemies.size()) {
       throw new IllegalStateException("No active enemy.");
@@ -377,12 +381,18 @@ public class BattleController {
 
   private void enterPlayerEnd() {
     // Coordinate end-of-turn operations.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    handle(BattleEvent.PLAYER_TURN_ENDED);
   }
 
   private void enterPlayerResolved() {
     // Check battle outcome before allowing another action.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    handle(BattleEvent.PLAYER_CONTINUES);
   }
 
   private void enterEnemyTurn() {
