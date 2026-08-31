@@ -2,20 +2,28 @@ package com.csse3200.game.components.enemy;
 
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.Component;
+import com.csse3200.game.components.enemy.EnemyAI.EnemyAI;
+import com.csse3200.game.components.enemy.EnemyAI.EnemyAIContext;
+import com.csse3200.game.components.enemy.EnemyAI.EnemyAIFactory;
 import com.csse3200.game.entities.Entity;
 
 /**
  * Decides and telegraphs an enemy's action each round, then resolves it.
  *
- * <p>Placeholder implementation: always rolls a fixed attack. Behaviour patterns are added in #20.
+ * <p>The action for each round is chosen by an {@link EnemyAI} resolved from the enemy's behaviour
+ * id. Player health is not yet visible to this component.
  */
 public class EnemyBehaviourComponent extends Component {
-  private static final int PLACEHOLDER_DAMAGE = 5;
+  private static final int UNKNOWN_PLAYER_HEALTH = 0;
+
   private final String behaviourId;
+  private final EnemyAI ai;
   private EnemyIntent currentIntent = EnemyIntent.unknown();
+  private int turnNumber = 0;
 
   public EnemyBehaviourComponent(String behaviourId) {
     this.behaviourId = behaviourId;
+    this.ai = EnemyAIFactory.create(behaviourId);
   }
 
   public String getBehaviourId() {
@@ -32,11 +40,39 @@ public class EnemyBehaviourComponent extends Component {
   /**
    * Decides the action for the coming round and telegraphs it.
    *
+   * <p>An enemy missing its stats component cannot make a meaningful decision, so it telegraphs
+   * {@link EnemyIntent#unknown()} instead.
+   *
    * @return the newly decided intent
    */
   public EnemyIntent rollIntent() {
+    turnNumber++;
+
+    EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
+    currentIntent = stats == null ? EnemyIntent.unknown() : ai.decide(buildContext(stats));
+
     entity.getEvents().trigger("intentChanged", currentIntent);
     return currentIntent;
+  }
+
+  /**
+   * Snapshots the battle state for the AI.
+   *
+   * <p>Player health is not yet available to this component, so it is reported as {@link
+   * #UNKNOWN_PLAYER_HEALTH}.
+   *
+   * @param stats the enemy's own combat stats
+   * @return a snapshot of the current battle state
+   */
+  private EnemyAIContext buildContext(EnemyStatsComponent stats) {
+    return new EnemyAIContext(
+        UNKNOWN_PLAYER_HEALTH,
+        stats.getHealth(),
+        stats.getMaxHealth(),
+        stats.getBaseAttack(),
+        stats.getArmour(),
+        currentIntent,
+        turnNumber);
   }
 
   /**
@@ -49,7 +85,7 @@ public class EnemyBehaviourComponent extends Component {
       case ATTACK -> attack(target);
       case DEFEND -> defend();
       default -> {
-        // BUFF, DEBUFF and UNKNOWN are handled in #20.
+        // No behaviour currently produces BUFF or DEBUFF; UNKNOWN is intentionally inert.
       }
     }
   }
@@ -67,8 +103,6 @@ public class EnemyBehaviourComponent extends Component {
       targetStats.hit(attackerStats);
     }
   }
-
-  // use the combatstatscomponent to update the attack
 
   private void defend() {
     EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
