@@ -1,5 +1,6 @@
 package com.csse3200.game.components.enemy;
 
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.Component;
 import com.csse3200.game.entities.Entity;
 
@@ -57,11 +58,17 @@ public class EnemyBehaviourComponent extends Component {
     if (target == null) {
       return;
     }
-    EnemyStatsComponent targetStats = target.getComponent(EnemyStatsComponent.class);
-    if (targetStats != null) {
-      targetStats.takeDamage(currentIntent.getValue());
+
+    CombatStatsComponent targetStats = target.getComponent(CombatStatsComponent.class);
+
+    EnemyStatsComponent attackerStats = entity.getComponent(EnemyStatsComponent.class);
+
+    if (targetStats != null && attackerStats != null) {
+      targetStats.hit(attackerStats);
     }
   }
+
+  // use the combatstatscomponent to update the attack
 
   private void defend() {
     EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
