@@ -85,7 +85,8 @@ public class EnemyFactory {
     animator.addAnimation("hurt", HURT_FRAME_DURATION, Animation.PlayMode.NORMAL);
 
     return new Entity()
-        .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
+        .addComponent(
+            new EnemyStatsComponent(config.health, config.baseAttack, config.armour, config.name))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
         .addComponent(animator)
         .addComponent(new EnemyAnimationController());
