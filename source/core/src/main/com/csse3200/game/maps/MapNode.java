@@ -19,7 +19,7 @@ public class MapNode {
   /**
    * Creates a map node.
    *
-   * @param nodeId   unique identifier
+   * @param nodeId unique identifier
    * @param roomType type of room
    */
   public MapNode(Integer nodeId, RoomType roomType) {

@@ -11,9 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 public class MapGraphTest {
   private MapNode createNode(int id, NodeState state) {
-    MapNode node = new MapNode(
-        id,
-        RoomType.COMBAT); // Add tests for other room types, hardcoded for simplicity for now
+    MapNode node =
+        new MapNode(
+            id,
+            RoomType.COMBAT); // Add tests for other room types, hardcoded for simplicity for now
     node.setState(state);
     return node;
   }
@@ -22,6 +23,7 @@ public class MapGraphTest {
   void testMapGenerationTemp() {
     RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
     MapGraph map = new MapGraph(NodePoolGenerator.generate(config));
+    map.generatePathing();
 
     assertTrue(map.getNodes().size() < MapGraph.MAX_NODE_COUNT);
   }
@@ -35,7 +37,8 @@ public class MapGraphTest {
 
   @Test
   void createsGraphFromGeneratedNodeMap() {
-    Map<Integer, MapNode> nodes = NodePoolGenerator.generate(new RoomDistributionConfig(5, 3, 2, 1, 12345L));
+    Map<Integer, MapNode> nodes =
+        NodePoolGenerator.generate(new RoomDistributionConfig(70, 3, 2, 1, 12345L));
 
     MapGraph graph = new MapGraph(nodes);
 
@@ -108,7 +111,7 @@ public class MapGraphTest {
     graph.addNode(connected2);
 
     graph.connectNodes(current, connected1);
-    graph.connectNodes(current, connected1);
+    graph.connectNodes(current, connected2);
 
     graph.completeNode(1, true);
 
