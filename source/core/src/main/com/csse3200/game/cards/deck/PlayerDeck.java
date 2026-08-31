@@ -31,9 +31,26 @@ public class PlayerDeck {
    * Adds one card to the end of the deck.
    *
    * @param cardId Team 6 card ID
+   * @throws IllegalArgumentException if the card ID is not registered
    */
   public void addCard(String cardId) {
-    cardIds.add(validateCardId(cardId));
+    if (!canAddCard(cardId)) {
+      throw new IllegalArgumentException("cardId must be registered");
+    }
+    cardIds.add(cardId);
+  }
+
+  /**
+   * Checks whether a card may be added to this player deck.
+   *
+   * <p>Sprint 1 allows duplicate cards and has no deck-size limit, so this check only verifies that
+   * the card ID is registered. This method does not modify the deck.
+   *
+   * @param cardId card ID to check
+   * @return true if the card can be added, otherwise false
+   */
+  public boolean canAddCard(String cardId) {
+    return CardIdRegistry.isRegistered(cardId);
   }
 
   /**

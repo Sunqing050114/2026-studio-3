@@ -42,6 +42,37 @@ class PlayerDeckTest {
   }
 
   @Test
+  void shouldAllowRegisteredCardsToBeAdded() {
+    PlayerDeck deck = new PlayerDeck();
+
+    for (String cardId : PlayerDeckFactory.getStarterDeckCardIds()) {
+      assertTrue(deck.canAddCard(cardId));
+    }
+
+    assertTrue(deck.isEmpty());
+  }
+
+  @Test
+  void shouldRejectInvalidCardsBeforeAdding() {
+    PlayerDeck deck = new PlayerDeck();
+
+    assertFalse(deck.canAddCard(null));
+    assertFalse(deck.canAddCard(""));
+    assertFalse(deck.canAddCard("  "));
+    assertFalse(deck.canAddCard("unknown_card"));
+    assertTrue(deck.isEmpty());
+  }
+
+  @Test
+  void shouldRejectUnknownCardWithoutChangingDeck() {
+    PlayerDeck deck = new PlayerDeck(List.of("strike"));
+
+    assertThrows(IllegalArgumentException.class, () -> deck.addCard("unknown_card"));
+
+    assertIterableEquals(List.of("strike"), deck.getCardIds());
+  }
+
+  @Test
   void shouldAddMultipleCardsInOrder() {
     PlayerDeck deck = new PlayerDeck();
 
@@ -86,6 +117,7 @@ class PlayerDeckTest {
     assertThrows(IllegalArgumentException.class, () -> deck.addCard(null));
     assertThrows(IllegalArgumentException.class, () -> deck.addCard(""));
     assertThrows(IllegalArgumentException.class, () -> deck.addCard("  "));
+    assertThrows(IllegalArgumentException.class, () -> deck.addCard("unknown_card"));
     assertThrows(IllegalArgumentException.class, () -> deck.addCards(null));
     assertThrows(IllegalArgumentException.class, () -> new PlayerDeck(List.of("strike", "")));
   }
