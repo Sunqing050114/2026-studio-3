@@ -28,7 +28,7 @@ public class ForestGameArea extends GameArea {
   private static final GridPoint2 ENEMY_SPAWN = new GridPoint2(PLAYER_SPAWN.x + 5, PLAYER_SPAWN.y);
   private static final float WALL_WIDTH = 0.1f;
   private static final String[] forestTextures = {
-    "images/box_boy_leaf.png",
+    "images/star_player.png",
     "images/tree.png",
     "images/ghost_king.png",
     "images/ghost_1.png",
@@ -72,6 +72,7 @@ public class ForestGameArea extends GameArea {
     spawnTerrain();
 
     spawnEnemy();
+    player = spawnPlayer();
 
     playMusic();
   }

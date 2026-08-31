@@ -21,6 +21,7 @@ import com.csse3200.game.components.spritedisplay.clickable.ClickableFactory;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableRecord;
 import com.csse3200.game.components.spritedisplay.displaying.CardDisplay;
 import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
+import com.csse3200.game.components.spritedisplay.displaying.HealthDisplay;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
 import com.csse3200.game.entities.configs.EnemyConfig;
@@ -56,7 +57,7 @@ public class BattleScreen extends ScreenAdapter {
   private final Renderer renderer;
   private ForestGameArea gameArea;
 
-  private static final String[] mainGameTextures = {"images/heart.png"};
+  private static final String[] mainGameTextures = {"images/heart.png", "images/energy.png", "images/money.png", "images/piety.png"};
   private static final Vector2 CAMERA_POSITION = new Vector2(7.5f, 7.5f);
 
   private static final int HAND_SIZE = 4;
@@ -116,6 +117,16 @@ public class BattleScreen extends ScreenAdapter {
             .variant("cardDisplay") // Use CardDisplay
             .build();
 
+    /**DisplayingRecord healthDisplayLabel =
+            DisplayingRecord.builder("Health")
+                    .position(1000, 50) // Position on screen
+                    .fontName("large") // Use a large font
+                    .scale(1.2f) // Scale it up
+                    .variant("healthDisplay") // Use CardDisplay
+                    .build();
+     */
+
+
     // sprites/BattleUi.json defines the static UI (exit/up/down); the card hand itself
     // is dealt dynamically by CardService each round, so it's merged in here rather than
     // being hardcoded in JSON.
@@ -150,6 +161,7 @@ public class BattleScreen extends ScreenAdapter {
             .addComponent(new ClickableFactory(records))
             .addComponent(new CardDisplay(cardLabelRecord))
             .addComponent(new BattleActions(controller, game));
+                //.addComponent(new HealthDisplay(healthDisplayLabel));
 
     gameArea.displayUI(battleUi);
 
