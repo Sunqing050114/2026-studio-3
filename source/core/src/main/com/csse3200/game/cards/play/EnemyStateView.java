@@ -9,6 +9,9 @@ import com.csse3200.game.cards.EffectType;
  * without making Team 5 depend on an enemy entity class.
  */
 public interface EnemyStateView {
+  /** Team 7's currently implemented fixed Vulnerable incoming-damage multiplier. */
+  float VULNERABLE_DAMAGE_MULTIPLIER = 1.5f;
+
   /**
    * @return whether the selected target currently exists and can receive a card effect
    */
@@ -22,4 +25,14 @@ public interface EnemyStateView {
    * @return current status value/stacks
    */
   int statusValue(String targetId, EffectType type);
+
+  /**
+   * Returns the multiplier Team 5 should apply to card damage against one target.
+   *
+   * <p>The default matches the current shared status rule: Vulnerable increases incoming damage by
+   * 50% while active and does not scale with its stored value.
+   */
+  default float incomingDamageMultiplier(String targetId) {
+    return statusValue(targetId, EffectType.VULNERABLE) > 0 ? VULNERABLE_DAMAGE_MULTIPLIER : 1.0f;
+  }
 }

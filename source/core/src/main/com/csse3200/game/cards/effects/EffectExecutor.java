@@ -18,13 +18,23 @@ public class EffectExecutor {
       TargetType target,
       int sequence,
       PlayerEffectState playerState) {
-    validate(cardId, effect, target, sequence, playerState);
+    return resolve(cardId, effect, target, sequence, CardEffectResolutionContext.from(playerState));
+  }
+
+  /** Resolves one effect using a snapshot of the current player and target combat modifiers. */
+  public ResolvedCardEffect resolve(
+      String cardId,
+      EffectConfig effect,
+      TargetType target,
+      int sequence,
+      CardEffectResolutionContext context) {
+    validate(cardId, effect, target, sequence, context);
 
     if (target == TargetType.SELF) {
-      return resolveSelfEffect(cardId, effect, sequence, playerState);
+      return resolveSelfEffect(cardId, effect, sequence);
     }
 
-    return resolveEnemyEffect(cardId, effect, target, sequence, playerState);
+    return resolveEnemyEffect(cardId, effect, target, sequence, context);
   }
 
   private void validate(
@@ -32,7 +42,7 @@ public class EffectExecutor {
       EffectConfig effect,
       TargetType target,
       int sequence,
-      PlayerEffectState playerState) {
+      CardEffectResolutionContext context) {
     if (cardId == null || cardId.isBlank()) {
       throw new IllegalArgumentException("Card ID cannot be null or blank");
     }
@@ -48,8 +58,8 @@ public class EffectExecutor {
     if (sequence < 0) {
       throw new IllegalArgumentException("Effect sequence cannot be negative");
     }
-    if (playerState == null) {
-      throw new IllegalArgumentException("Player effect state cannot be null");
+    if (context == null) {
+      throw new IllegalArgumentException("Card effect resolution context cannot be null");
     }
     if (effect.value <= 0) {
       throw new IllegalArgumentException("Effect value must be positive");
@@ -62,11 +72,10 @@ public class EffectExecutor {
     }
   }
 
-  private ResolvedCardEffect resolveSelfEffect(
-      String cardId, EffectConfig effect, int sequence, PlayerEffectState playerState) {
-    if (effect.type == EffectType.STRENGTH) {
-      playerState.addStrength(effect.value);
-    } else if (effect.type != EffectType.BLOCK && effect.type != EffectType.HEAL) {
+  private ResolvedCardEffect resolveSelfEffect(String cardId, EffectConfig effect, int sequence) {
+    if (effect.type != EffectType.STRENGTH
+        && effect.type != EffectType.BLOCK
+        && effect.type != EffectType.HEAL) {
       throw new IllegalArgumentException("Unsupported self-targeting effect type: " + effect.type);
     }
 
@@ -79,15 +88,10 @@ public class EffectExecutor {
       EffectConfig effect,
       TargetType target,
       int sequence,
-      PlayerEffectState playerState) {
+      CardEffectResolutionContext context) {
     if (effect.type == EffectType.DAMAGE) {
       return new ResolvedCardEffect(
-          cardId,
-          EffectType.DAMAGE,
-          target,
-          Math.max(0, effect.value + playerState.getStrength()),
-          0,
-          sequence);
+          cardId, EffectType.DAMAGE, target, context.resolveDamage(effect.value), 0, sequence);
     }
 
     if (effect.type.usesDuration()) {

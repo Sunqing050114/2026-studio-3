@@ -9,6 +9,9 @@ import com.csse3200.game.cards.EffectType;
  * truth for player combat state.
  */
 public interface PlayerStateView {
+  /** Team 7's currently implemented fixed Feeble outgoing-damage multiplier. */
+  float FEEBLE_DAMAGE_MULTIPLIER = 0.75f;
+
   /**
    * @return the player's current energy
    */
@@ -21,4 +24,15 @@ public interface PlayerStateView {
    * @return current status value/stacks
    */
   int statusValue(EffectType type);
+
+  /**
+   * Returns the multiplier Team 5 should apply to outgoing card damage.
+   *
+   * <p>The default matches Team 7's current StatusEffectCalculator: Feeble is a fixed 25% damage
+   * reduction while active and does not scale with its stored value. A concrete adapter can
+   * override this method if the shared design changes later.
+   */
+  default float outgoingDamageMultiplier() {
+    return statusValue(EffectType.FEEBLE) > 0 ? FEEBLE_DAMAGE_MULTIPLIER : 1.0f;
+  }
 }

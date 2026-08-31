@@ -120,7 +120,27 @@ class CardPlayServiceTest {
   }
 
   @Test
-  void shouldRestoreEnergyWhenACommitStepThrows() {
+  void shouldReturnInvalidCardConfigFailureWithoutSpendingEnergy() {
+    CardConfig strike =
+        card("strike", 1, TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+    CardLibrary cardLibrary = new CardLibrary(List.of(strike));
+    strike.effects = new EffectConfig[0];
+    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("strike")));
+    battleDeck.drawOne();
+    EnergyComponent energyComponent = new EnergyComponent(3);
+    CardPlayService playService = new CardPlayService(cardLibrary, battleDeck, energyComponent);
+
+    CardPlayResult result = playService.playCard(CardPlayRequest.singleEnemy("strike", "enemy-1"));
+
+    assertFalse(result.success());
+    assertEquals(CardPlayFailureReason.INVALID_CARD_CONFIG, result.failureReason());
+    assertEquals(3, energyComponent.getCurrentEnergy());
+    assertIterableEquals(List.of("strike"), result.updatedHand());
+    assertTrue(result.enemyEffects().isEmpty());
+  }
+
+  @Test
+  void shouldReturnFailureAndLeaveNoEffectsWhenDeckCommitFails() {
     CardConfig strike =
         card("strike", 1, TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
     CardLibrary cardLibrary = new CardLibrary(List.of(strike));
@@ -137,12 +157,16 @@ class CardPlayServiceTest {
           }
         };
     EnergyComponent energyComponent = new EnergyComponent(3);
-    CardPlayService playService = new CardPlayService(cardLibrary, failingDeck, energyComponent);
+    CardEffectResolutionService resolutionService = new CardEffectResolutionService(cardLibrary);
+    CardPlayService playService =
+        new CardPlayService(cardLibrary, resolutionService, failingDeck, energyComponent);
 
-    assertThrows(
-        IllegalStateException.class,
-        () -> playService.playCard(CardPlayRequest.singleEnemy("strike", "enemy-1")));
+    CardPlayResult result = playService.playCard(CardPlayRequest.singleEnemy("strike", "enemy-1"));
+
+    assertFalse(result.success());
+    assertEquals(CardPlayFailureReason.RESOLUTION_FAILED, result.failureReason());
     assertEquals(3, energyComponent.getCurrentEnergy());
+    assertTrue(resolutionService.getResolutions().isEmpty());
   }
 
   @Test
@@ -161,12 +185,115 @@ class CardPlayServiceTest {
     CardPlayResult result = playService.playCard("inner_focus");
 
     assertFalse(result.successful());
-    assertEquals(CardPlayFailureReason.INSUFFICIENT_ENERGY, result.failureReason());
+    assertEquals(CardPlayFailureReason.NOT_ENOUGH_ENERGY, result.failureReason());
     assertEquals(1, energyComponent.getCurrentEnergy());
     assertIterableEquals(List.of("inner_focus"), battleDeck.getHand());
     assertTrue(battleDeck.getDiscardPile().isEmpty());
     assertTrue(result.enemyEffects().isEmpty());
     assertTrue(result.playerEffects().isEmpty());
+    assertTrue(resolutionService.getResolutions().isEmpty());
+  }
+
+  @Test
+  void shouldResolveDamageFromPlayerAndEnemyStateViews() {
+    CardConfig strike =
+        card("strike", 1, TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+    CardLibrary cardLibrary = new CardLibrary(List.of(strike));
+    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("strike")));
+    battleDeck.drawOne();
+    EnergyComponent energyComponent = new EnergyComponent(3);
+    PlayerStateView playerState =
+        new PlayerStateView() {
+          @Override
+          public int currentEnergy() {
+            return energyComponent.getCurrentEnergy();
+          }
+
+          @Override
+          public int statusValue(EffectType type) {
+            return switch (type) {
+              case STRENGTH -> 2;
+              case FEEBLE -> 1;
+              default -> 0;
+            };
+          }
+        };
+    EnemyStateView enemyState =
+        new EnemyStateView() {
+          @Override
+          public boolean isTargetAvailable(String targetId) {
+            return "enemy-1".equals(targetId);
+          }
+
+          @Override
+          public int statusValue(String targetId, EffectType type) {
+            return type == EffectType.VULNERABLE ? 2 : 0;
+          }
+        };
+    CardPlayService playService =
+        new CardPlayService(cardLibrary, battleDeck, energyComponent, playerState, enemyState);
+
+    CardPlayResult result = playService.playCard(CardPlayRequest.singleEnemy("strike", "enemy-1"));
+
+    assertTrue(result.success());
+    assertEquals(9, result.enemyEffects().get(0).value());
+    assertEquals(2, energyComponent.getCurrentEnergy());
+  }
+
+  @Test
+  void shouldRejectUnavailableEnemyBeforeSpendingEnergy() {
+    CardConfig strike =
+        card("strike", 1, TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+    CardLibrary cardLibrary = new CardLibrary(List.of(strike));
+    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("strike")));
+    battleDeck.drawOne();
+    EnergyComponent energyComponent = new EnergyComponent(3);
+    PlayerStateView playerState = stateView(energyComponent);
+    EnemyStateView unavailableEnemy =
+        new EnemyStateView() {
+          @Override
+          public boolean isTargetAvailable(String targetId) {
+            return false;
+          }
+
+          @Override
+          public int statusValue(String targetId, EffectType type) {
+            return 0;
+          }
+        };
+    CardPlayService playService =
+        new CardPlayService(
+            cardLibrary, battleDeck, energyComponent, playerState, unavailableEnemy);
+
+    CardPlayResult result =
+        playService.playCard(CardPlayRequest.singleEnemy("strike", "missing-enemy"));
+
+    assertFalse(result.success());
+    assertEquals(CardPlayFailureReason.INVALID_TARGET, result.failureReason());
+    assertEquals(3, energyComponent.getCurrentEnergy());
+    assertIterableEquals(List.of("strike"), result.updatedHand());
+  }
+
+  @Test
+  void shouldRollbackEnergyAndReturnFailureWhenResolutionFails() {
+    CardConfig invalidCombination =
+        card("enemy_heal", 1, TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.HEAL, 4));
+    CardLibrary cardLibrary = new CardLibrary(List.of(invalidCombination));
+    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("enemy_heal")));
+    battleDeck.drawOne();
+    EnergyComponent energyComponent = new EnergyComponent(3);
+    CardEffectResolutionService resolutionService = new CardEffectResolutionService(cardLibrary);
+    CardPlayService playService =
+        new CardPlayService(cardLibrary, resolutionService, battleDeck, energyComponent);
+
+    CardPlayResult result =
+        playService.playCard(CardPlayRequest.singleEnemy("enemy_heal", "enemy-1"));
+
+    assertFalse(result.success());
+    assertEquals(CardPlayFailureReason.RESOLUTION_FAILED, result.failureReason());
+    assertEquals(3, energyComponent.getCurrentEnergy());
+    assertIterableEquals(List.of("enemy_heal"), result.updatedHand());
+    assertTrue(result.updatedDiscardPile().isEmpty());
     assertTrue(resolutionService.getResolutions().isEmpty());
   }
 
@@ -245,7 +372,7 @@ class CardPlayServiceTest {
         IllegalArgumentException.class,
         () ->
             new CardPlayResult(
-                "strike", true, 1, resolution, CardPlayFailureReason.INSUFFICIENT_ENERGY));
+                "strike", true, 1, resolution, CardPlayFailureReason.NOT_ENOUGH_ENERGY));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CardPlayResult("strike", false, 1, null, CardPlayFailureReason.NONE));
@@ -279,5 +406,19 @@ class CardPlayServiceTest {
     card.effects = effects;
     card.texturePath = "images/cards/" + id + ".png";
     return card;
+  }
+
+  private static PlayerStateView stateView(EnergyComponent energyComponent) {
+    return new PlayerStateView() {
+      @Override
+      public int currentEnergy() {
+        return energyComponent.getCurrentEnergy();
+      }
+
+      @Override
+      public int statusValue(EffectType type) {
+        return 0;
+      }
+    };
   }
 }

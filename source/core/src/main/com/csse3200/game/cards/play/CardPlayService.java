@@ -6,6 +6,7 @@ import com.csse3200.game.cards.TargetType;
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.deck.BattleDeck;
 import com.csse3200.game.cards.effects.CardEffectResolution;
+import com.csse3200.game.cards.effects.CardEffectResolutionContext;
 import com.csse3200.game.cards.effects.CardEffectResolutionService;
 import com.csse3200.game.components.player.EnergyComponent;
 import java.util.List;
@@ -21,6 +22,8 @@ public final class CardPlayService {
   private final CardEffectResolutionService resolutionService;
   private final BattleDeck battleDeck;
   private final EnergyComponent energyComponent;
+  private final PlayerStateView playerStateView;
+  private final EnemyStateView enemyStateView;
 
   /**
    * Creates a play service using Team 6 card retrieval, Team 5 effect resolution and Team 7 energy.
@@ -35,7 +38,25 @@ public final class CardPlayService {
         cardService,
         new CardEffectResolutionService(requireCardService(cardService)),
         battleDeck,
-        energyComponent);
+        energyComponent,
+        null,
+        null);
+  }
+
+  /** Creates a play service that resolves cards from Team 7/Team 1 read-only state views. */
+  public CardPlayService(
+      CardService cardService,
+      BattleDeck battleDeck,
+      EnergyComponent energyComponent,
+      PlayerStateView playerStateView,
+      EnemyStateView enemyStateView) {
+    this(
+        cardService,
+        new CardEffectResolutionService(requireCardService(cardService)),
+        battleDeck,
+        energyComponent,
+        playerStateView,
+        enemyStateView);
   }
 
   /** Creates a play service with explicit dependencies for integration and testing. */
@@ -44,6 +65,17 @@ public final class CardPlayService {
       CardEffectResolutionService resolutionService,
       BattleDeck battleDeck,
       EnergyComponent energyComponent) {
+    this(cardService, resolutionService, battleDeck, energyComponent, null, null);
+  }
+
+  /** Creates a play service with all card-play and external-state dependencies supplied. */
+  public CardPlayService(
+      CardService cardService,
+      CardEffectResolutionService resolutionService,
+      BattleDeck battleDeck,
+      EnergyComponent energyComponent,
+      PlayerStateView playerStateView,
+      EnemyStateView enemyStateView) {
     this.cardService = requireCardService(cardService);
     if (resolutionService == null) {
       throw new IllegalArgumentException("Card effect resolution service cannot be null");
@@ -57,6 +89,8 @@ public final class CardPlayService {
     this.resolutionService = resolutionService;
     this.battleDeck = battleDeck;
     this.energyComponent = energyComponent;
+    this.playerStateView = playerStateView;
+    this.enemyStateView = enemyStateView;
   }
 
   /**
@@ -87,6 +121,7 @@ public final class CardPlayService {
     return card != null
         && CardValidator.validate(card).isEmpty()
         && isValidTarget(card, request.target())
+        && isTargetAvailable(request.target())
         && battleDeck.getHand().contains(card.id)
         && energyComponent.canAfford(card.cost);
   }
@@ -126,9 +161,9 @@ public final class CardPlayService {
       return failure(request, 0, CardPlayFailureReason.UNKNOWN_CARD);
     }
     if (!CardValidator.validate(card).isEmpty()) {
-      return failure(request, Math.max(card.cost, 0), CardPlayFailureReason.INVALID_CARD);
+      return failure(request, Math.max(card.cost, 0), CardPlayFailureReason.INVALID_CARD_CONFIG);
     }
-    if (!isValidTarget(card, request.target())) {
+    if (!isValidTarget(card, request.target()) || !isTargetAvailable(request.target())) {
       return failure(request, card.cost, CardPlayFailureReason.INVALID_TARGET);
     }
     return playValidatedCard(card, request.target());
@@ -142,23 +177,42 @@ public final class CardPlayService {
     // This read-only check gives the common failure a stable reason. spendEnergy() remains the
     // authoritative atomic check-and-spend in case energy changes between the two calls.
     if (!energyComponent.canAfford(card.cost) || !energyComponent.spendEnergy(card.cost)) {
-      return failure(card.id, target, card.cost, CardPlayFailureReason.INSUFFICIENT_ENERGY);
+      return failure(card.id, target, card.cost, CardPlayFailureReason.NOT_ENOUGH_ENERGY);
     }
 
+    CardEffectResolution resolution;
     try {
-      CardEffectResolution resolution = resolutionService.resolve(card);
-      if (!battleDeck.playCard(card.id)) {
-        throw new IllegalStateException(
-            "Card was no longer in hand after energy was spent: " + card.id);
-      }
-      return CardPlayResult.success(
-          card.id, target, card.cost, resolution, DeckSnapshot.from(battleDeck));
+      resolution = resolveFromCurrentState(card, target);
     } catch (RuntimeException exception) {
-      // Restore Team 7 energy when a later internal operation fails. The exception is rethrown so
-      // callers never mistake an incomplete play for a normal validation failure.
+      // Resolution is prepared without recording or changing Team 5 Strength, so restoring energy
+      // is the only rollback needed before the deck commit.
       energyComponent.restoreEnergy(card.cost);
-      throw exception;
+      return failure(card.id, target, card.cost, CardPlayFailureReason.RESOLUTION_FAILED);
     }
+
+    if (!battleDeck.playCard(card.id)) {
+      energyComponent.restoreEnergy(card.cost);
+      return failure(card.id, target, card.cost, CardPlayFailureReason.RESOLUTION_FAILED);
+    }
+    resolutionService.recordSuccessful(resolution, playerStateView == null);
+    return CardPlayResult.success(
+        card.id, target, card.cost, resolution, DeckSnapshot.from(battleDeck));
+  }
+
+  private CardEffectResolution resolveFromCurrentState(CardConfig card, CardPlayTarget target) {
+    if (playerStateView == null) {
+      return resolutionService.resolveUnrecorded(card);
+    }
+
+    int strength = playerStateView.statusValue(com.csse3200.game.cards.EffectType.STRENGTH);
+    float incomingDamageMultiplier = 1.0f;
+    if (enemyStateView != null && target != null && target.type() == TargetType.SINGLE_ENEMY) {
+      incomingDamageMultiplier = enemyStateView.incomingDamageMultiplier(target.targetId());
+    }
+    CardEffectResolutionContext context =
+        new CardEffectResolutionContext(
+            strength, playerStateView.outgoingDamageMultiplier(), incomingDamageMultiplier);
+    return resolutionService.resolveUnrecorded(card, context);
   }
 
   private CardPlayResult failure(
@@ -177,6 +231,12 @@ public final class CardPlayService {
       return false;
     }
     return card.target != TargetType.SINGLE_ENEMY || target.targetId() != null;
+  }
+
+  private boolean isTargetAvailable(CardPlayTarget target) {
+    return enemyStateView == null
+        || target.type() != TargetType.SINGLE_ENEMY
+        || enemyStateView.isTargetAvailable(target.targetId());
   }
 
   private CardConfig getPlayableCardConfig(String cardId) {

@@ -9,7 +9,7 @@ public enum CardPlayFailureReason {
   UNKNOWN_CARD,
 
   /** The retrieved Team 6 card config does not satisfy the card validation contract. */
-  INVALID_CARD,
+  INVALID_CARD_CONFIG,
 
   /** The selected target does not match the target required by the card config. */
   INVALID_TARGET,
@@ -18,5 +18,20 @@ public enum CardPlayFailureReason {
   CARD_NOT_IN_HAND,
 
   /** Team 7's energy component rejected the card cost. */
+  NOT_ENOUGH_ENERGY,
+
+  /** Effect resolution or the local deck commit failed after validation. */
+  RESOLUTION_FAILED,
+
+  /**
+   * @deprecated use {@link #INVALID_CARD_CONFIG}.
+   */
+  @Deprecated
+  INVALID_CARD,
+
+  /**
+   * @deprecated use {@link #NOT_ENOUGH_ENERGY}.
+   */
+  @Deprecated
   INSUFFICIENT_ENERGY
 }
