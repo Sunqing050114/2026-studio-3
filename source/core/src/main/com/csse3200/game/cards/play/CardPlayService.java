@@ -2,6 +2,7 @@ package com.csse3200.game.cards.play;
 
 import com.csse3200.game.cards.CardService;
 import com.csse3200.game.cards.CardValidator;
+import com.csse3200.game.cards.TargetType;
 import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.deck.BattleDeck;
 import com.csse3200.game.cards.effects.CardEffectResolution;
@@ -73,6 +74,24 @@ public final class CardPlayService {
   }
 
   /**
+   * Read-only preview for the unified Team 3 request flow.
+   *
+   * @param request card and selected target
+   * @return true only when the card, target, hand and energy checks currently pass
+   */
+  public boolean canPlay(CardPlayRequest request) {
+    if (request == null) {
+      return false;
+    }
+    CardConfig card = cardService.getCard(request.cardId()).orElse(null);
+    return card != null
+        && CardValidator.validate(card).isEmpty()
+        && isValidTarget(card, request.target())
+        && battleDeck.getHand().contains(card.id)
+        && energyComponent.canAfford(card.cost);
+  }
+
+  /**
    * Attempts to play a card from the current hand.
    *
    * <p>When successful, Team 7 energy is spent first, then Team 5 resolves effects, then the battle
@@ -84,19 +103,80 @@ public final class CardPlayService {
    */
   public CardPlayResult playCard(String cardId) {
     CardConfig card = getPlayableCardConfig(cardId);
-    if (!battleDeck.getHand().contains(card.id)) {
-      return CardPlayResult.failure(card.id, card.cost, CardPlayFailureReason.CARD_NOT_IN_HAND);
-    }
-    if (!energyComponent.spendEnergy(card.cost)) {
-      return CardPlayResult.failure(card.id, card.cost, CardPlayFailureReason.INSUFFICIENT_ENERGY);
+    return playValidatedCard(card, null);
+  }
+
+  /**
+   * Unified Team 5 entry point for a card play attempt from Team 3/battle flow.
+   *
+   * <p>Expected validation failures are returned as data. A failed result never spends energy or
+   * moves the card. A successful result spends energy exactly once, records the resolved effects,
+   * moves the card to the discard pile and includes immutable deck snapshots.
+   *
+   * @param request card ID and already selected target
+   * @return complete result for UI coordination and Team 1/Team 7 effect consumers
+   */
+  public CardPlayResult playCard(CardPlayRequest request) {
+    if (request == null) {
+      throw new IllegalArgumentException("Card play request cannot be null");
     }
 
-    CardEffectResolution resolution = resolutionService.resolve(card);
-    if (!battleDeck.playCard(card.id)) {
-      throw new IllegalStateException(
-          "Card was no longer in hand after energy was spent: " + card.id);
+    CardConfig card = cardService.getCard(request.cardId()).orElse(null);
+    if (card == null) {
+      return failure(request, 0, CardPlayFailureReason.UNKNOWN_CARD);
     }
-    return CardPlayResult.success(card.id, card.cost, resolution);
+    if (!CardValidator.validate(card).isEmpty()) {
+      return failure(request, Math.max(card.cost, 0), CardPlayFailureReason.INVALID_CARD);
+    }
+    if (!isValidTarget(card, request.target())) {
+      return failure(request, card.cost, CardPlayFailureReason.INVALID_TARGET);
+    }
+    return playValidatedCard(card, request.target());
+  }
+
+  private CardPlayResult playValidatedCard(CardConfig card, CardPlayTarget target) {
+    if (!battleDeck.getHand().contains(card.id)) {
+      return failure(card.id, target, card.cost, CardPlayFailureReason.CARD_NOT_IN_HAND);
+    }
+
+    // This read-only check gives the common failure a stable reason. spendEnergy() remains the
+    // authoritative atomic check-and-spend in case energy changes between the two calls.
+    if (!energyComponent.canAfford(card.cost) || !energyComponent.spendEnergy(card.cost)) {
+      return failure(card.id, target, card.cost, CardPlayFailureReason.INSUFFICIENT_ENERGY);
+    }
+
+    try {
+      CardEffectResolution resolution = resolutionService.resolve(card);
+      if (!battleDeck.playCard(card.id)) {
+        throw new IllegalStateException(
+            "Card was no longer in hand after energy was spent: " + card.id);
+      }
+      return CardPlayResult.success(
+          card.id, target, card.cost, resolution, DeckSnapshot.from(battleDeck));
+    } catch (RuntimeException exception) {
+      // Restore Team 7 energy when a later internal operation fails. The exception is rethrown so
+      // callers never mistake an incomplete play for a normal validation failure.
+      energyComponent.restoreEnergy(card.cost);
+      throw exception;
+    }
+  }
+
+  private CardPlayResult failure(
+      CardPlayRequest request, int energyCost, CardPlayFailureReason failureReason) {
+    return failure(request.cardId(), request.target(), energyCost, failureReason);
+  }
+
+  private CardPlayResult failure(
+      String cardId, CardPlayTarget target, int energyCost, CardPlayFailureReason failureReason) {
+    return CardPlayResult.failure(
+        cardId, target, energyCost, failureReason, DeckSnapshot.from(battleDeck));
+  }
+
+  private boolean isValidTarget(CardConfig card, CardPlayTarget target) {
+    if (target == null || card.target != target.type()) {
+      return false;
+    }
+    return card.target != TargetType.SINGLE_ENEMY || target.targetId() != null;
   }
 
   private CardConfig getPlayableCardConfig(String cardId) {

@@ -5,6 +5,15 @@ public enum CardPlayFailureReason {
   /** The card was played successfully. */
   NONE,
 
+  /** Team 6's card service does not contain the requested card ID. */
+  UNKNOWN_CARD,
+
+  /** The retrieved Team 6 card config does not satisfy the card validation contract. */
+  INVALID_CARD,
+
+  /** The selected target does not match the target required by the card config. */
+  INVALID_TARGET,
+
   /** The requested card is not currently in the battle deck hand. */
   CARD_NOT_IN_HAND,
 
