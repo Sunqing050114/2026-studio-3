@@ -8,6 +8,9 @@ import com.csse3200.game.extensions.GameExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
+import com.csse3200.game.entities.Entity;
+
 @ExtendWith(GameExtension.class)
 class InventoryComponentTest {
     @Test
@@ -60,5 +63,48 @@ class InventoryComponentTest {
         // fail on negative input
         assertFalse(inventory.subtractGold(-20));
         assertEquals(50, inventory.getGold());
+    }
+    @Test
+    void shouldTriggerUpdateGoldEventOnSetGold() {
+        Entity entity = new Entity();
+        InventoryComponent inventory = new InventoryComponent(100);
+        entity.addComponent(inventory);
+
+        final int[] receivedGold = {-1};
+        entity.getEvents().addListener("updateGold", (Integer gold) -> receivedGold[0] = gold);
+
+        inventory.setGold(75);
+
+        assertEquals(75, receivedGold[0]);
+    }
+
+    @Test
+    void shouldTriggerUpdateGoldEventOnAddAndSubtract() {
+        Entity entity = new Entity();
+        InventoryComponent inventory = new InventoryComponent(50);
+        entity.addComponent(inventory);
+
+        final int[] receivedGold = {-1};
+        entity.getEvents().addListener("updateGold", (Integer gold) -> receivedGold[0] = gold);
+
+        inventory.addGold(20);
+        assertEquals(70, receivedGold[0]);
+
+        inventory.subtractGold(30);
+        assertEquals(40, receivedGold[0]);
+    }
+
+    @Test
+    void shouldRetainGoldAcrossSimulatedNodeTransition() {
+        Entity player = new Entity();
+        InventoryComponent inventory = new InventoryComponent(120);
+        player.addComponent(inventory);
+
+        inventory.setGold(120);
+
+        InventoryComponent inventoryAfterTransition = player.getComponent(InventoryComponent.class);
+
+        assertEquals(120, inventoryAfterTransition.getGold());
+        assertSame(inventory, inventoryAfterTransition);
     }
 }
