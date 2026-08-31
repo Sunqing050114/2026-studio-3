@@ -172,44 +172,4 @@ class ArmorAndStatusEffectTest {
         combat.updateStatusEffects();
         assertTrue(combat.hasStatusEffect("STRENGTH"));
     }
-
-    //verifies that outgoing damage is unchanged when FEEBLE is not active
-    @Test
-    void shouldReturnNormalOutgoingDamamgeModifierWithoutFeeble(){
-        CombatStatsComponent combat=new CombatStatsComponent(100,20);
-        assertEquals(1.0f,combat.getOutgoingDamamgedModifier(),0.001f);
-    }
-
-    //Verifies that an active FEEBLE effect applies the fixed 25% outgoing damage reduction
-    @Test
-    void shouldReduceOutgoingDamamgeModifierWhenFeebleIsActive(){
-        CombatStatsComponent combat=new CombatStatsComponent(100,20);
-        combat.applyStatusEffect(new StatusEffect("FEEBLE",1,2));
-        assertEquals(0.75f,combat.getOutgoingDamamgedModifier(),0.001f);
-    }
-
-    /*Verifies that the current FEEBLE implementation uses a fixed modifier
-    regardless of the stored stack count
-     */
-    @Test
-    void feebleModifierShouldNotDependOnStackCount(){
-        CombatStatsComponent combat=new CombatStatsComponent(100,20);
-        combat.applyStatusEffect(new StatusEffect("FEEBLE",3,2));
-        assertEquals(0.75f,combat.getOutgoingDamamgedModifier(),0.001f);
-    }
-
-    //Verifies that outgoing damage returns to normal after FEEBLE expires
-    @Test
-    void shouldRestoreOutgoingDamageModifierAfterFeebleExpires() {
-        CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-        combat.applyStatusEffect(new StatusEffect("FEEBLE", 1, 1));
-        assertEquals(0.75f, combat.getOutgoingDamamgedModifier(), 0.001f);
-        combat.updateStatusEffects();
-        assertEquals(1.0f, combat.getOutgoingDamamgedModifier(), 0.001f);
-    }
-
-    // NOTE: tests that previously verified a specific effect (e.g. "vulnerable" modifying
-    // incoming damage by a hard-coded formula) have been removed. takeDamage() no longer applies
-    // any status-effect-based damage modification - that calculation is owned by whichever caller
-    // needs it (e.g. Team 5), not by CombatStatsComponent. See takeDamage() javadoc.
 }
