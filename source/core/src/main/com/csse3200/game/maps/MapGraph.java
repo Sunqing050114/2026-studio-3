@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /** Represents the map graph containing all map nodes. */
 public class MapGraph implements EncounterCallback {
 
   private final Map<Integer, MapNode> nodes;
   private MapNode currentNode;
+
+  public static final int MAP_WIDTH = 7;
+  public static final int MAP_HEIGHT = 10;
+  public static final int MAX_NODE_COUNT = MAP_WIDTH * MAP_HEIGHT;
 
   public MapGraph() {
     nodes = new HashMap<>();
@@ -22,6 +27,95 @@ public class MapGraph implements EncounterCallback {
    */
   public MapGraph(Map<Integer, MapNode> nodes) {
     this.nodes = new HashMap<>(nodes);
+
+    generatePathing();
+  }
+
+  /**
+   * Primary map generation function. Only called once in constructor.
+   * 
+   * TODO: currently just does a weird bfs with a lot of things randomly removed
+   * TODO: connections need to be properly pruned and i might be destroying too
+   * many nodes
+   *
+   *
+   * @param void
+   */
+  private void generatePathing() {
+
+    MapNode top = nodes.get(MAX_NODE_COUNT);
+    List<MapNode> prevRow, nextRow;
+    Random rand = new Random();
+
+    // set connections to boss first
+    int pathCount = rand.nextInt(1, 3); // NOTE: this would be better as a bounded gaussian
+
+    nextRow = getNodesByHeight(MAP_HEIGHT - 1);
+
+    for (int j = 0; j < pathCount; j++) {
+
+      connectNodes(top, nextRow.get(rand.nextInt(0, MAP_WIDTH)));
+    }
+    pruneUnconnectedNodes(nextRow);
+    prevRow = nextRow;
+
+    // begin to loop the bulk of connections down the tree
+    for (int i = 2; i < MAP_HEIGHT; i++) {
+
+      nextRow = getNodesByHeight(MAP_HEIGHT - i);
+
+      pathCount = rand.nextInt(3, 5);
+      pruneRandomNodes(nextRow, pathCount);
+
+      for (MapNode parentNode : prevRow) {
+        for (MapNode childNode : nextRow) {
+          int distance = (parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
+          if (distance < 2) { // TODO: should be a minimum distance cause this will make broken paths
+            connectNodes(parentNode, childNode);
+          }
+        }
+      }
+      // TODO: good start for map generation but need tests and much refinement
+      pruneUnconnectedNodes(nextRow);
+      prevRow = nextRow;
+    }
+
+    pruneUnconnectedMapNodes();
+  }
+
+  /**
+   * Removes all unconnected nodes from the MapGraph. Only called as the final
+   * step of generation.
+   *
+   * @param void
+   */
+  private void pruneUnconnectedMapNodes() {
+    nodes.values().removeIf(node -> node.getConnections().isEmpty());
+  }
+
+  /**
+   * Removes random nodes from a list. Does not remove from MapGraph state.
+   *
+   * @param nodelist list of nodes to be pruned
+   */
+  private void pruneRandomNodes(List<MapNode> nodelist, int count) {
+
+    Random rand = new Random();
+
+    for (int i = 0; i < count; i++) {
+      nodelist.remove(rand.nextInt(0, nodelist.size() - 1));
+    }
+  }
+
+  /**
+   * Removes all nodes in a list with no connections. Does not remove from
+   * MapGraph state.
+   *
+   * @param nodelist list of nodes to be pruned
+   */
+  private void pruneUnconnectedNodes(List<MapNode> nodelist) {
+
+    nodelist.removeIf(node -> node.getConnections().isEmpty());
   }
 
   /**
@@ -43,6 +137,11 @@ public class MapGraph implements EncounterCallback {
     return nodes.get(nodeId);
   }
 
+  public MapNode getNodeByCoords(int x, int y) {
+
+    return nodes.get((y * MAP_WIDTH + x) - 1);
+  }
+
   /**
    * Gets the current node.
    *
@@ -61,11 +160,19 @@ public class MapGraph implements EncounterCallback {
     return nodes;
   }
 
-  /** Connects two nodes. */
-  public void connectNodes(Integer firstId, Integer secondId) {
+  public List<MapNode> getNodesByHeight(int height) {
 
-    MapNode first = nodes.get(firstId);
-    MapNode second = nodes.get(secondId);
+    List<MapNode> result = new ArrayList<>();
+    for (MapNode node : nodes.values()) {
+      if (node.getHeight() == height) {
+        result.add(node);
+      }
+    }
+    return result;
+  }
+
+  /** Connects two nodes. */
+  public void connectNodes(MapNode first, MapNode second) {
 
     if (first != null && second != null) {
       first.addConnection(second);
@@ -76,7 +183,7 @@ public class MapGraph implements EncounterCallback {
   /**
    * Called after an encounter finishes.
    *
-   * @param nodeId completed node id
+   * @param nodeId  completed node id
    * @param success whether encounter completed successfully
    */
   public void completeNode(Integer nodeId, boolean success) {
