@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class MapSelectionControllerTest {
 
-  private MapGraph graph;
+  private MapGraph mapGraph;
   private MapSelectionController controller;
   private AtomicReference<Integer> selected;
   private AtomicReference<Integer> locked;
@@ -26,35 +26,35 @@ class MapSelectionControllerTest {
    * Creates a node with the given id, room type and state.
    *
    * @param id node identifier
-   * @param type room type
-   * @param state initial node state
+   * @param roomType room type
+   * @param nodeState initial node state
    * @return the created node
    */
-  private MapNode node(int id, RoomType type, NodeState state) {
-    MapNode n = new MapNode(id, type);
-    n.setState(state);
+  private MapNode node(int id, RoomType roomType, NodeState nodeState) {
+    MapNode n = new MapNode(id, roomType);
+    n.setState(nodeState);
     return n;
   }
 
   @BeforeEach
   void setUp() {
-    graph = new MapGraph();
+    mapGraph = new MapGraph();
 
     // 0 (CURRENT) -- 1 (AVAILABLE) -- 3 (LOCKED) -- 4 (LOCKED)
     //             \- 2 (AVAILABLE) -/
-    graph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
-    graph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
-    graph.addNode(node(2, RoomType.SHOP, NodeState.AVAILABLE));
-    graph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
-    graph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
+    mapGraph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
+    mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
+    mapGraph.addNode(node(2, RoomType.SHOP, NodeState.AVAILABLE));
+    mapGraph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
+    mapGraph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
 
-    graph.connectNodes(0, 1);
-    graph.connectNodes(0, 2);
-    graph.connectNodes(1, 3);
-    graph.connectNodes(2, 3);
-    graph.connectNodes(3, 4);
+    mapGraph.connectNodes(0, 1);
+    mapGraph.connectNodes(0, 2);
+    mapGraph.connectNodes(1, 3);
+    mapGraph.connectNodes(2, 3);
+    mapGraph.connectNodes(3, 4);
 
-    controller = new MapSelectionController(graph);
+    controller = new MapSelectionController(mapGraph);
 
     selected = new AtomicReference<>();
     locked = new AtomicReference<>();
@@ -71,7 +71,7 @@ class MapSelectionControllerTest {
     assertFalse(accepted);
     assertEquals(3, locked.get());
     assertNull(selected.get());
-    assertEquals(NodeState.LOCKED, graph.getNode(3).getState());
+    assertEquals(NodeState.LOCKED, mapGraph.getNode(3).getState());
   }
 
   @Test
@@ -92,7 +92,7 @@ class MapSelectionControllerTest {
 
   @Test
   void completedNodeFiresCompletedNotLocked() {
-    graph.getNode(1).setState(NodeState.COMPLETED);
+    mapGraph.getNode(1).setState(NodeState.COMPLETED);
 
     boolean accepted = controller.onNodeClicked(1);
 
@@ -104,7 +104,7 @@ class MapSelectionControllerTest {
 
   @Test
   void roomTypeIsExposedForBossNode() {
-    assertEquals(RoomType.FINAL, graph.getNode(4).getRoomType());
+    assertEquals(RoomType.FINAL, mapGraph.getNode(4).getRoomType());
   }
 
   @Test
@@ -126,7 +126,7 @@ class MapSelectionControllerTest {
     assertFalse(controller.isSelectable(null));
   }
 
-  // BLOCKED until map generation (#15) seeds a starting CURRENT node:
+  // BLOCKED until map generation can seed a starting CURRENT node:
   // - selectableNodeCommitsMoveAndFiresSelected
   // - lockedNodeBecomesSelectableAfterEncounterCompletes
 }

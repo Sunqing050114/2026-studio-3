@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class MapInputHandlerTest {
 
-  private MapGraph graph;
+  private MapGraph mapGraph;
   private MapSelectionController controller;
   private MapInputHandler inputHandler;
   private AtomicReference<Integer> selected;
@@ -41,16 +41,16 @@ class MapInputHandlerTest {
 
   @BeforeEach
   void setUp() {
-    graph = new MapGraph();
+    mapGraph = new MapGraph();
 
-    graph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
-    graph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
-    graph.addNode(node(2, RoomType.SHOP, NodeState.LOCKED));
+    mapGraph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
+    mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
+    mapGraph.addNode(node(2, RoomType.SHOP, NodeState.LOCKED));
 
-    graph.connectNodes(0, 1);
-    graph.connectNodes(0, 2);
+    mapGraph.connectNodes(0, 1);
+    mapGraph.connectNodes(0, 2);
 
-    controller = new MapSelectionController(graph);
+    controller = new MapSelectionController(mapGraph);
     inputHandler = new MapInputHandler(controller);
 
     selected = new AtomicReference<>();
