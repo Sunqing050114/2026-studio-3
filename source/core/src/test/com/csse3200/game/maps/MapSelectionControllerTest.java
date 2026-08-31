@@ -16,6 +16,7 @@ class MapSelectionControllerTest {
   private MapSelectionController controller;
   private AtomicReference<Integer> selected;
   private AtomicReference<Integer> locked;
+  private AtomicReference<Integer> completed;
 
   /**
    * Creates a node with the given id, room type and state.
@@ -53,8 +54,10 @@ class MapSelectionControllerTest {
 
     selected = new AtomicReference<>();
     locked = new AtomicReference<>();
+    completed = new AtomicReference<>();
     controller.getEvents().addListener("nodeSelected", (Integer id) -> selected.set(id));
     controller.getEvents().addListener("nodeLocked", (Integer id) -> locked.set(id));
+    controller.getEvents().addListener("nodeCompleted", (Integer id) -> completed.set(id));
   }
 
   @Test
@@ -84,13 +87,14 @@ class MapSelectionControllerTest {
   }
 
   @Test
-  void completedNodeisNotSelectable() {
+  void completedNodeFiresCompletedNotLocked() {
     mapGraph.getNode(1).setState(NodeState.COMPLETED);
 
     boolean accepted = controller.onNodeClicked(1);
 
     assertFalse(accepted);
-    assertEquals(1, locked.get());
+    assertEquals(1, completed.get());
+    assertNull(locked.get());
     assertNull(selected.get());
   }
 

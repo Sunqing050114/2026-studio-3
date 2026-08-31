@@ -39,7 +39,18 @@ public class MapSelectionController {
     }
 
     MapNode node = mapGraph.getNode(nodeId);
-    if (node == null || node.getState() != NodeState.AVAILABLE) {
+
+    if (node == null) {
+      events.trigger("nodeLocked", nodeId);
+      return false;
+    }
+
+    if (node.getState() == NodeState.COMPLETED) {
+      events.trigger("nodeCompleted", nodeId);
+      return false;
+    }
+
+    if (node.getState() != NodeState.AVAILABLE) {
       events.trigger("nodeLocked", nodeId);
       return false;
     }
