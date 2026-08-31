@@ -6,9 +6,11 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
 import com.csse3200.game.components.player.PlayerActions;
+import com.csse3200.game.components.player.PlayerIntent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
+import net.dermetfan.gdx.physics.box2d.PositionController;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayDeque;
@@ -25,6 +27,7 @@ public class BattleController {
   private BattlePhase currentPhase;
   private int currentEnemyIndex;
   private EnemyIntent currentEnemyIntent;
+  private PlayerIntent currentPlayerIntent;
   private final BattleTransitions battleTransitions;
   private final EventHandler eventHandler;
   private final Deque<BattleEvent> eventQueue;
@@ -52,6 +55,7 @@ public class BattleController {
     this.currentPhase = BattlePhase.SETUP;
     this.currentEnemyIndex = -1;
     this.currentEnemyIntent = null;
+    this.currentPlayerIntent = null;
     this.eventHandler = new EventHandler();
     this.eventQueue = new ArrayDeque<>();
   }
@@ -155,25 +159,25 @@ public class BattleController {
 
   public void selectAttack() {
     if (canHandle(BattleEvent.PLAYER_ATTACK_SELECTED)) {
-      handle(BattleEvent.PLAYER_ATTACK_SELECTED);
+      currentPlayerIntent = PlayerIntent.ATTACK;
     }
   }
 
   public void selectDefend() {
     if (canHandle(BattleEvent.PLAYER_DEFEND_SELECTED)) {
-      handle(BattleEvent.PLAYER_DEFEND_SELECTED);
+      currentPlayerIntent = PlayerIntent.DEFEND;
     }
   }
 
   public void selectOther() {
     if (canHandle(BattleEvent.PLAYER_OTHER_SELECTED)) {
-      handle(BattleEvent.PLAYER_OTHER_SELECTED);
+      currentPlayerIntent = PlayerIntent.OTHER;
     }
   }
 
   public void endPlayerTurn() {
     if (canHandle(BattleEvent.PLAYER_END_REQUESTED)) {
-      handle(BattleEvent.PLAYER_END_REQUESTED);
+      currentPlayerIntent = PlayerIntent.END_PLAYER_TURN;
     }
   }
 
@@ -345,6 +349,7 @@ public class BattleController {
   }
 
   private void enterRevealIntents() {
+    // reset enemy index to reduce the chance of buggy behaviour with dead enemies
     this.setCurrentEnemyIndex(-1); // TODO: Probably a better way to do this.
 
     // Rolls intent for alive each enemy.
@@ -375,7 +380,22 @@ public class BattleController {
 
   private void enterPlayerTurn() {
     // Enable or accept player actions.
-    this.isBattleOver();
+    if (this.isBattleOver()) {
+      return;
+    }
+    switch (currentPlayerIntent) {
+      case PlayerIntent.ATTACK:
+        handle(BattleEvent.PLAYER_ATTACK_SELECTED);
+        break;
+      case PlayerIntent.DEFEND:
+        handle(BattleEvent.PLAYER_DEFEND_SELECTED);
+        break;
+      case PlayerIntent.END_PLAYER_TURN:
+        handle(BattleEvent.PLAYER_TURN_ENDED);
+        break;
+      default:
+        handle(BattleEvent.PLAYER_OTHER_SELECTED);
+    }
   }
 
   private void enterPlayerAttack() {
@@ -386,7 +406,7 @@ public class BattleController {
 
   private void enterPlayerDefend() {
     // Ask the relevant system to execute the submitted defence.
-    // TODO: figure out how much armor is added on
+    // TODO: figure out how much armor is added on / maybe another class takes care of this
     // player.getComponent(CombatStatsComponent.class).addArmor(0);
     handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }

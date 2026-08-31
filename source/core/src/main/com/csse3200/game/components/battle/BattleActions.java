@@ -13,7 +13,7 @@ public class BattleActions extends Component {
   static final String PHASE_CHANGED_EVENT = "phaseChange";
 
   private final BattleController controller;
-  private GdxGame game;
+  private final GdxGame game;
 
   public BattleActions(BattleController controller, GdxGame game) {
     this.controller = controller;
