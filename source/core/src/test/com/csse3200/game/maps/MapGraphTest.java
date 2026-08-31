@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.csse3200.game.extensions.GameExtension;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -23,6 +24,19 @@ public class MapGraphTest {
     MapGraph graph = new MapGraph();
 
     assertNull(graph.getCurrentNode());
+  }
+
+  @Test
+  void createsGraphFromGeneratedNodeMap() {
+    Map<Integer, MapNode> nodes =
+        NodePoolGenerator.generate(new RoomDistributionConfig(5, 3, 2, 1, 12345L));
+
+    MapGraph graph = new MapGraph(nodes);
+
+    assertEquals(nodes.keySet(), graph.getNodes().keySet());
+    assertTrue(
+        nodes.entrySet().stream()
+            .allMatch(entry -> graph.getNode(entry.getKey()) == entry.getValue()));
   }
 
   @Test

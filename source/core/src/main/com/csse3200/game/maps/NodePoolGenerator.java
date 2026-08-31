@@ -2,7 +2,9 @@ package com.csse3200.game.maps;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /** Generates a seeded pool of typed map nodes without creating graph connections. */
@@ -14,10 +16,10 @@ public final class NodePoolGenerator {
    * Generates the configured normal nodes followed by exactly one final node.
    *
    * @param config room distribution configuration
-   * @return immutable node pool with unique, sequential IDs
+   * @return immutable node pool keyed by unique, sequential IDs
    * @throws NullPointerException if the configuration is null
    */
-  public static List<MapNode> generate(RoomDistributionConfig config) {
+  public static Map<Integer, MapNode> generate(RoomDistributionConfig config) {
     if (config == null) {
       throw new NullPointerException("Config cannot be null!");
     }
@@ -28,15 +30,15 @@ public final class NodePoolGenerator {
     Random random = seed == null ? new Random() : new Random(seed);
 
     Collections.shuffle(roomTypes, random); // Shuffleeeee
-    List<MapNode> nodes = new ArrayList<>(nodeCount + 1);
+    Map<Integer, MapNode> nodes = new HashMap<>(nodeCount + 1);
 
     // Using zero-based IDs here: 0 to nodeCount - 1.
     for (int index = 0; index < roomTypes.size(); index++) {
-      nodes.add(new MapNode(index, roomTypes.get(index)));
+      nodes.put(index, new MapNode(index, roomTypes.get(index)));
     }
 
-    nodes.add(new MapNode(config.getNormalNodeCount(), RoomType.FINAL)); // Final Node
-    return List.copyOf(nodes);
+    nodes.put(nodeCount, new MapNode(nodeCount, RoomType.FINAL));
+    return Map.copyOf(nodes);
   }
 
   /** Calculates proportional room counts and creates the room-type list. */
