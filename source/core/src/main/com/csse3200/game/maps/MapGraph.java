@@ -24,16 +24,16 @@ public class MapGraph implements EncounterCallback {
     nodes.put(node.getNodeId(), node);
   }
 
-  /** 
+  /**
    * Adds a list of nodes to the graph. TO BE DELETED, JUST FOR TESTING
    *
    * @param nodeList nodes to add to the graph
    */
-   public void addNodes(Map<Integer, MapNode> nodeList) {
-     for (MapNode node : nodeList.values()) {
-       addNode(node); 
-      }
+  public void addNodes(Map<Integer, MapNode> nodeList) {
+    for (MapNode node : nodeList.values()) {
+      addNode(node);
     }
+  }
 
   /**
    * Gets a node by its id.

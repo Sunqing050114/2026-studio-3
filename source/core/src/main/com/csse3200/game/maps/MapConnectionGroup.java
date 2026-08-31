@@ -7,40 +7,36 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 
+public class MapConnectionGroup extends Group {
+  private final float length;
+  private final float angle;
+  private Image mapConnection;
 
-public class MapConnectionGroup extends Group{
-    private final float length;
-    private final float angle;
-    private Image mapConnection;
+  public MapConnectionGroup(Vector2 start, Vector2 end) {
 
-    public MapConnectionGroup (Vector2 start, Vector2 end) {
+    Vector2 difference = end.cpy().sub(start);
+    this.length = difference.len();
+    this.angle = difference.angleDeg();
 
-        Vector2 difference = end.cpy().sub(start);
-        this.length = difference.len();
-        this.angle = difference.angleDeg();
+    loadNodeAssets();
+    mapConnection =
+        new Image(ServiceLocator.getResourceService().getAsset("nodeLine.png", Texture.class));
 
-        loadNodeAssets();
-        mapConnection = new Image(
-            ServiceLocator.getResourceService().getAsset("nodeLine.png",
-            Texture.class));
+    mapConnection.setSize(8, length);
+    mapConnection.setRotation(angle);
+    mapConnection.setPosition(start.x, start.y);
 
-        mapConnection.setSize(8, length);
-        mapConnection.setRotation(angle);
-        mapConnection.setPosition(start.x, start.y);
+    addActor(mapConnection);
+  }
 
-        addActor(mapConnection);
+  public double getAngle() {
+    return this.angle;
+  }
 
-
-    }
-
-    public double getAngle() {
-        return this.angle;
-    }
-
-    private void loadNodeAssets() {
-        String[] nodeAssets = {"nodeLine.png"};
-        ResourceService resourceService = ServiceLocator.getResourceService();
-        resourceService.loadTextures(nodeAssets);
-        ServiceLocator.getResourceService().loadAll();
-    }
+  private void loadNodeAssets() {
+    String[] nodeAssets = {"nodeLine.png"};
+    ResourceService resourceService = ServiceLocator.getResourceService();
+    resourceService.loadTextures(nodeAssets);
+    ServiceLocator.getResourceService().loadAll();
+  }
 }

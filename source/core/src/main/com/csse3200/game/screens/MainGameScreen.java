@@ -1,8 +1,5 @@
 package com.csse3200.game.screens;
 
-import java.util.List;
-import java.util.Map;
-import com.csse3200.game.maps.*;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -18,6 +15,7 @@ import com.csse3200.game.entities.factories.RenderFactory;
 import com.csse3200.game.input.InputComponent;
 import com.csse3200.game.input.InputDecorator;
 import com.csse3200.game.input.InputService;
+import com.csse3200.game.maps.*;
 import com.csse3200.game.physics.PhysicsEngine;
 import com.csse3200.game.physics.PhysicsService;
 import com.csse3200.game.rendering.RenderService;
@@ -27,9 +25,9 @@ import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * The game screen containing the main game.
@@ -135,7 +133,8 @@ public class MainGameScreen extends ScreenAdapter {
         ServiceLocator.getInputService().getInputFactory().createForTerminal();
 
     Entity ui = new Entity();
-    Map<Integer, MapNode> nodePool = NodePoolGenerator.generate(new RoomDistributionConfig(20,5,3,2));
+    Map<Integer, MapNode> nodePool =
+        NodePoolGenerator.generate(new RoomDistributionConfig(20, 5, 3, 2));
     MapGraph map = new MapGraph();
     map.addNodes(nodePool);
     MapDisplay map22 = new MapDisplay(map);
