@@ -61,7 +61,14 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
 
     //Energy text
-    energyLabel = new Label("Energy: ", skin, "large");
+    EnergyComponent component = entity.getComponent(EnergyComponent.class);
+    int energy = 100;
+    if (energy != 100) {
+      energy = component.getCurrentEnergy();
+    }
+    CharSequence energyText = String.format("Energy: %d", energy);
+    energyLabel = new Label(energyText, skin, "large");
+    //energyLabel = new Label("Energy: ", skin, "large");
 
     //Piety image
     pietyImage =
