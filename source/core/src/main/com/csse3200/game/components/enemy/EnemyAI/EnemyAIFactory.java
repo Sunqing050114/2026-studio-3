@@ -3,6 +3,7 @@ package com.csse3200.game.components.enemy.EnemyAI;
 /** Creates enemy AI implementations from behaviour identifiers. */
 public final class EnemyAIFactory {
   public static final String LESSER_SHADE = "lesser_shade_ai";
+  public static final String BLADE_DISCIPLE = "blade_disciple";
 
   /**
    * Creates a new enemy AI from its behaviour identifier.
