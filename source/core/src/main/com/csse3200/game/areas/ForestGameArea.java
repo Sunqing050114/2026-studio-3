@@ -7,9 +7,11 @@ import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.areas.terrain.TerrainFactory.TerrainType;
 import com.csse3200.game.components.gamearea.GameAreaDisplay;
 import com.csse3200.game.entities.Entity;
+import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
+import com.csse3200.game.entities.factories.TestDropTargetFactory;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.utils.math.GridPoint2Utils;
@@ -22,13 +24,15 @@ public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
-  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(10, 10);
+  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(15, 20);
+  private static final GridPoint2 ENEMY_SPAWN = new GridPoint2(PLAYER_SPAWN.x + 5, PLAYER_SPAWN.y);
   private static final float WALL_WIDTH = 0.1f;
   private static final String[] forestTextures = {
     "images/star_player.png",
     "images/tree.png",
     "images/ghost_king.png",
     "images/ghost_1.png",
+    "images/heart.png",
     "images/grass_1.png",
     "images/grass_2.png",
     "images/grass_3.png",
@@ -65,20 +69,14 @@ public class ForestGameArea extends GameArea {
   @Override
   public void create() {
     loadAssets();
-
-    displayUI();
-
     spawnTerrain();
-    spawnTrees();
-    player = spawnPlayer();
-    spawnGhosts();
-    spawnGhostKing();
+
+    spawnEnemy();
 
     playMusic();
   }
 
-  private void displayUI() {
-    Entity ui = new Entity();
+  public void displayUI(Entity ui) {
     ui.addComponent(new GameAreaDisplay("Box Forest"));
     spawnEntity(ui);
   }
@@ -128,6 +126,29 @@ public class ForestGameArea extends GameArea {
     Entity newPlayer = PlayerFactory.createPlayer();
     spawnEntityAt(newPlayer, PLAYER_SPAWN, true, true);
     return newPlayer;
+  }
+
+  /**
+   * Spawns a single enemy into the forest area so it's visible and present in the world. Uses the
+   * roster-driven EnemyFactory, so the enemy id must exist in configs/enemies.json (falls back to a
+   * default config otherwise).
+   */
+  private Entity spawnEnemy() {
+    Entity newEnemy = EnemyFactory.create("bone_crawler");
+    spawnEntityAt(newEnemy, ENEMY_SPAWN, true, true);
+    return newEnemy;
+  }
+
+  /**
+   * TEMP: spawns a static, non-moving entity purely to validate that EnemyDropTargetComponent's
+   * drop zone visually and functionally lines up with where a card is dragged. Offset from
+   * PLAYER_SPAWN so it's a distinct, easy-to-target entity separate from the (currently stationary)
+   * player. Remove this method and its call site once drag-and-drop is confirmed working.
+   */
+  private void spawnTestDropTarget() {
+    Entity testTarget = TestDropTargetFactory.createTestTarget();
+    GridPoint2 testSpawn = new GridPoint2(PLAYER_SPAWN.x + 3, PLAYER_SPAWN.y);
+    spawnEntityAt(testTarget, testSpawn, true, true);
   }
 
   private void spawnGhosts() {

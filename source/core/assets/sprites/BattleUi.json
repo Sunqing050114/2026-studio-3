@@ -1,0 +1,22 @@
+{
+  "Clickable": [
+    {
+      "text": "exit",
+      "x": 100,
+      "y": 100,
+      "trigger": "exit"
+    },
+    {
+      "text": "up",
+      "x": 100,
+      "y": 200,
+      "trigger": "up"
+    },
+    {
+      "text": "down",
+      "x": 100,
+      "y": 300,
+      "trigger": "down"
+    }
+  ]
+}

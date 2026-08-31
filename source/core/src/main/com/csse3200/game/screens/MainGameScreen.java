@@ -7,6 +7,7 @@ import com.csse3200.game.GdxGame;
 import com.csse3200.game.areas.ForestGameArea;
 import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.components.gamearea.PerformanceDisplay;
+import com.csse3200.game.components.maingame.DebugShortcutInputComponent;
 import com.csse3200.game.components.maingame.MainGameActions;
 import com.csse3200.game.components.maingame.MainGameExitDisplay;
 import com.csse3200.game.entities.Entity;

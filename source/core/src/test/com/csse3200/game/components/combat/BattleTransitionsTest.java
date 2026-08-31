@@ -102,10 +102,11 @@ class BattleTransitionsTest {
             BattlePhase.ENEMY_OTHER, BattleEvent.ENEMY_ACTION_RESOLVED, BattlePhase.ENEMY_RESOLVED),
         transition(BattlePhase.ENEMY_RESOLVED, BattleEvent.PLAYER_DEFEATED, BattlePhase.DEFEAT),
         transition(BattlePhase.ENEMY_RESOLVED, BattleEvent.ENEMIES_DEFEATED, BattlePhase.VICTORY),
-        transition(BattlePhase.ENEMY_RESOLVED, BattleEvent.ADVANCE_ENEMY, BattlePhase.NEXT_ENEMY),
-        transition(BattlePhase.NEXT_ENEMY, BattleEvent.MORE_ENEMIES, BattlePhase.ENEMY_TURN),
+        transition(BattlePhase.ENEMY_RESOLVED, BattleEvent.MORE_ENEMIES, BattlePhase.ENEMY_TURN),
         transition(
-            BattlePhase.NEXT_ENEMY, BattleEvent.ENEMY_PHASE_COMPLETE, BattlePhase.PLAYER_START));
+            BattlePhase.ENEMY_RESOLVED,
+            BattleEvent.ENEMY_PHASE_COMPLETE,
+            BattlePhase.REVEAL_INTENTS));
   }
 
   private static Transition transition(
