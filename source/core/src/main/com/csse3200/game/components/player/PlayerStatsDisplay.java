@@ -21,9 +21,6 @@ public class PlayerStatsDisplay extends UIComponent {
   private Image moneyImage;
   private Label moneyLabel;
 
-  private Image energyImage;
-  private Label energyLabel;
-
   /** Creates reusable ui styles and adds actors to the stage. */
   @Override
   public void create() {
