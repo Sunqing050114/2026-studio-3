@@ -6,8 +6,8 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.IntentType;
 import org.junit.jupiter.api.Test;
 
-class LesserShadeAITest {
-  private final LesserShadeAI ai = new LesserShadeAI();
+class CycleAttackDefendAITest {
+  private final CycleAttackDefendAI ai = new CycleAttackDefendAI();
 
   @Test
   void shouldAttackOnOddTurn() {

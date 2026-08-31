@@ -18,7 +18,7 @@ public final class EnemyAIFactory {
     }
 
     return switch (behaviourId) {
-      case LESSER_SHADE -> new LesserShadeAI();
+      case LESSER_SHADE -> new CycleAttackDefendAI();
 
       default -> throw new IllegalArgumentException("Unknown enemy behaviour id: " + behaviourId);
     };

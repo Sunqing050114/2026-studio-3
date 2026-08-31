@@ -4,7 +4,7 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import java.util.Objects;
 
 /** Basic enemy AI that alternates between attacking and defending. */
-public class LesserShadeAI implements EnemyAI {
+public class CycleAttackDefendAI implements EnemyAI {
   private static final int DEFEND_AMOUNT = 2;
 
   @Override

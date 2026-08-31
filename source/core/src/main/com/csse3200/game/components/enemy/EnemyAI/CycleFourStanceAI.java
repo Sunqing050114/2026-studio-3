@@ -4,7 +4,7 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import java.util.Objects;
 
 /**
- * A stance-based enemy that alternates between pressure and defence.
+ * A stance-based behaviour that alternates between pressure and defence.
  *
  * <p>It follows a four-turn cycle:
  *
@@ -15,7 +15,7 @@ import java.util.Objects;
  *   <li>Attack if armour remains, otherwise defend
  * </ol>
  */
-public class BladeDiscipleAI implements EnemyAI {
+public class CycleFourStanceAI implements EnemyAI {
   private static final int DEFEND_AMOUNT = 4;
   private static final int CYCLE_LENGTH = 4;
 

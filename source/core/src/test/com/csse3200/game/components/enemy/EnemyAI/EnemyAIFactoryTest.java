@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 
 class EnemyAIFactoryTest {
   @Test
-  void shouldCreateLesserShadeAI() {
+  void shouldCreateCycleAttackDefendAI() {
     EnemyAI ai = EnemyAIFactory.create(EnemyAIFactory.LESSER_SHADE);
 
-    assertInstanceOf(LesserShadeAI.class, ai);
+    assertInstanceOf(CycleAttackDefendAI.class, ai);
   }
 
   @Test

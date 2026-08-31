@@ -6,8 +6,8 @@ import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.IntentType;
 import org.junit.jupiter.api.Test;
 
-class BladeDiscipleAITest {
-  private final BladeDiscipleAI ai = new BladeDiscipleAI();
+class CycleFourStanceAITest {
+  private final CycleFourStanceAI ai = new CycleFourStanceAI();
 
   @Test
   void shouldAttackOnFirstTurn() {
