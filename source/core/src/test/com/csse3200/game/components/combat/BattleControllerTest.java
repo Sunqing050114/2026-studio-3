@@ -14,6 +14,7 @@ import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
+import com.csse3200.game.components.player.PlayerActions;
 import com.csse3200.game.entities.Entity;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -33,6 +34,7 @@ class BattleControllerTest {
   @BeforeEach
   void setUp() {
     player = new Entity().addComponent(new CombatStatsComponent(20, 0));
+    player.addComponent(new PlayerActions());
     firstEnemyBehaviour = mock(EnemyBehaviourComponent.class);
     secondEnemyBehaviour = mock(EnemyBehaviourComponent.class);
     enemies =

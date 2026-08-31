@@ -1,7 +1,9 @@
 package com.csse3200.game.components.battle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
+import com.csse3200.game.GdxGame;
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.combat.BattleEvent;
@@ -24,7 +26,8 @@ class BattleActionsTest {
     player.addComponent(new CombatStatsComponent(20, 0));
     Entity enemy = EnemyFactory.create(new EnemyConfig());
     controller = new BattleController(player, List.of(enemy));
-    entity = new Entity().addComponent(new BattleActions(controller));
+    GdxGame game = mock(GdxGame.class);
+    entity = new Entity().addComponent(new BattleActions(controller, game));
     entity.create();
   }
 
