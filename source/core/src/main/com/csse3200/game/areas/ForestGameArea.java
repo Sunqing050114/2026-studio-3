@@ -24,9 +24,9 @@ public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
-  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(15, 20);
-  private static final GridPoint2 ENEMY_SPAWN = new GridPoint2(PLAYER_SPAWN.x + 5, PLAYER_SPAWN.y);
-  private static final float WALL_WIDTH = 0.1f;
+  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(5, 20);
+  private static final GridPoint2 ENEMY_SPAWN = new GridPoint2(20, PLAYER_SPAWN.y);
+  private static final float WALL_WIDTH = 3f;
   private static final String[] forestTextures = {
     "images/star_player.png",
     "images/tree.png",
@@ -74,11 +74,11 @@ public class ForestGameArea extends GameArea {
     spawnEnemy();
     player = spawnPlayer();
 
-    playMusic();
+    //playMusic();
   }
 
   public void displayUI(Entity ui) {
-    ui.addComponent(new GameAreaDisplay("Box Forest"));
+    ui.addComponent(new GameAreaDisplay("The Fall of Pantheons"));
     spawnEntity(ui);
   }
 
@@ -172,12 +172,12 @@ public class ForestGameArea extends GameArea {
     spawnEntityAt(ghostKing, randomPos, true, true);
   }
 
-  private void playMusic() {
+   /**private void playMusic() {
     Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
     music.setLooping(true);
     music.setVolume(0.3f);
     music.play();
-  }
+  }*/
 
   private void loadAssets() {
     logger.debug("Loading assets");
