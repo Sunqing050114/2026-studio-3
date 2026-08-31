@@ -114,6 +114,7 @@ class BattleControllerTest {
   void shouldProcessMultipleEnemies() {
     advanceToEnemyTurn();
 
+
     assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
     assertEquals(0, controller.getCurrentEnemyIndex());
     verify(firstEnemyBehaviour, times(2)).rollIntent();
@@ -272,6 +273,7 @@ class BattleControllerTest {
   }
 
   private void advanceToPlayerTurn() {
+    controller.selectAttack();
     controller.handle(BattleEvent.SETUP_COMPLETE);
   }
 

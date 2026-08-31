@@ -158,27 +158,19 @@ public class BattleController {
   }
 
   public void selectAttack() {
-    if (canHandle(BattleEvent.PLAYER_ATTACK_SELECTED)) {
-      currentPlayerIntent = PlayerIntent.ATTACK;
-    }
+    this.currentPlayerIntent = PlayerIntent.ATTACK;
   }
 
   public void selectDefend() {
-    if (canHandle(BattleEvent.PLAYER_DEFEND_SELECTED)) {
-      currentPlayerIntent = PlayerIntent.DEFEND;
-    }
+    this.currentPlayerIntent = PlayerIntent.DEFEND;
   }
 
   public void selectOther() {
-    if (canHandle(BattleEvent.PLAYER_OTHER_SELECTED)) {
-      currentPlayerIntent = PlayerIntent.OTHER;
-    }
+    this.currentPlayerIntent = PlayerIntent.OTHER;
   }
 
   public void endPlayerTurn() {
-    if (canHandle(BattleEvent.PLAYER_END_REQUESTED)) {
-      currentPlayerIntent = PlayerIntent.END_PLAYER_TURN;
-    }
+    this.currentPlayerIntent = PlayerIntent.END_PLAYER_TURN;
   }
 
   public void resetBattle() {
@@ -383,7 +375,7 @@ public class BattleController {
     if (this.isBattleOver()) {
       return;
     }
-    switch (currentPlayerIntent) {
+    switch (this.currentPlayerIntent) {
       case PlayerIntent.ATTACK:
         handle(BattleEvent.PLAYER_ATTACK_SELECTED);
         break;
@@ -400,7 +392,7 @@ public class BattleController {
 
   private void enterPlayerAttack() {
     // Ask the relevant system to execute the submitted attack.
-    player.getComponent(PlayerActions.class).attack();
+    // player.getComponent(PlayerActions.class).attack();
     handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
 
