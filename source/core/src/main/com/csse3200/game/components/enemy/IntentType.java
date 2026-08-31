@@ -9,5 +9,4 @@ public enum IntentType {
   DEBUFF,
   /** Intent is hidden or not yet decided. */
   UNKNOWN,
-
 }
