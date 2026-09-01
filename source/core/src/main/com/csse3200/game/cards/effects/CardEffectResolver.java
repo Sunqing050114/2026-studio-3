@@ -34,25 +34,11 @@ public class CardEffectResolver {
 
   /** Resolves a card that has already been retrieved from Team 6's card library. */
   public CardEffectResolution resolve(CardConfig card, PlayerEffectState playerState) {
-    CardEffectResolution resolution =
-        resolveWithoutStateUpdate(card, CardEffectResolutionContext.from(playerState));
-    updateCalculationState(resolution, playerState);
-    return resolution;
-  }
-
-  /**
-   * Resolves a card without mutating Team 5 calculation state.
-   *
-   * <p>This preview/prepare operation is used by {@code CardPlayService} so failed plays cannot
-   * leave Strength or result-history side effects behind.
-   */
-  public CardEffectResolution resolveWithoutStateUpdate(
-      CardConfig card, CardEffectResolutionContext context) {
-    validate(card, context);
+    validate(card, playerState);
 
     List<ResolvedCardEffect> results = new ArrayList<>();
     for (int i = 0; i < card.effects.length; i++) {
-      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, context));
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, playerState));
     }
     return new CardEffectResolution(card.id, results);
   }
@@ -72,9 +58,9 @@ public class CardEffectResolver {
     return resolve(card, playerState);
   }
 
-  private void validate(CardConfig card, CardEffectResolutionContext context) {
-    if (context == null) {
-      throw new IllegalArgumentException("Card effect resolution context cannot be null");
+  private void validate(CardConfig card, PlayerEffectState playerState) {
+    if (playerState == null) {
+      throw new IllegalArgumentException("Player effect state cannot be null");
     }
     List<String> errors = CardValidator.validate(card);
     if (!errors.isEmpty()) {
@@ -85,15 +71,5 @@ public class CardEffectResolver {
         throw new IllegalArgumentException("Card effects cannot contain null");
       }
     }
-  }
-
-  static void updateCalculationState(
-      CardEffectResolution resolution, PlayerEffectState playerState) {
-    if (resolution == null || playerState == null) {
-      throw new IllegalArgumentException("Resolution and player effect state cannot be null");
-    }
-    resolution.effects().stream()
-        .filter(effect -> effect.type() == com.csse3200.game.cards.EffectType.STRENGTH)
-        .forEach(effect -> playerState.addStrength(effect.value()));
   }
 }

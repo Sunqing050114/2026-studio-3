@@ -66,27 +66,6 @@ class CardEffectResolutionServiceTest {
   }
 
   @Test
-  void shouldNotRecordOrUpdateStrengthUntilPreparedResolutionIsCommitted() {
-    CardConfig innerFocus =
-        card("inner_focus", TargetType.SELF, new EffectConfig(EffectType.STRENGTH, 2));
-    CardLibrary library = new CardLibrary(List.of(innerFocus));
-    PlayerEffectState calculationState = new PlayerEffectState();
-    CardEffectResolutionService service =
-        new CardEffectResolutionService(
-            new CardEffectResolver(library), calculationState, new TurnEffectStore());
-
-    CardEffectResolution prepared = service.resolveUnrecorded(innerFocus);
-
-    assertEquals(List.of(), service.getResolutions());
-    assertEquals(0, calculationState.getStrength());
-
-    service.recordSuccessful(prepared, true);
-
-    assertEquals(List.of(prepared), service.getResolutions());
-    assertEquals(2, calculationState.getStrength());
-  }
-
-  @Test
   void shouldRejectMissingDependencies() {
     assertThrows(
         IllegalArgumentException.class,

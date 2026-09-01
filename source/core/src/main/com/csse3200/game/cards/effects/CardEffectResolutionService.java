@@ -46,42 +46,12 @@ public final class CardEffectResolutionService {
 
   /** Resolves a card by ID and records the successful result for current-turn consumers. */
   public CardEffectResolution resolve(String cardId) {
-    CardEffectResolution resolution = resolver.resolve(cardId, playerEffectState);
-    resultStore.record(resolution);
-    return resolution;
+    return record(resolver.resolve(cardId, playerEffectState));
   }
 
   /** Resolves an already retrieved Team 6 card config and records the successful result. */
   public CardEffectResolution resolve(CardConfig card) {
-    CardEffectResolution resolution = resolver.resolve(card, playerEffectState);
-    resultStore.record(resolution);
-    return resolution;
-  }
-
-  /** Prepares a resolution from Team 5's internal state without recording or mutating it. */
-  public CardEffectResolution resolveUnrecorded(CardConfig card) {
-    return resolver.resolveWithoutStateUpdate(
-        card, CardEffectResolutionContext.from(playerEffectState));
-  }
-
-  /** Prepares a resolution from external state without recording or mutating Team 5 state. */
-  public CardEffectResolution resolveUnrecorded(
-      CardConfig card, CardEffectResolutionContext context) {
-    return resolver.resolveWithoutStateUpdate(card, context);
-  }
-
-  /**
-   * Commits a resolution after the complete card-play transaction succeeds.
-   *
-   * @param resolution prepared immutable resolution
-   * @param updateCalculationState whether Team 5's backwards-compatible Strength state should be
-   *     updated; false when Team 7 is the source of truth through a PlayerStateView
-   */
-  public void recordSuccessful(CardEffectResolution resolution, boolean updateCalculationState) {
-    resultStore.record(resolution);
-    if (updateCalculationState) {
-      CardEffectResolver.updateCalculationState(resolution, playerEffectState);
-    }
+    return record(resolver.resolve(card, playerEffectState));
   }
 
   /**
@@ -117,6 +87,11 @@ public final class CardEffectResolutionService {
    */
   public void clearTurnResults() {
     resultStore.clear();
+  }
+
+  private CardEffectResolution record(CardEffectResolution resolution) {
+    resultStore.record(resolution);
+    return resolution;
   }
 
   private static CardService requireCardService(CardService cardService) {

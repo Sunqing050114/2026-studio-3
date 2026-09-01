@@ -54,49 +54,6 @@ class EffectExecutorTest {
   }
 
   @Test
-  void shouldApplyExternalStrengthFeebleAndVulnerableOnce() {
-    CardEffectResolutionContext context = new CardEffectResolutionContext(2, 0.75f, 1.5f);
-
-    ResolvedCardEffect result =
-        executor.resolve(
-            "strike", new EffectConfig(EffectType.DAMAGE, 6), TargetType.SINGLE_ENEMY, 0, context);
-
-    assertEquals(
-        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 9, 0, 0),
-        result);
-  }
-
-  @Test
-  void shouldApplyPlayerFeebleToOutgoingDamage() {
-    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 0.75f, 1.0f);
-
-    ResolvedCardEffect result =
-        executor.resolve(
-            "strike", new EffectConfig(EffectType.DAMAGE, 8), TargetType.SINGLE_ENEMY, 0, context);
-
-    assertEquals(6, result.value());
-  }
-
-  @Test
-  void shouldApplyEnemyVulnerableToIncomingDamage() {
-    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 1.0f, 1.5f);
-
-    ResolvedCardEffect result =
-        executor.resolve(
-            "strike", new EffectConfig(EffectType.DAMAGE, 6), TargetType.SINGLE_ENEMY, 0, context);
-
-    assertEquals(9, result.value());
-  }
-
-  @Test
-  void shouldRejectInvalidDamageMultipliers() {
-    assertThrows(
-        IllegalArgumentException.class, () -> new CardEffectResolutionContext(0, Float.NaN, 1.0f));
-    assertThrows(
-        IllegalArgumentException.class, () -> new CardEffectResolutionContext(0, 1.0f, -1.0f));
-  }
-
-  @Test
   void shouldReturnEveryOngoingEnemyStatusForOtherSystemsToApply() {
     int sequence = 0;
     for (EffectType effectType : EffectType.values()) {
@@ -130,7 +87,7 @@ class EffectExecutorTest {
   }
 
   @Test
-  void shouldReturnStrengthWithoutMutatingStateDuringEffectPreparation() {
+  void shouldUpdateTeamFiveStrengthStateWhenResolvingStrength() {
     ResolvedCardEffect result =
         executor.resolve(
             "inner_focus",
@@ -142,7 +99,7 @@ class EffectExecutorTest {
     assertEquals(
         new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0),
         result);
-    assertEquals(0, playerState.getStrength());
+    assertEquals(2, playerState.getStrength());
   }
 
   @Test
@@ -203,7 +160,7 @@ class EffectExecutorTest {
                 new EffectConfig(EffectType.DAMAGE, 1),
                 TargetType.SINGLE_ENEMY,
                 0,
-                (PlayerEffectState) null));
+                null));
   }
 
   @Test

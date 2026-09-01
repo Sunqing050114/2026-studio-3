@@ -74,21 +74,6 @@ class CardEffectResolverTest {
   }
 
   @Test
-  void shouldPrepareExternalStateResolutionWithoutUpdatingInternalStrength() {
-    CardEffectResolver resolver = new CardEffectResolver();
-    PlayerEffectState internalState = new PlayerEffectState();
-    CardConfig innerFocus =
-        card("inner_focus", TargetType.SELF, new EffectConfig(EffectType.STRENGTH, 2));
-
-    CardEffectResolution resolution =
-        resolver.resolveWithoutStateUpdate(
-            innerFocus, new CardEffectResolutionContext(4, 1.0f, 1.0f));
-
-    assertEquals(EffectType.STRENGTH, resolution.playerEffects().get(0).type());
-    assertEquals(0, internalState.getStrength());
-  }
-
-  @Test
   void shouldSplitEnemyAndPlayerEffects() {
     CardEffectResolution enemyResolution =
         new CardEffectResolution(
