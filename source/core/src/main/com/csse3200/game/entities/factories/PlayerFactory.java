@@ -4,7 +4,7 @@ import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.player.EnergyComponent;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.player.PlayerActions;
-import com.csse3200.game.components.player.PlayerBehaviorComponent;
+import com.csse3200.game.components.player.PlayerBehaviourComponent;
 import com.csse3200.game.components.player.PlayerStatsDisplay;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.PlayerConfig;
@@ -46,7 +46,7 @@ public class PlayerFactory {
             .addComponent(new PlayerActions())
             .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack, stats.maxHealth))
             .addComponent(new InventoryComponent(stats.gold))
-            .addComponent(new PlayerBehaviorComponent())
+            .addComponent(new PlayerBehaviourComponent())
             .addComponent(inputComponent)
             .addComponent(new PlayerStatsDisplay())
             .addComponent(new EnergyComponent(stats.maxEnergy));

@@ -5,14 +5,15 @@ import com.csse3200.game.components.Component;
 import com.csse3200.game.components.StatusEffectCalculator;
 import com.csse3200.game.entities.Entity;
 
-public class PlayerBehaviorComponent extends Component {
+/** What it does: resolves player attack and defend against the shared CombatStatsComponent */
+public class PlayerBehaviourComponent extends Component {
 
   /**
    * Attack the target with cardDamage calculation. The card damage plus player's base attack is
-   * multiplied by the player's modifier and enemy's modifier
+   * multiplied by the player's modifier and enemy's modifier.
    *
-   * @param target the entity's being attacked
-   * @param cardDamage the base damage value from card
+   * @param target the entity being attacked
+   * @param cardDamage the base damage value from the card
    */
   public void attack(Entity target, int cardDamage) {
     if (target == null) {
