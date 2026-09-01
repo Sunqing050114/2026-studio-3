@@ -61,14 +61,10 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
 
     //Energy text
-    EnergyComponent component = entity.getComponent(EnergyComponent.class);
-    int energy = 100;
-    if (energy != 100) {
-      energy = component.getCurrentEnergy();
-    }
+    EnergyComponent energyComponent = entity.getComponent(EnergyComponent.class);
+    int energy = energyComponent.getCurrentEnergy();
     CharSequence energyText = String.format("Energy: %d", energy);
     energyLabel = new Label(energyText, skin, "large");
-    //energyLabel = new Label("Energy: ", skin, "large");
 
     //Piety image
     pietyImage =
@@ -82,7 +78,10 @@ public class PlayerStatsDisplay extends UIComponent {
         new Image(ServiceLocator.getResourceService().getAsset("images/money.png", Texture.class));
 
     //Money text
-    moneyLabel = new Label("Gold: $0", skin, "large");
+    InventoryComponent inventoryComponent = entity.getComponent(InventoryComponent.class);
+    int money = inventoryComponent.getGold();
+    CharSequence moneyText = String.format("Gold: $%d", money);
+    moneyLabel = new Label(moneyText, skin, "large");
 
     table.add(heartImage).size(imageSideLength).pad(5);
     table.add(healthLabel);
