@@ -17,6 +17,13 @@
       "x": 100,
       "y": 300,
       "trigger": "down"
+    },
+    {
+      "text": "EndTurn",
+      "x": 100,
+      "y": 400,
+      "trigger": "endturn"
+
     }
   ]
 }

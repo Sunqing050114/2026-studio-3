@@ -2,7 +2,7 @@ package com.csse3200.game.components.battle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
-
+import com.csse3200.game.cards.CardLibrary;
 import com.csse3200.game.GdxGame;
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.combat.BattleController;
@@ -15,6 +15,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.when;
+
+import com.csse3200.game.cards.CardPlayRequest;
+import com.csse3200.game.cards.CardType;
+import com.csse3200.game.cards.configs.CardConfig;
+import java.util.Optional;
 
 class BattleActionsTest {
   private BattleController controller;
@@ -27,7 +33,8 @@ class BattleActionsTest {
     Entity enemy = EnemyFactory.create(new EnemyConfig());
     controller = new BattleController(player, List.of(enemy));
     GdxGame game = mock(GdxGame.class);
-    entity = new Entity().addComponent(new BattleActions(controller, game));
+    CardLibrary library = mock(CardLibrary.class);
+    entity = new Entity().addComponent(new BattleActions(controller, game, library));
     entity.create();
   }
 
