@@ -49,9 +49,19 @@ public final class CardEffectResolutionService {
     return record(resolver.resolve(cardId, playerEffectState));
   }
 
+  /** Resolves a card by ID with read-only combat state and records the successful result. */
+  public CardEffectResolution resolve(String cardId, CardEffectResolutionContext context) {
+    return record(resolver.resolve(cardId, context));
+  }
+
   /** Resolves an already retrieved Team 6 card config and records the successful result. */
   public CardEffectResolution resolve(CardConfig card) {
     return record(resolver.resolve(card, playerEffectState));
+  }
+
+  /** Resolves an already retrieved card config with read-only combat state. */
+  public CardEffectResolution resolve(CardConfig card, CardEffectResolutionContext context) {
+    return record(resolver.resolve(card, context));
   }
 
   /**

@@ -58,6 +58,21 @@ class CardEffectResolutionServiceTest {
   }
 
   @Test
+  void shouldResolveWithExternalCombatContextAndRecordResult() {
+    CardConfig strike =
+        card("strike", TargetType.SINGLE_ENEMY, new EffectConfig(EffectType.DAMAGE, 6));
+    CardEffectResolutionService service = new CardEffectResolutionService(new CardLibrary());
+
+    CardEffectResolution result = service.resolve(strike, new CardEffectResolutionContext(2, 1, 1));
+
+    assertEquals(
+        List.of(
+            new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 9, 0, 0)),
+        result.enemyEffects());
+    assertEquals(List.of(result), service.getResolutions());
+  }
+
+  @Test
   void shouldNotRecordFailedResolutions() {
     CardEffectResolutionService service = new CardEffectResolutionService(new CardLibrary());
 
