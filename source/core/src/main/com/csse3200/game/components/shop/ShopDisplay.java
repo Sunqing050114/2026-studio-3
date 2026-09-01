@@ -77,7 +77,6 @@ public class ShopDisplay extends UIComponent {
     }
   }
 
-  private final InventoryComponent inventory;
   private final ShopEncounter shopEncounter;
   private final Map<String, ItemWidgets> itemWidgets = new HashMap<>();
   private final Set<String> purchasedItemIds = new HashSet<>();
@@ -132,11 +131,19 @@ public class ShopDisplay extends UIComponent {
    * @param shopEncounter encounter session receiving purchase and completion actions
    */
   public ShopDisplay(InventoryComponent inventory, ShopEncounter shopEncounter) {
-    this.inventory = inventory;
     this.shopEncounter =
         shopEncounter == null
             ? new ShopEncounter(inventory, new ShopService((ShopConfig) null))
             : shopEncounter;
+  }
+
+  /**
+   * Creates a display for an encounter already connected through the integration gateways.
+   *
+   * @param shopEncounter integrated shop session
+   */
+  public ShopDisplay(ShopEncounter shopEncounter) {
+    this(null, shopEncounter);
   }
 
   @Override
@@ -348,8 +355,8 @@ public class ShopDisplay extends UIComponent {
   }
 
   private void refresh() {
-    goldLabel.setText(
-        inventory == null ? "GOLD  --" : String.format("GOLD  %d", inventory.getGold()));
+    Integer currency = shopEncounter.getCurrency();
+    goldLabel.setText(currency == null ? "GOLD  --" : String.format("GOLD  %d", currency));
 
     for (ShopItem item : shopEncounter.getItems()) {
       ItemWidgets widgets = itemWidgets.get(item.id);
