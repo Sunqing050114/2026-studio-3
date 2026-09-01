@@ -118,6 +118,31 @@ public class MapGraph implements EncounterCallback {
   }
 
   /**
+   * Starts a run at the given node, unlocking its connections so there is somewhere to move.
+   *
+   * @param nodeId id of the node the player starts on
+   * @return true if the node exists
+   */
+  public boolean startRun(Integer nodeId) {
+    MapNode startNode = nodes.get(nodeId);
+
+    if (startNode == null) {
+      return false;
+    }
+
+    currentNode = startNode;
+    startNode.setState(NodeState.CURRENT);
+
+    for (MapNode connected : startNode.getConnections()) {
+      if (connected.getState() == NodeState.LOCKED) {
+        connected.setState(NodeState.AVAILABLE);
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Checks if a move is valid and updates currentNode accordingly.
    *
    * @param nodeId id of the node to move to
@@ -127,8 +152,8 @@ public class MapGraph implements EncounterCallback {
     MapNode targetNode = nodes.get(nodeId);
 
     // targetNode must be connected to currentNode and must be available
-    // TODO: Handle case where currentNode is null
-    if (targetNode == null
+    if (currentNode == null
+        || targetNode == null
         || targetNode.getState() != NodeState.AVAILABLE
         || !currentNode.getConnections().contains(targetNode)) {
       return false;
