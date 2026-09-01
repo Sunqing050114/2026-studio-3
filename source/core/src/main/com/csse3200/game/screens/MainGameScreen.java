@@ -133,10 +133,9 @@ public class MainGameScreen extends ScreenAdapter {
         ServiceLocator.getInputService().getInputFactory().createForTerminal();
 
     Entity ui = new Entity();
-    Map<Integer, MapNode> nodePool =
-        NodePoolGenerator.generate(new RoomDistributionConfig(20, 5, 3, 2));
-    MapGraph map = new MapGraph();
-    map.addNodes(nodePool);
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 70, 20, 10);
+    MapGraph map = new MapGraph(NodePoolGenerator.generate(config));
+    map.generatePathing();
     MapDisplay map22 = new MapDisplay(map);
     ui.addComponent(new InputDecorator(stage, 10))
         .addComponent(new PerformanceDisplay())

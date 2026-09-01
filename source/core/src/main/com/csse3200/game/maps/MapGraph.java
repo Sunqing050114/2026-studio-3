@@ -71,11 +71,11 @@ public class MapGraph implements EncounterCallback {
         int minDistance = MAP_WIDTH;
         for (MapNode childNode : nextRow) {
           int distance = Math.abs(parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
-          if (distance <= minDistance) {
+          if (distance < minDistance) {
             minDistance = distance;
-          }
-          if (parentNode.getConnections().size() < rand.nextInt(3, 4)) {
-            connectNodes(parentNode, childNode);
+            if (parentNode.getConnections().size() < 3) {
+              connectNodes(parentNode, childNode);
+            }
           }
         }
       }

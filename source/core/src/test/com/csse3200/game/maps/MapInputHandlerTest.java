@@ -47,8 +47,8 @@ class MapInputHandlerTest {
     mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
     mapGraph.addNode(node(2, RoomType.SHOP, NodeState.LOCKED));
 
-    mapGraph.connectNodes(0, 1);
-    mapGraph.connectNodes(0, 2);
+    //mapGraph.connectNodes(0, 1);
+    //mapGraph.connectNodes(0, 2);
 
     controller = new MapSelectionController(mapGraph);
     inputHandler = new MapInputHandler(controller);
