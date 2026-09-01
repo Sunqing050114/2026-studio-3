@@ -2,9 +2,15 @@ package com.csse3200.game.components.battle;
 
 import com.csse3200.game.GdxGame;
 import com.csse3200.game.cards.CardLibrary;
+import com.csse3200.game.cards.CardPlayRequest;
+import com.csse3200.game.cards.CardType;
+import com.csse3200.game.cards.EffectType;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
 import com.csse3200.game.components.Component;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.combat.BattleEvent;
+import com.csse3200.game.components.player.PlayerIntent;
 
 /** Connects battle UI events to valid transitions in the battle controller. */
 public class BattleActions extends Component {
@@ -36,16 +42,32 @@ public class BattleActions extends Component {
     entity.getEvents().addListener(PLAY_CARD_EVENT, this::onCardPlayed);
     controller.addPhaseChangeListener(
         (previousPhase, nextPhase) -> entity.getEvents().trigger(PHASE_CHANGED_EVENT, nextPhase));
+    entity.getEvents().addListener("cardPlayed", this::logCardPlayed);
+    entity.getEvents().addListener("endturn", this::triggerEndTurn);
   }
-
+  //test is card is played
+  private void logCardPlayed(String cardName, String targetID) {
+    System.out.println("Card played: " + cardName + " on target: " + targetID);
+  }
   /**
    * A card was played (self-target on click, or dropped on a target) — see Clickable/DragNDrop
    * and EnemyDropTargetComponent for how "playCard" ends up firing with (cardId, targetId).
    * Translates the raw cardId into its display name and re-fires as "cardPlayed" for UI feedback.
    */
-  private void onCardPlayed(String cardId, String targetLabel) {
-    String cardLabel = library.getCard(cardId).map(card -> card.name).orElse(cardId);
-    entity.getEvents().trigger("cardPlayed", cardLabel, targetLabel);
+
+  private void onCardPlayed(String cardID, String targetID) {
+    var optionalCard = library.getCard(cardID);
+    if (optionalCard.isEmpty()) {
+      return;
+    }
+    CardConfig cardConfig = optionalCard.get();
+    CardPlayRequest request = new CardPlayRequest(cardID,targetID);
+    PlayerIntent intent = classifyCard(cardConfig);
+
+    if (controller.submitCardPlayRequest(request,intent)) {
+      entity.getEvents().trigger("cardPlayed", cardConfig.name, targetID);
+    }
+
   }
 
 //  private void selectAttack() {
@@ -56,9 +78,28 @@ public class BattleActions extends Component {
 //    handleIfAllowed(BattleEvent.PLAYER_DEFEND_SELECTED);
 //  }
 //
-//  private void selectEndTurn() {
-//    handleIfAllowed(BattleEvent.PLAYER_END_REQUESTED);
-//  }
+  private void triggerEndTurn() {
+    controller.endPlayerTurn();
+  }
+  private void selectEndTurn() {
+    if (controller.canHandle(BattleEvent.PLAYER_END_REQUESTED)) {
+
+    }
+  }
+
+  private PlayerIntent classifyCard(CardConfig card) {
+    if (card.type == CardType.ATTACK) {
+      return PlayerIntent.ATTACK;
+    }
+
+    for (EffectConfig effect : card.effects) {
+      if (effect.type == EffectType.BLOCK) {
+        return PlayerIntent.DEFEND;
+      }
+    }
+
+    return PlayerIntent.OTHER;
+  }
 //
 //  private void handleIfAllowed(BattleEvent event) {
 //    if (controller.canHandle(event)) {

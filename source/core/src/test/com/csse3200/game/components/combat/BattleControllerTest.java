@@ -9,12 +9,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import com.csse3200.game.cards.CardPlayRequest;
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.player.PlayerActions;
+import com.csse3200.game.components.player.PlayerIntent;
 import com.csse3200.game.entities.Entity;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -72,7 +73,23 @@ class BattleControllerTest {
     assertEquals(BattlePhase.SETUP, controller.getCurrentPhase());
     assertEquals(-1, controller.getCurrentEnemyIndex());
   }
+  @Test
+  void shouldWaitForPlayerInputWhenPlayerTurnStarts() {
+    controller.start();
 
+    assertEquals(BattlePhase.PLAYER_TURN, controller.getCurrentPhase());
+  }
+  @Test
+  void shouldstoreSubmittedAttackCard() {
+    advanceToPlayerTurn();
+    CardPlayRequest request = new CardPlayRequest("strike", "enemy-1");
+
+    boolean accepted = controller.submitCardPlayRequest(request, PlayerIntent.ATTACK);
+
+    assertTrue(accepted);
+    assertEquals(request, controller.getCardPlayRequest());
+    assertEquals(BattlePhase.PLAYER_ATTACK, controller.getCurrentPhase());
+  }
   @Test
   void shouldApplyValidTransitions() {
     controller.handle(BattleEvent.SETUP_COMPLETE);
@@ -273,7 +290,6 @@ class BattleControllerTest {
   }
 
   private void advanceToPlayerTurn() {
-    controller.selectAttack();
     controller.handle(BattleEvent.SETUP_COMPLETE);
   }
 

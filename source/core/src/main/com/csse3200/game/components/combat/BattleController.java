@@ -11,7 +11,7 @@ import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
 import com.csse3200.game.events.listeners.EventListener2;
 import net.dermetfan.gdx.physics.box2d.PositionController;
-
+import com.csse3200.game.cards.CardPlayRequest;
 import java.lang.ref.SoftReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -35,6 +35,7 @@ public class BattleController {
   private final List<Entity> enemies;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
   private boolean pendingEvent;
+  private CardPlayRequest pendingCard;
 
   public BattleController(Entity player, List<Entity> enemies) throws IllegalArgumentException {
 
@@ -331,7 +332,30 @@ public class BattleController {
   private void cleanUp() {
     this.setCurrentEnemyIndex(-1);
   }
+  public CardPlayRequest getCardPlayRequest() {
+    return this.pendingCard;
+  }
+  public Boolean submitCardPlayRequest(CardPlayRequest cardPlayRequest, PlayerIntent playerIntent) {
+    System.out.println(cardPlayRequest.toString());
+    System.out.println(playerIntent.toString());
+    Objects.requireNonNull(cardPlayRequest, "cardPlayRequest cannot be null.");
+    Objects.requireNonNull(playerIntent, "playerIntent cannot be null.");
+    BattleEvent event = switch(playerIntent) {
+      case ATTACK -> BattleEvent.PLAYER_ATTACK_SELECTED;
+      case DEFEND -> BattleEvent.PLAYER_DEFEND_SELECTED;
+      case OTHER -> BattleEvent.PLAYER_OTHER_SELECTED;
+      case END_PLAYER_TURN ->
+              throw new IllegalArgumentException("End turn is not a card action");
+    };
+    if (!canHandle(event)) {
+      return false;
 
+    }
+    pendingCard = cardPlayRequest;
+    currentPlayerIntent = playerIntent;
+    handle(event);
+    return true;
+  }
   /*------------------------- Possible Action Branches ----------------------------*/
 
   private void enterSetup() {
@@ -375,40 +399,35 @@ public class BattleController {
     if (this.isBattleOver()) {
       return;
     }
-    switch (this.currentPlayerIntent) {
-      case PlayerIntent.ATTACK:
-        handle(BattleEvent.PLAYER_ATTACK_SELECTED);
-        break;
-      case PlayerIntent.DEFEND:
-        handle(BattleEvent.PLAYER_DEFEND_SELECTED);
-        break;
-      case PlayerIntent.END_PLAYER_TURN:
-        handle(BattleEvent.PLAYER_TURN_ENDED);
-        break;
-      default:
-        handle(BattleEvent.PLAYER_OTHER_SELECTED);
-    }
+    // wait for ui to submit card or end tyurn
   }
-
+  private void finishPlayerCardAction() {
+    pendingCard = null;
+    currentPlayerIntent = null;
+    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
+  }
   private void enterPlayerAttack() {
     // Ask the relevant system to execute the submitted attack.
     // player.getComponent(PlayerActions.class).attack();
-    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
+    System.out.println("attack hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
+    finishPlayerCardAction();
   }
 
   private void enterPlayerDefend() {
     // Ask the relevant system to execute the submitted defence.
     // TODO: figure out how much armor is added on / maybe another class takes care of this
     // player.getComponent(CombatStatsComponent.class).addArmor(0);
-    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
+    System.out.println("DEFEND hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
+    finishPlayerCardAction();
   }
 
   private void enterPlayerOther() {
     // Ask the relevant system to execute the submitted action.
-    handle(BattleEvent.PLAYER_ACTION_RESOLVED);
+    System.out.println("OTHER hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
+    finishPlayerCardAction();
   }
 
-  private void enterPlayerEnd() {
+  public void enterPlayerEnd() {
     // Coordinate end-of-turn operations.
     if (this.isBattleOver()) {
       return;
