@@ -4,6 +4,11 @@ Owner: Guoqing Sun (`@Sunqing050114`)
 
 Parent feature: [#6 — Non-Battle Encounters / Chance Encounters / Shop Encounters](https://github.com/UQcsse3200/2026-studio-3/issues/6)
 
+Supporting evidence:
+
+- [Integration test plan](encounter-integration-test-plan.md)
+- [AI use disclosure](encounter-integration-ai-disclosure.md)
+
 ## Purpose
 
 This integration layer completes the boundary between Team 2 encounters and the Map, Player, Card
@@ -167,3 +172,6 @@ Run the verification suite from the repository's `source` directory:
 - Resolve the Team 2 string versus Team 4 integer node-ID contract.
 - Confirm with Team 3 whether encounters remain overlays or become independent screens.
 - Confirm whether leaving a Shop counts as successful completion when no purchase was made.
+
+These checks are intentionally not reported as complete. The final feature must be re-tested after
+the Team 2 branch reaches `main`; see the test plan for manual acceptance cases and evidence fields.
