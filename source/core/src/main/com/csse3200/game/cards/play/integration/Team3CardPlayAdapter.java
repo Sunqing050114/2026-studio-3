@@ -12,7 +12,8 @@ import com.csse3200.game.components.Component;
  * Connects Team 3's existing {@code playCard(cardId, targetId)} event to Team 5's unified API.
  *
  * <p>Attach this component to the same battle-flow entity that receives Team 3's card UI events.
- * The component emits one {@code cardPlayResult} event for UI feedback after every attempt.
+ * The component emits one {@code cardPlayResult} event after every attempt. Team 3's battle flow
+ * owns distribution of the returned enemy and player effects to Team 1 and Team 7.
  */
 public final class Team3CardPlayAdapter extends Component {
   public static final String PLAY_CARD_EVENT = "playCard";
@@ -20,18 +21,9 @@ public final class Team3CardPlayAdapter extends Component {
 
   private final CardService cardService;
   private final CardPlayService cardPlayService;
-  private final CardPlayResultDispatcher resultDispatcher;
 
-  /** Creates an adapter that returns results without applying them to Team 1 or Team 7. */
+  /** Creates an adapter that returns results to Team 3 without applying external state changes. */
   public Team3CardPlayAdapter(CardService cardService, CardPlayService cardPlayService) {
-    this(cardService, cardPlayService, null);
-  }
-
-  /** Creates an adapter that also forwards successful effects to Team 1 and Team 7. */
-  public Team3CardPlayAdapter(
-      CardService cardService,
-      CardPlayService cardPlayService,
-      CardPlayResultDispatcher resultDispatcher) {
     if (cardService == null) {
       throw new IllegalArgumentException("Card service cannot be null");
     }
@@ -40,7 +32,6 @@ public final class Team3CardPlayAdapter extends Component {
     }
     this.cardService = cardService;
     this.cardPlayService = cardPlayService;
-    this.resultDispatcher = resultDispatcher;
   }
 
   @Override
@@ -50,9 +41,6 @@ public final class Team3CardPlayAdapter extends Component {
 
   private void onCardPlayed(String cardId, String targetId) {
     CardPlayResult result = cardPlayService.playCard(toRequest(cardId, targetId));
-    if (resultDispatcher != null) {
-      resultDispatcher.dispatch(result);
-    }
     entity.getEvents().trigger(CARD_PLAY_RESULT_EVENT, result);
   }
 
