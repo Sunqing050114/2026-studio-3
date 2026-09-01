@@ -6,9 +6,12 @@ import com.csse3200.game.cards.CardConfigLoader;
 import com.csse3200.game.cards.CardLibrary;
 import com.csse3200.game.cards.EffectType;
 import com.csse3200.game.cards.TargetType;
+import com.csse3200.game.extensions.GameExtension;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(GameExtension.class)
 class CardEffectResolutionIntegrationTest {
   @Test
   void shouldResolveTheInitialTeamSixCards() {

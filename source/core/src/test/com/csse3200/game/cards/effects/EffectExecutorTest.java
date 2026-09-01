@@ -54,6 +54,44 @@ class EffectExecutorTest {
   }
 
   @Test
+  void shouldApplyExternalStrengthFeebleAndVulnerableOnce() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(2, 1, 1);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike", new EffectConfig(EffectType.DAMAGE, 6), TargetType.SINGLE_ENEMY, 0, context);
+
+    assertEquals(
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 9, 0, 0),
+        result);
+  }
+
+  @Test
+  void shouldRoundModifiedDamageDown() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 1, 1);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike", new EffectConfig(EffectType.DAMAGE, 5), TargetType.SINGLE_ENEMY, 0, context);
+
+    assertEquals(5, result.value());
+  }
+
+  @Test
+  void shouldReturnStrengthWithoutMutatingStateWhenResolvingFromExternalContext() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 0, 0);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "inner_focus", new EffectConfig(EffectType.STRENGTH, 2), TargetType.SELF, 0, context);
+
+    assertEquals(
+        new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0),
+        result);
+    assertEquals(0, playerState.getStrength());
+  }
+
+  @Test
   void shouldReturnEveryOngoingEnemyStatusForOtherSystemsToApply() {
     int sequence = 0;
     for (EffectType effectType : EffectType.values()) {
@@ -160,7 +198,7 @@ class EffectExecutorTest {
                 new EffectConfig(EffectType.DAMAGE, 1),
                 TargetType.SINGLE_ENEMY,
                 0,
-                null));
+                (PlayerEffectState) null));
   }
 
   @Test
