@@ -18,6 +18,8 @@ import com.csse3200.game.utils.math.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /** Forest area for the demo game with trees, a player, and some enemies. */
 public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
@@ -52,7 +54,7 @@ public class ForestGameArea extends GameArea {
   private final TerrainFactory terrainFactory;
 
   private Entity player;
-
+  private Entity enemy;
   /**
    * Initialise this ForestGameArea to use the provided TerrainFactory.
    *
@@ -70,7 +72,7 @@ public class ForestGameArea extends GameArea {
     loadAssets();
     spawnTerrain();
 
-    spawnEnemy();
+    enemy = spawnEnemy();
     player = spawnPlayer();
 
     //playMusic();
@@ -139,7 +141,13 @@ public class ForestGameArea extends GameArea {
     return newEnemy;
   }
 
+  public Entity getPlayer() {
+    return player;
+  }
 
+  public List<Entity> getEnemies() {
+    return List.of(enemy);
+  }
   private void spawnGhosts() {
     GridPoint2 minPos = new GridPoint2(0, 0);
     GridPoint2 maxPos = terrain.getMapBounds(0).sub(2, 2);

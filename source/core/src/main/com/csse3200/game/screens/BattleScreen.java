@@ -97,9 +97,7 @@ public class BattleScreen extends ScreenAdapter {
 
     loadAssets(); // <-- MOVED UP: load "images/heart.png" before anything uses it
 
-    Entity player = new Entity();
-    List<Entity> enemies = List.of(EnemyFactory.create(new EnemyConfig()));
-    controller = new BattleController(player, enemies);
+
 
     renderer = RenderFactory.createRenderer();
     renderer.getCamera().getEntity().setPosition(CAMERA_POSITION);
@@ -112,8 +110,11 @@ public class BattleScreen extends ScreenAdapter {
     ForestGameArea forestGameArea = new ForestGameArea(terrainFactory);
     this.gameArea = forestGameArea;
     forestGameArea.create();
+    controller = new BattleController(forestGameArea.getPlayer(), forestGameArea.getEnemies());
 
-    createUI();
+
+      createUI();
+      controller.start();
   }
 
   public void createUI() {
@@ -163,8 +164,6 @@ public class BattleScreen extends ScreenAdapter {
             .addComponent(new BattleActions(controller, game, library));
 
     this.battleUi = battleUi;
-    ServiceLocator.getEntityService().register(battleUi);
-
       gameArea.displayUI(battleUi);
   }
 
