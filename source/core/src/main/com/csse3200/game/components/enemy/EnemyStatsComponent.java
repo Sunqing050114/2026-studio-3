@@ -12,6 +12,7 @@ public class EnemyStatsComponent extends CombatStatsComponent {
   private static final String DEFAULT_DISPLAY_NAME = "Unknown Enemy";
 
   private final String displayName;
+  private int lastHealth;
 
   public EnemyStatsComponent(int health, int baseAttack, int armor) {
     this(health, baseAttack, armor, DEFAULT_DISPLAY_NAME);
@@ -48,34 +49,21 @@ public class EnemyStatsComponent extends CombatStatsComponent {
     return getHealth() > 0;
   }
 
-  /**
-   * Applies damage, depleting armor before health.
-   *
-   * @param damage incoming damage, ignored if not positive
-   */
   @Override
-  public void takeDamage(int damage) {
-    if (damage <= 0 || !isAlive()) {
-      return;
+  public void create() {
+    super.create();
+    lastHealth = getHealth();
+    entity.getEvents().addListener("updateHealth", this::onHealthUpdated);
+  }
+
+  private void onHealthUpdated(int health) {
+    if (health < lastHealth) {
+      entity.getEvents().trigger("enemyDamaged", lastHealth - health);
     }
-
-    int healthBeforeDamage = getHealth();
-
-    int absorbed = Math.min(getArmor(), damage);
-    setArmor(getArmor() - absorbed);
-
-    int remaining = damage - absorbed;
-    if (remaining > 0) {
-      setHealth(getHealth() - remaining);
-    }
-
-    int actualHealthDamage = healthBeforeDamage - getHealth();
-    if (actualHealthDamage > 0 && entity != null) {
-      entity.getEvents().trigger("enemyDamaged", actualHealthDamage);
-    }
-
-    if (healthBeforeDamage > 0 && !isAlive() && entity != null) {
+    if (lastHealth > 0 && health == 0) {
       entity.getEvents().trigger("enemyDefeated");
     }
+    lastHealth = health;
   }
 }
+
