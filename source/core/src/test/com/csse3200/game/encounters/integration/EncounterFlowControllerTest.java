@@ -33,21 +33,21 @@ class EncounterFlowControllerTest {
         new IntegratedShopTransactionGateway(player, new MockCardCatalogGateway("card_heal"), deck);
     EncounterFlowController flow = new EncounterFlowController(player, shopTransactions, map);
 
-    ChanceEncounterSession chance = flow.startChance("chance", createChanceEncounter());
+    ChanceEncounterSession chance = flow.startChance(1, createChanceEncounter());
     ChanceResolution chanceResult = chance.resolveChoice("risk");
     assertTrue(chanceResult.isSuccess());
     assertTrue(chance.complete());
 
     assertEquals(90, player.getHealth());
     assertEquals(125, player.getCurrency());
-    assertEquals(NodeState.COMPLETED, map.getNode("chance").getState());
-    assertEquals(NodeState.AVAILABLE, map.getNode("shop").getState());
+    assertEquals(NodeState.COMPLETED, map.getNode(1).getState());
+    assertEquals(NodeState.AVAILABLE, map.getNode(2).getState());
     assertFalse(flow.isEncounterActive());
 
-    map.getNode("shop").setState(NodeState.CURRENT);
+    map.getNode(2).setState(NodeState.CURRENT);
     ShopService shopService =
         new ShopService(new ShopItem[] {new ShopItem("heal-offer", "card_heal", "Heal", 30, 1)});
-    ShopEncounter shop = flow.startShop("shop", shopService);
+    ShopEncounter shop = flow.startShop(2, shopService);
     PurchaseResult purchase = shop.purchase("heal-offer");
     shop.complete(true);
 
@@ -55,9 +55,9 @@ class EncounterFlowControllerTest {
     assertEquals(95, player.getCurrency());
     assertEquals(1, deck.getCardCount("card_heal"));
     assertEquals(0, shopService.getItem("heal-offer").stock);
-    assertEquals(NodeState.COMPLETED, map.getNode("chance").getState());
-    assertEquals(NodeState.COMPLETED, map.getNode("shop").getState());
-    assertEquals(NodeState.AVAILABLE, map.getNode("return").getState());
+    assertEquals(NodeState.COMPLETED, map.getNode(1).getState());
+    assertEquals(NodeState.COMPLETED, map.getNode(2).getState());
+    assertEquals(NodeState.AVAILABLE, map.getNode(3).getState());
     assertFalse(flow.isEncounterActive());
   }
 
@@ -70,11 +70,10 @@ class EncounterFlowControllerTest {
     EncounterFlowController flow =
         new EncounterFlowController(player, transactions, (nodeId, success) -> {});
 
-    flow.startChance("chance", createChanceEncounter());
+    flow.startChance(1, createChanceEncounter());
 
     assertThrows(
-        IllegalStateException.class,
-        () -> flow.startShop("shop", new ShopService(new ShopItem[0])));
+        IllegalStateException.class, () -> flow.startShop(2, new ShopService(new ShopItem[0])));
   }
 
   @Test
@@ -86,11 +85,11 @@ class EncounterFlowControllerTest {
             player, new MockCardCatalogGateway("card_heal"), new MockDeckGateway());
     EncounterFlowController flow = new EncounterFlowController(player, transactions, map);
 
-    ChanceEncounterSession chance = flow.startChance("chance", createChanceEncounter());
+    ChanceEncounterSession chance = flow.startChance(1, createChanceEncounter());
     assertTrue(chance.cancel());
 
-    assertEquals(NodeState.CURRENT, map.getNode("chance").getState());
-    assertEquals(NodeState.LOCKED, map.getNode("shop").getState());
+    assertEquals(NodeState.CURRENT, map.getNode(1).getState());
+    assertEquals(NodeState.LOCKED, map.getNode(2).getState());
     assertFalse(flow.isEncounterActive());
   }
 
@@ -107,7 +106,7 @@ class EncounterFlowControllerTest {
         IllegalArgumentException.class, () -> flow.startChance(null, createChanceEncounter()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> flow.startShop("   ", new ShopService(new ShopItem[0])));
+        () -> flow.startShop(null, new ShopService(new ShopItem[0])));
 
     assertFalse(flow.isEncounterActive());
     assertNull(flow.getActiveNodeId());
@@ -123,12 +122,12 @@ class EncounterFlowControllerTest {
     EncounterFlowController flow =
         new EncounterFlowController(player, transactions, (nodeId, success) -> {});
 
-    assertThrows(NullPointerException.class, () -> flow.startChance("broken", null));
+    assertThrows(NullPointerException.class, () -> flow.startChance(3, null));
     assertFalse(flow.isEncounterActive());
 
-    ShopEncounter shop = flow.startShop("shop", new ShopService(new ShopItem[0]));
+    ShopEncounter shop = flow.startShop(2, new ShopService(new ShopItem[0]));
     assertTrue(flow.isEncounterActive());
-    assertEquals("shop", flow.getActiveNodeId());
+    assertEquals(2, flow.getActiveNodeId());
     shop.complete(true);
     assertFalse(flow.isEncounterActive());
   }
@@ -142,18 +141,18 @@ class EncounterFlowControllerTest {
     RecordingCallback callback = new RecordingCallback();
     EncounterFlowController flow = new EncounterFlowController(player, transactions, callback);
 
-    flow.startShop("shop", new ShopService(new ShopItem[0]));
-    flow.onEncounterComplete("stale-node", true);
+    flow.startShop(2, new ShopService(new ShopItem[0]));
+    flow.onEncounterComplete(999, true);
 
     assertTrue(flow.isEncounterActive());
     assertEquals(0, callback.count);
 
-    flow.onEncounterComplete("shop", true);
-    flow.onEncounterComplete("shop", true);
+    flow.onEncounterComplete(2, true);
+    flow.onEncounterComplete(2, true);
 
     assertFalse(flow.isEncounterActive());
     assertEquals(1, callback.count);
-    assertEquals("shop", callback.nodeId);
+    assertEquals(2, callback.nodeId);
     assertTrue(callback.success);
   }
 
@@ -168,29 +167,27 @@ class EncounterFlowControllerTest {
         new EncounterFlowController(
             player,
             transactions,
-            (nodeId, success) ->
-                flowHolder[0].startShop("next-shop", new ShopService(new ShopItem[0])));
+            (nodeId, success) -> flowHolder[0].startShop(4, new ShopService(new ShopItem[0])));
 
-    ShopEncounter firstShop =
-        flowHolder[0].startShop("first-shop", new ShopService(new ShopItem[0]));
+    ShopEncounter firstShop = flowHolder[0].startShop(5, new ShopService(new ShopItem[0]));
     firstShop.complete(true);
 
     assertTrue(flowHolder[0].isEncounterActive());
-    assertEquals("next-shop", flowHolder[0].getActiveNodeId());
+    assertEquals(4, flowHolder[0].getActiveNodeId());
     assertEquals(EncounterFlowController.EncounterType.SHOP, flowHolder[0].getActiveType());
   }
 
   private MapGraph createMap() {
     MapGraph map = new MapGraph();
-    MapNode chance = new MapNode("chance", RoomType.EVENT);
-    MapNode shop = new MapNode("shop", RoomType.SHOP);
-    MapNode returnNode = new MapNode("return", RoomType.EVENT);
+    MapNode chance = new MapNode(1, RoomType.EVENT);
+    MapNode shop = new MapNode(2, RoomType.SHOP);
+    MapNode returnNode = new MapNode(3, RoomType.EVENT);
     chance.setState(NodeState.CURRENT);
     map.addNode(chance);
     map.addNode(shop);
     map.addNode(returnNode);
-    map.connectNodes("chance", "shop");
-    map.connectNodes("shop", "return");
+    map.connectNodes(1, 2);
+    map.connectNodes(2, 3);
     return map;
   }
 
@@ -203,11 +200,11 @@ class EncounterFlowControllerTest {
 
   private static final class RecordingCallback implements com.csse3200.game.maps.EncounterCallback {
     private int count;
-    private String nodeId;
+    private Integer nodeId;
     private boolean success;
 
     @Override
-    public void onEncounterComplete(String nodeId, boolean success) {
+    public void onEncounterComplete(Integer nodeId, boolean success) {
       count++;
       this.nodeId = nodeId;
       this.success = success;

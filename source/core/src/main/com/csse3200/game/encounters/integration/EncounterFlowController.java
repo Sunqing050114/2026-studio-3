@@ -25,7 +25,7 @@ public final class EncounterFlowController implements EncounterCallback {
   private final ShopTransactionGateway shopTransactions;
   private final EncounterCallback mapCallback;
 
-  private String activeNodeId;
+  private Integer activeNodeId;
   private EncounterType activeType;
 
   /**
@@ -53,7 +53,7 @@ public final class EncounterFlowController implements EncounterCallback {
    * @return session ready for the Chance UI
    * @throws IllegalStateException when another encounter is active
    */
-  public ChanceEncounterSession startChance(String nodeId, ChanceEncounter encounter) {
+  public ChanceEncounterSession startChance(Integer nodeId, ChanceEncounter encounter) {
     begin(nodeId, EncounterType.CHANCE);
     try {
       return new ChanceEncounterSession(nodeId, encounter, chanceOutcomeApplier, this);
@@ -71,13 +71,13 @@ public final class EncounterFlowController implements EncounterCallback {
    * @return session ready for the Shop UI
    * @throws IllegalStateException when another encounter is active
    */
-  public ShopEncounter startShop(String nodeId, ShopService shopService) {
+  public ShopEncounter startShop(Integer nodeId, ShopService shopService) {
     begin(nodeId, EncounterType.SHOP);
     return new ShopEncounter(nodeId, shopService, shopTransactions, this);
   }
 
   @Override
-  public void onEncounterComplete(String nodeId, boolean success) {
+  public void onEncounterComplete(Integer nodeId, boolean success) {
     if (activeNodeId == null || !activeNodeId.equals(nodeId)) {
       return;
     }
@@ -100,7 +100,7 @@ public final class EncounterFlowController implements EncounterCallback {
    *
    * @return active map node ID, or null when no encounter is active
    */
-  public String getActiveNodeId() {
+  public Integer getActiveNodeId() {
     return activeNodeId;
   }
 
@@ -113,13 +113,13 @@ public final class EncounterFlowController implements EncounterCallback {
     return activeType;
   }
 
-  private void begin(String nodeId, EncounterType type) {
+  private void begin(Integer nodeId, EncounterType type) {
     if (isEncounterActive()) {
       throw new IllegalStateException(
           String.format("Encounter for node %s is already active", activeNodeId));
     }
-    if (nodeId == null || nodeId.isBlank()) {
-      throw new IllegalArgumentException("nodeId cannot be null or blank");
+    if (nodeId == null) {
+      throw new IllegalArgumentException("nodeId cannot be null");
     }
     activeNodeId = nodeId;
     activeType = type;

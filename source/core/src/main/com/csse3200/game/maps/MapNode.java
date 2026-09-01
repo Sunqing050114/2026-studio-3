@@ -6,7 +6,7 @@ import java.util.List;
 /** Represents a single node in the map graph. */
 public class MapNode {
 
-  private final String nodeId;
+  private final Integer nodeId;
 
   private final RoomType roomType;
 
@@ -20,7 +20,7 @@ public class MapNode {
    * @param nodeId unique identifier
    * @param roomType type of room
    */
-  public MapNode(String nodeId, RoomType roomType) {
+  public MapNode(Integer nodeId, RoomType roomType) {
     this.nodeId = nodeId;
     this.roomType = roomType;
 
@@ -29,7 +29,7 @@ public class MapNode {
     this.connections = new ArrayList<>();
   }
 
-  public String getNodeId() {
+  public Integer getNodeId() {
     return nodeId;
   }
 

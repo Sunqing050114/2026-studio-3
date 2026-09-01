@@ -106,7 +106,7 @@ public class ShopDisplay extends UIComponent {
    * @param callback callback notified when the player leaves the shop
    * @param nodeId identifier of the associated map node
    */
-  public ShopDisplay(InventoryComponent inventory, EncounterCallback callback, String nodeId) {
+  public ShopDisplay(InventoryComponent inventory, EncounterCallback callback, Integer nodeId) {
     this(
         inventory,
         new ShopEncounter(

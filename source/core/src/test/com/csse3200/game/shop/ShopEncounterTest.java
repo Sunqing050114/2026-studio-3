@@ -19,16 +19,16 @@ class ShopEncounterTest {
   @Test
   void shouldCompleteMapNodeWhenShopEncounterEnds() {
     MapGraph graph = new MapGraph();
-    MapNode shopNode = new MapNode("shop-1", RoomType.SHOP);
-    MapNode nextNode = new MapNode("event-1", RoomType.EVENT);
+    MapNode shopNode = new MapNode(1, RoomType.SHOP);
+    MapNode nextNode = new MapNode(2, RoomType.EVENT);
     shopNode.setState(NodeState.CURRENT);
     graph.addNode(shopNode);
     graph.addNode(nextNode);
-    graph.connectNodes("shop-1", "event-1");
+    graph.connectNodes(1, 2);
 
     ShopEncounter encounter =
         new ShopEncounter(
-            "shop-1",
+            1,
             new InventoryComponent(50),
             new ShopService(new ShopItem[] {new ShopItem("heal", "card_heal", "Heal", 20, 1)}),
             graph);
@@ -46,7 +46,7 @@ class ShopEncounterTest {
     InventoryComponent inventory = new InventoryComponent(50);
     ShopService shop =
         new ShopService(new ShopItem[] {new ShopItem("heal", "card_heal", "Heal", 20, 1)});
-    ShopEncounter encounter = new ShopEncounter("shop-1", inventory, shop, null);
+    ShopEncounter encounter = new ShopEncounter(1, inventory, shop, null);
 
     encounter.complete(true);
     PurchaseResult result = encounter.purchase("heal");
@@ -63,7 +63,7 @@ class ShopEncounterTest {
     CountingCallback callback = new CountingCallback();
     ShopEncounter encounter =
         new ShopEncounter(
-            "shop-1",
+            1,
             new InventoryComponent(50),
             new ShopService(new ShopItem[] {new ShopItem("heal", "card_heal", "Heal", 20, 1)}),
             callback);
@@ -74,23 +74,23 @@ class ShopEncounterTest {
     assertTrue(encounter.isCompleted());
     assertFalse(encounter.completedSuccessfully());
     assertEquals(1, callback.count);
-    assertEquals("shop-1", callback.nodeId);
+    assertEquals(1, callback.nodeId);
     assertFalse(callback.success);
   }
 
   @Test
   void shouldNotUnlockMapNodeWhenShopEncounterFails() {
     MapGraph graph = new MapGraph();
-    MapNode shopNode = new MapNode("shop-1", RoomType.SHOP);
-    MapNode nextNode = new MapNode("event-1", RoomType.EVENT);
+    MapNode shopNode = new MapNode(1, RoomType.SHOP);
+    MapNode nextNode = new MapNode(2, RoomType.EVENT);
     shopNode.setState(NodeState.CURRENT);
     graph.addNode(shopNode);
     graph.addNode(nextNode);
-    graph.connectNodes("shop-1", "event-1");
+    graph.connectNodes(1, 2);
 
     ShopEncounter encounter =
         new ShopEncounter(
-            "shop-1",
+            1,
             new InventoryComponent(50),
             new ShopService(new ShopItem[] {new ShopItem("heal", "card_heal", "Heal", 20, 1)}),
             graph);
@@ -105,11 +105,11 @@ class ShopEncounterTest {
 
   private static class CountingCallback implements EncounterCallback {
     private int count;
-    private String nodeId;
+    private Integer nodeId;
     private boolean success;
 
     @Override
-    public void onEncounterComplete(String nodeId, boolean success) {
+    public void onEncounterComplete(Integer nodeId, boolean success) {
       count++;
       this.nodeId = nodeId;
       this.success = success;

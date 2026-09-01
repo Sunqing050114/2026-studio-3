@@ -11,20 +11,20 @@ import java.util.function.BiConsumer;
  * integer node identifiers.
  */
 public final class MapCompletionAdapter implements EncounterCallback {
-  private final BiConsumer<String, Boolean> completionHandler;
+  private final BiConsumer<Integer, Boolean> completionHandler;
 
   /**
    * Creates a callback adapter around a map completion function.
    *
    * @param completionHandler function that receives a node ID and completion status
    */
-  public MapCompletionAdapter(BiConsumer<String, Boolean> completionHandler) {
+  public MapCompletionAdapter(BiConsumer<Integer, Boolean> completionHandler) {
     this.completionHandler =
         Objects.requireNonNull(completionHandler, "completionHandler cannot be null");
   }
 
   @Override
-  public void onEncounterComplete(String nodeId, boolean success) {
+  public void onEncounterComplete(Integer nodeId, boolean success) {
     completionHandler.accept(nodeId, success);
   }
 }

@@ -53,7 +53,7 @@ class ChanceEncounterSessionTest {
     assertEquals(95, player.getHealth());
     assertEquals(60, player.getCurrency());
     assertEquals(1, callback.count);
-    assertEquals("event-1", callback.nodeId);
+    assertEquals(1, callback.nodeId);
     assertTrue(callback.success);
   }
 
@@ -66,17 +66,16 @@ class ChanceEncounterSessionTest {
             List.of(
                 new ChanceChoice("accept", "Accept", new ChanceOutcome(-5, 10)),
                 new ChanceChoice("leave", "Leave", new ChanceOutcome(0, 0))));
-    return new ChanceEncounterSession(
-        "event-1", encounter, new ChanceOutcomeApplier(player), callback);
+    return new ChanceEncounterSession(1, encounter, new ChanceOutcomeApplier(player), callback);
   }
 
   private static final class RecordingCallback implements com.csse3200.game.maps.EncounterCallback {
     private int count;
-    private String nodeId;
+    private Integer nodeId;
     private boolean success;
 
     @Override
-    public void onEncounterComplete(String nodeId, boolean success) {
+    public void onEncounterComplete(Integer nodeId, boolean success) {
       count++;
       this.nodeId = nodeId;
       this.success = success;

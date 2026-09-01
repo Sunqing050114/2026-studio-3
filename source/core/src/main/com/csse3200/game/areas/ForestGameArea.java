@@ -40,8 +40,9 @@ public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
-  private static final String SHOP_NODE_ID = "forest-shop";
-  private static final String CHANCE_NODE_ID = "forest-chance";
+  private static final Integer SHOP_NODE_ID = 1;
+  private static final Integer CHANCE_NODE_ID = 2;
+  private static final Integer RETURN_NODE_ID = 3;
   private static final String SHOP_CONFIG = "configs/shopItems.json";
   private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(10, 10);
   private static final float WALL_WIDTH = 0.1f;
@@ -153,7 +154,7 @@ public class ForestGameArea extends GameArea {
     MapGraph graph = new MapGraph();
     MapNode shopNode = new MapNode(SHOP_NODE_ID, RoomType.SHOP);
     MapNode chanceNode = new MapNode(CHANCE_NODE_ID, RoomType.EVENT);
-    MapNode returnNode = new MapNode("forest-return", RoomType.EVENT);
+    MapNode returnNode = new MapNode(RETURN_NODE_ID, RoomType.EVENT);
 
     chanceNode.setState(NodeState.CURRENT);
     graph.addNode(shopNode);

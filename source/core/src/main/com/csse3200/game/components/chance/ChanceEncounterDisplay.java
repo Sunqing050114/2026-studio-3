@@ -47,7 +47,7 @@ public class ChanceEncounterDisplay extends UIComponent {
   private final ChanceEncounter encounter;
   private final ChanceEncounterSession encounterSession;
   private final EncounterCallback completionCallback;
-  private final String nodeId;
+  private final Integer nodeId;
   private final List<TextButton> choiceButtons = new ArrayList<>();
 
   private Table rootTable;
@@ -63,7 +63,7 @@ public class ChanceEncounterDisplay extends UIComponent {
    * @param encounter encounter information and choices displayed by the UI
    */
   public ChanceEncounterDisplay(ChanceEncounter encounter) {
-    this(encounter, null, encounter == null ? null : encounter.getId());
+    this(encounter, null, null);
   }
 
   /**
@@ -74,7 +74,7 @@ public class ChanceEncounterDisplay extends UIComponent {
    * @param nodeId map node associated with this encounter
    */
   public ChanceEncounterDisplay(
-      ChanceEncounter encounter, EncounterCallback completionCallback, String nodeId) {
+      ChanceEncounter encounter, EncounterCallback completionCallback, Integer nodeId) {
     this(encounter, completionCallback, nodeId, null);
   }
 
@@ -94,7 +94,7 @@ public class ChanceEncounterDisplay extends UIComponent {
   private ChanceEncounterDisplay(
       ChanceEncounter encounter,
       EncounterCallback completionCallback,
-      String nodeId,
+      Integer nodeId,
       ChanceEncounterSession encounterSession) {
     this.encounter = Objects.requireNonNull(encounter, "encounter cannot be null");
     this.encounterSession = encounterSession;

@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /** Coordinates choice resolution, player updates, and map completion for one Chance Encounter. */
 public final class ChanceEncounterSession {
-  private final String nodeId;
+  private final Integer nodeId;
   private final ChanceEncounter encounter;
   private final ChanceOutcomeApplier outcomeApplier;
   private final EncounterCallback completionCallback;
@@ -24,12 +24,12 @@ public final class ChanceEncounterSession {
    * @param completionCallback callback returning control to the map
    */
   public ChanceEncounterSession(
-      String nodeId,
+      Integer nodeId,
       ChanceEncounter encounter,
       ChanceOutcomeApplier outcomeApplier,
       EncounterCallback completionCallback) {
-    if (nodeId == null || nodeId.isBlank()) {
-      throw new IllegalArgumentException("nodeId cannot be null or blank");
+    if (nodeId == null) {
+      throw new IllegalArgumentException("nodeId cannot be null");
     }
     this.nodeId = nodeId;
     this.encounter = Objects.requireNonNull(encounter, "encounter cannot be null");
@@ -105,7 +105,7 @@ public final class ChanceEncounterSession {
    *
    * @return map node ID associated with this session
    */
-  public String getNodeId() {
+  public Integer getNodeId() {
     return nodeId;
   }
 

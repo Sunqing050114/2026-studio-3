@@ -8,9 +8,9 @@ import java.util.Collection;
 
 /** Bridges shop purchase logic with the map encounter completion callback. */
 public class ShopEncounter {
-  public static final String DEFAULT_NODE_ID = "shop-encounter";
+  public static final Integer DEFAULT_NODE_ID = -1;
 
-  private final String nodeId;
+  private final Integer nodeId;
   private final ShopTransactionGateway transactions;
   private final ShopService shopService;
   private final EncounterCallback callback;
@@ -36,7 +36,7 @@ public class ShopEncounter {
    * @param callback map completion callback
    */
   public ShopEncounter(
-      String nodeId,
+      Integer nodeId,
       InventoryComponent inventory,
       ShopService shopService,
       EncounterCallback callback) {
@@ -56,11 +56,11 @@ public class ShopEncounter {
    * @param callback map completion callback
    */
   public ShopEncounter(
-      String nodeId,
+      Integer nodeId,
       ShopService shopService,
       ShopTransactionGateway transactions,
       EncounterCallback callback) {
-    this.nodeId = nodeId == null || nodeId.isBlank() ? DEFAULT_NODE_ID : nodeId;
+    this.nodeId = nodeId == null ? DEFAULT_NODE_ID : nodeId;
     this.transactions = transactions;
     this.shopService = shopService == null ? new ShopService((ShopConfig) null) : shopService;
     this.callback = callback;
@@ -86,7 +86,7 @@ public class ShopEncounter {
     return shopService.getItems();
   }
 
-  public String getNodeId() {
+  public Integer getNodeId() {
     return nodeId;
   }
 
