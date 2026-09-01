@@ -70,7 +70,7 @@ public class EnemyBehaviourComponent extends Component {
         stats.getHealth(),
         stats.getMaxHealth(),
         stats.getBaseAttack(),
-        stats.getArmour(),
+        stats.getArmor(),
         currentIntent,
         turnNumber);
   }
@@ -107,7 +107,7 @@ public class EnemyBehaviourComponent extends Component {
   private void defend() {
     EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
     if (stats != null) {
-      stats.addArmour(currentIntent.getValue());
+      stats.addArmor(currentIntent.getValue());
     }
   }
 }

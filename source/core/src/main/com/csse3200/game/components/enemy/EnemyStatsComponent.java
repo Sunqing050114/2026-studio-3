@@ -20,9 +20,8 @@ public class EnemyStatsComponent extends CombatStatsComponent {
   public EnemyStatsComponent(int health, int baseAttack, int armor, String displayName) {
     super(health, baseAttack);
     super.setArmor(armor);
-    this.displayName = displayName == null || displayName.isBlank()
-            ? DEFAULT_DISPLAY_NAME
-            : displayName;
+    this.displayName =
+            displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
   }
 
   public String getDisplayName() {
@@ -37,13 +36,12 @@ public class EnemyStatsComponent extends CombatStatsComponent {
     return super.getArmor();
   }
 
-  public void setArmor(int armour) {
-    super.setArmor(armour);
+  public void setArmor(int armor) {
+    super.setArmor(armor);
   }
 
-  /** Adds armour, for example when a defend intent resolves. */
-  public void addArmor(int armour) {
-    super.addArmor(armour);
+  public void addArmor(int armor) {
+    super.addArmor(armor);
   }
 
   public boolean isAlive() {
@@ -55,6 +53,7 @@ public class EnemyStatsComponent extends CombatStatsComponent {
    *
    * @param damage incoming damage, ignored if not positive
    */
+  @Override
   public void takeDamage(int damage) {
     if (damage <= 0 || !isAlive()) {
       return;
@@ -62,8 +61,8 @@ public class EnemyStatsComponent extends CombatStatsComponent {
 
     int healthBeforeDamage = getHealth();
 
-    int absorbed = Math.min(armor, damage);
-    setArmor(armor - absorbed);
+    int absorbed = Math.min(getArmor(), damage);
+    setArmor(getArmor() - absorbed);
 
     int remaining = damage - absorbed;
     if (remaining > 0) {

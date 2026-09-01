@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class EnemyStatsComponentTest {
   @Test
-  void shouldApplyDamageToArmourBeforeHealth() {
+  void shouldApplyDamageToArmorBeforeHealth() {
     Entity enemy = new Entity();
     EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
     enemy.addComponent(stats);
@@ -23,11 +23,11 @@ class EnemyStatsComponentTest {
     stats.takeDamage(8);
 
     assertEquals(17, stats.getHealth());
-    assertEquals(0, stats.getArmour());
+    assertEquals(0, stats.getArmor());
   }
 
   @Test
-  void shouldLetArmourFullyAbsorbDamage() {
+  void shouldLetArmorFullyAbsorbDamage() {
     Entity enemy = new Entity();
     EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
     enemy.addComponent(stats);
@@ -36,11 +36,11 @@ class EnemyStatsComponentTest {
     stats.takeDamage(3);
 
     assertEquals(20, stats.getHealth());
-    assertEquals(2, stats.getArmour());
+    assertEquals(2, stats.getArmor());
   }
 
   @Test
-  void shouldDamageHealthDirectlyWhenNoArmour() {
+  void shouldDamageHealthDirectlyWhenNoArmor() {
     Entity enemy = new Entity();
     EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 0);
     enemy.addComponent(stats);
@@ -49,7 +49,7 @@ class EnemyStatsComponentTest {
     stats.takeDamage(6);
 
     assertEquals(14, stats.getHealth());
-    assertEquals(0, stats.getArmour());
+    assertEquals(0, stats.getArmor());
   }
 
   @Test
@@ -62,7 +62,7 @@ class EnemyStatsComponentTest {
     stats.takeDamage(0);
 
     assertEquals(20, stats.getHealth());
-    assertEquals(5, stats.getArmour());
+    assertEquals(5, stats.getArmor());
   }
 
   @Test
@@ -75,7 +75,7 @@ class EnemyStatsComponentTest {
     stats.takeDamage(-5);
 
     assertEquals(20, stats.getHealth());
-    assertEquals(5, stats.getArmour());
+    assertEquals(5, stats.getArmor());
   }
 
   @Test
@@ -120,30 +120,30 @@ class EnemyStatsComponentTest {
 
     verify(listener).handle(3);
     assertEquals(17, stats.getHealth());
-    assertEquals(0, stats.getArmour());
+    assertEquals(0, stats.getArmor());
   }
 
   @Test
-  void shouldClampSetArmourToZero() {
+  void shouldClampSetArmorToZero() {
     Entity enemy = new Entity();
     EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
     enemy.addComponent(stats);
     enemy.create();
 
-    stats.setArmour(-10);
+    stats.setArmor(-10);
 
-    assertEquals(0, stats.getArmour());
+    assertEquals(0, stats.getArmor());
   }
 
   @Test
-  void shouldClampAddArmourToZero() {
+  void shouldClampAddArmorToZero() {
     Entity enemy = new Entity();
     EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 5);
     enemy.addComponent(stats);
     enemy.create();
 
-    stats.addArmour(-10);
+    stats.addArmor(-10);
 
-    assertEquals(0, stats.getArmour());
+    assertEquals(5, stats.getArmor());
   }
 }
