@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 class Team3CardPlayAdapterTest {
   @Test
-  void shouldResolveDispatchAndReturnOneResultFromTeamThreePlayEvent() {
+  void shouldResolveAndReturnOneResultWithoutApplyingEnemyEffects() {
     CardConfig strike = strike();
     CardLibrary cards = new CardLibrary(List.of(strike));
     BattleDeck deck = new BattleDeck(new PlayerDeck(List.of("strike")));
@@ -40,8 +40,7 @@ class Team3CardPlayAdapterTest {
     Team1EnemyStateAdapter enemies = new Team1EnemyStateAdapter(Map.of("enemy-1", enemyEntity));
 
     CardPlayService playService = new CardPlayService(cards, deck, energy, player, enemies);
-    CardPlayResultDispatcher dispatcher = new CardPlayResultDispatcher(enemies, player);
-    Team3CardPlayAdapter adapter = new Team3CardPlayAdapter(cards, playService, dispatcher);
+    Team3CardPlayAdapter adapter = new Team3CardPlayAdapter(cards, playService);
     Entity battleFlow = new Entity().addComponent(adapter);
     AtomicReference<CardPlayResult> observed = new AtomicReference<>();
     battleFlow.getEvents().addListener(Team3CardPlayAdapter.CARD_PLAY_RESULT_EVENT, observed::set);
@@ -52,7 +51,8 @@ class Team3CardPlayAdapterTest {
     assertNotNull(observed.get());
     assertTrue(observed.get().success());
     assertEquals(2, energy.getCurrentEnergy());
-    assertEquals(4, enemyStats.getHealth());
+    assertEquals(6, observed.get().enemyEffects().get(0).value());
+    assertEquals(10, enemyStats.getHealth());
     assertTrue(deck.getHand().isEmpty());
     assertEquals(List.of("strike"), deck.getDiscardPile());
   }
