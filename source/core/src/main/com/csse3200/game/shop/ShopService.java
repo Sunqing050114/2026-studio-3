@@ -1,7 +1,5 @@
 package com.csse3200.game.shop;
 
-import com.csse3200.game.components.player.InventoryComponent;
-import com.csse3200.game.encounters.integration.InventoryShopTransactionAdapter;
 import com.csse3200.game.encounters.integration.ShopTransactionGateway;
 import com.csse3200.game.encounters.integration.ShopTransactionStatus;
 import java.util.ArrayList;
@@ -47,20 +45,6 @@ public class ShopService {
   }
 
   /**
-   * Attempts to purchase a shop item. The player's inventory is updated only after item, stock, and
-   * gold checks pass.
-   *
-   * @param itemId shop item identifier
-   * @param inventory player inventory
-   * @return purchase result with success or failure reason
-   */
-  public PurchaseResult purchase(String itemId, InventoryComponent inventory) {
-    ShopTransactionGateway transactions =
-        inventory == null ? null : new InventoryShopTransactionAdapter(inventory);
-    return purchaseWithGateway(itemId, transactions);
-  }
-
-  /**
    * Attempts to purchase an item through the cross-team transaction boundary.
    *
    * @param itemId shop item identifier
@@ -81,19 +65,6 @@ public class ShopService {
 
     item.decreaseStock();
     return PurchaseResult.success(item);
-  }
-
-  /**
-   * Checks whether a purchase can be made without changing gold, cards, or stock.
-   *
-   * @param itemId shop item identifier
-   * @param inventory player inventory
-   * @return success if the item is purchasable with the current inventory
-   */
-  public PurchaseResult canPurchase(String itemId, InventoryComponent inventory) {
-    ShopTransactionGateway transactions =
-        inventory == null ? null : new InventoryShopTransactionAdapter(inventory);
-    return canPurchaseWithGateway(itemId, transactions);
   }
 
   /**
