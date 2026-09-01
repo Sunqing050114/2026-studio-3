@@ -3,10 +3,10 @@ package com.csse3200.game.maps;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /** Represents the map graph containing all map nodes. */
 public class MapGraph implements EncounterCallback {
@@ -37,15 +37,9 @@ public class MapGraph implements EncounterCallback {
   }
 
   /**
-   * Primary map generation function. The player is able to start from any of the
-   * nodes at height = 1.
-   *
-   * Distinct paths are generated and can have a chance to create random branches
-   * if the option is available.
-   * 
-   * Should be private and only be called once in constructor. Currently public
-   * for testing.
-   *
+   * Primary map generation function. The player is able to start from any of the nodes at height =
+   * 1. Distinct paths are generated and can have a chance to create random branches if the option
+   * is available.
    */
   private int generatePathing() {
 
@@ -59,9 +53,8 @@ public class MapGraph implements EncounterCallback {
     Set<MapNode> visited = new HashSet<>();
     List<MapNode> pathNodes = new ArrayList<>();
 
-    for (int i = 0; i < row.size(); i++) {
-
-      MapNode child = row.get(i);
+    // generates initial no. of paths from final node
+    for (MapNode child : row) {
 
       if (child == null) {
         return -1;
@@ -71,7 +64,6 @@ public class MapGraph implements EncounterCallback {
       visited.add(child);
       pathNodes.add(child);
     }
-
     // begin to loop the bulk of connections down the tree
     for (int i = 2; i < MAP_HEIGHT; i++) {
 
@@ -79,18 +71,17 @@ public class MapGraph implements EncounterCallback {
       List<MapNode> newNodes = new ArrayList<>();
 
       for (MapNode parentNode : pathNodes) {
-
         MapNode child = chooseNextNode(parentNode, row, visited);
         if (child == null) {
           return -1;
         }
 
         connectNodes(parentNode, child);
-
         visited.add(child);
         newNodes.add(child);
 
-        if (newNodes.size() < 5 && rand.nextInt(100) < BRANCH_CHANCE) {
+        // creates random additional branches off of the paths for variety
+        if (newNodes.size() < 6 && rand.nextInt(100) < BRANCH_CHANCE) {
 
           MapNode branch = chooseNextNode(parentNode, row, visited);
 
@@ -113,9 +104,9 @@ public class MapGraph implements EncounterCallback {
    * that hasn't already been visited.
    *
    * @param parentNode Chosen node where heuristic will be calculated from
-   * 
-   * @param row The row the node must be connected to (can be above or below)
-   * 
+   *
+   * @param row Chosen row the node must be connected to (can be above or below)
+   *
    * @param visited The set of nodes that have already been visited by the
    * branches
    */
@@ -138,13 +129,13 @@ public class MapGraph implements EncounterCallback {
 
   /*
    * Returns a list of nodes that are within the given x coordinate range of a
-   * provided node on a neighbouring row.
+   * provided node on a neighboring row.
    *
    *
    * @param nodePos The x-coordinate of the node that is being ranged from.
-   * 
-   * @param row The row the nodes should be trying to reach.
-   * 
+   *
+   * @param row The row nodes should be trying to reach.
+   *
    * @param range The desired range of the nodes to be returned.
    */
   private List<MapNode> getNodesInRange(int nodePos, List<MapNode> row, int range) {
@@ -163,19 +154,17 @@ public class MapGraph implements EncounterCallback {
   }
 
   /**
-   * Removes all unconnected nodes from the MapGraph. Only called as the final
-   * step of generation.
-   *
+   * Removes all unconnected nodes from the MapGraph. Only called as the final step of generation.
    */
   private void pruneUnconnectedMapGraphNodes() {
-    nodes.values().removeIf(node -> node.getConnections().size() == 0);
+    nodes.values().removeIf(node -> node.getConnections().isEmpty());
   }
 
   /**
    * Removes random nodes from a list. Does not remove from MapGraph state.
    *
    * @param nodelist List of nodes to be pruned
-   * @param count    Number of nodes to be pruned
+   * @param count Number of nodes to be pruned
    */
   private void pruneRandomNodes(List<MapNode> nodelist, int count) {
 
@@ -216,11 +205,6 @@ public class MapGraph implements EncounterCallback {
     return nodes.get(nodeId);
   }
 
-  public MapNode getNodeByCoords(int x, int y) {
-
-    return nodes.get((y * MAP_WIDTH + x) - 1);
-  }
-
   /**
    * Gets the current node.
    *
@@ -243,7 +227,6 @@ public class MapGraph implements EncounterCallback {
    * Gets all nodes in the given row of the MapGraph.
    *
    * @param height The chosen height/layer from which nodes are retrieved
-   *
    * @return all map nodes in the given row
    */
   public List<MapNode> getNodesByHeight(int height) {
@@ -269,7 +252,7 @@ public class MapGraph implements EncounterCallback {
   /**
    * Called after an encounter finishes.
    *
-   * @param nodeId  completed node id
+   * @param nodeId completed node id
    * @param success whether encounter completed successfully
    */
   public void completeNode(Integer nodeId, boolean success) {

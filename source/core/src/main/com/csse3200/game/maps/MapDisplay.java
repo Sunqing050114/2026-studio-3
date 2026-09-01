@@ -70,20 +70,19 @@ public class MapDisplay extends UIComponent {
   private void addNodes() {
     for (MapNode node : mapGraph.getNodes().values()) {
       MapNodeGroup nodeGroup = new MapNodeGroup(node);
-      
+
       float x = getNodeX(node.getNodeId(), nodeWidth);
       float y = getNodeY(node);
 
-      nodePositions.put(node.getNodeId(), new Vector2(x , y).add(nodeWidth /2f,
-         nodeWidth));
+      nodePositions.put(node.getNodeId(), new Vector2(x, y).add(nodeWidth / 2f, nodeWidth));
 
       nodeGroup.setPosition(x, y);
       group.addActor(nodeGroup);
     }
   }
 
-  private float getNodeX(int nodeId, float nodeWidth ) {
-    return nodeWidth * 1.5f *((nodeId % 7) + 1);
+  private float getNodeX(int nodeId, float nodeWidth) {
+    return nodeWidth * 1.5f * ((nodeId % 7) + 1);
   }
 
   private float getNodeY(MapNode node) {
@@ -101,7 +100,7 @@ public class MapDisplay extends UIComponent {
 
         Vector2 start = nodePositions.get(node.getNodeId());
         Vector2 end = nodePositions.get(connection.getNodeId());
-        end.sub(0, nodeWidth /2f);
+        end.sub(0, nodeWidth / 2f);
         MapConnectionGroup mapConnectionGroup = new MapConnectionGroup(start, end);
 
         group.addActor(mapConnectionGroup);

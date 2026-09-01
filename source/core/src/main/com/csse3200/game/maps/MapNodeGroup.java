@@ -69,25 +69,25 @@ public class MapNodeGroup extends Group {
 
   private void checkNodeState() {
     float iconSize = size;
-  switch (node.getState()) {
-    case LOCKED:
-      nodeIcon.getColor().a = 0.5f;
-      break;
-    case AVAILABLE:
-      iconSize = 1.25f;
-      break;
-    case COMPLETED:
-      nodeIcon.setColor(0, 255, 0, 0.5f);
-      break;
-    case CURRENT:
-      iconSize = 1.5f;
-      nodeIcon.setColor(255, 255, 0, 1);
-      break;
-    default:
-      break;
+    switch (node.getState()) {
+      case LOCKED:
+        nodeIcon.getColor().a = 0.5f;
+        break;
+      case AVAILABLE:
+        iconSize = 1.25f;
+        break;
+      case COMPLETED:
+        nodeIcon.setColor(0, 255, 0, 0.5f);
+        break;
+      case CURRENT:
+        iconSize = 1.5f;
+        nodeIcon.setColor(255, 255, 0, 1);
+        break;
+      default:
+        break;
+    }
+    setNodeSize(iconSize);
   }
-  setNodeSize(iconSize);
-}
 
   private void loadNodeAssets() {
     String[] nodeAssets = {

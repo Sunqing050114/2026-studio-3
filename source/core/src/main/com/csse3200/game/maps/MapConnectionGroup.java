@@ -20,7 +20,8 @@ public class MapConnectionGroup extends Group {
 
     loadNodeAssets();
     mapConnection =
-        new Image(ServiceLocator.getResourceService().getAsset("images/nodeLine.png", Texture.class));
+        new Image(
+            ServiceLocator.getResourceService().getAsset("images/nodeLine.png", Texture.class));
 
     mapConnection.setSize(4, length);
     mapConnection.setOrigin(4, 0);
