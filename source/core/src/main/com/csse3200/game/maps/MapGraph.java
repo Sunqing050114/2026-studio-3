@@ -33,10 +33,8 @@ public class MapGraph implements EncounterCallback {
    * Primary map generation function. The player is able to start from any of the
    * nodes at height =
    * 1.
-   *
    * Should be private and only be called once in constructor. Currently public
    * for testing.
-   *
    * TODO: currently just does a weird bfs with a lot of things randomly shaved
    * needs more work
    * and refining branches but they are there and should have some variation
@@ -50,7 +48,7 @@ public class MapGraph implements EncounterCallback {
     Random rand = new Random();
 
     // set connections to boss/final first
-    int pathCount = rand.nextInt(1, 3); // NOTE: this would be better as a bounded gaussian
+    int pathCount = rand.nextInt(1, 3);
 
     nextRow = getNodesByHeight(MAP_HEIGHT - 1);
 
@@ -70,9 +68,13 @@ public class MapGraph implements EncounterCallback {
       pruneRandomNodes(nextRow, pathCount);
 
       for (MapNode parentNode : prevRow) {
+        int minDistance = MAP_WIDTH;
         for (MapNode childNode : nextRow) {
-          int distance = (parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
-          if (Math.abs(distance) < 2) { // TODO: improve heuristic this makes it suicidal
+          int distance = Math.abs(parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
+          if (distance <= minDistance) {
+            minDistance = distance;
+          }
+          if (parentNode.getConnections().size() < rand.nextInt(3, 4)) {
             connectNodes(parentNode, childNode);
           }
         }
