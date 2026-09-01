@@ -108,7 +108,7 @@ class EnemyFactoryTest {
     EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
 
     assertEquals(50, stats.getHealth());
-    assertEquals(3, stats.getArmour());
+    assertEquals(3, stats.getArmor());
   }
 
   @Test
