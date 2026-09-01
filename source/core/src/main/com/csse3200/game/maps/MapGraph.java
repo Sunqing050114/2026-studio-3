@@ -13,7 +13,7 @@ public class MapGraph implements EncounterCallback {
   private MapNode currentNode;
 
   public static final int MAP_WIDTH = 7;
-  public static final int MAP_HEIGHT = 10;
+  public static final int MAP_HEIGHT = 15;
   public static final int MAX_NODE_COUNT = MAP_WIDTH * MAP_HEIGHT;
 
   public MapGraph() {
@@ -73,8 +73,14 @@ public class MapGraph implements EncounterCallback {
           int distance = Math.abs(parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
           if (distance < minDistance) {
             minDistance = distance;
-            if (parentNode.getConnections().size() < 3) {
-              connectNodes(parentNode, childNode);
+            if (rand.nextGaussian() < 0.3) {
+              if (parentNode.getConnections().size() < 3) {
+                connectNodes(parentNode, childNode);
+              }
+            } else  {
+              if (parentNode.getConnections().size() < 2) {
+                connectNodes(parentNode, childNode);
+              }
             }
           }
         }
