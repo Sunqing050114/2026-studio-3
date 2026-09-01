@@ -16,6 +16,7 @@ import com.csse3200.game.physics.components.HitboxComponent;
 import com.csse3200.game.physics.components.PhysicsComponent;
 import com.csse3200.game.rendering.TextureRenderComponent;
 import com.csse3200.game.services.ServiceLocator;
+import com.csse3200.game.components.player.PlayerBehaviorComponent;
 
 /**
  * Factory to create a player entity.
@@ -45,6 +46,7 @@ public class PlayerFactory {
             .addComponent(new PlayerActions())
             .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack, stats.maxHealth))
             .addComponent(new InventoryComponent(stats.gold))
+            .addComponent(new PlayerBehaviorComponent())
             .addComponent(inputComponent)
             .addComponent(new PlayerStatsDisplay())
             .addComponent(new EnergyComponent(stats.maxEnergy));
