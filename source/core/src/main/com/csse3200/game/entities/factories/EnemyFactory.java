@@ -58,7 +58,7 @@ public class EnemyFactory {
    */
   public static Entity create(EnemyConfig config) {
     return new Entity()
-        .addComponent(new TextureRenderComponent("images/heart.png")) //place holder image
+        .addComponent(new TextureRenderComponent("images/enemy.png")) //place holder image
         .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
         .addComponent(

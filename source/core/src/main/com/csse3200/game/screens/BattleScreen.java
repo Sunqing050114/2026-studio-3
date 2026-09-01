@@ -60,7 +60,7 @@ public class BattleScreen extends ScreenAdapter {
   private final Renderer renderer;
   private ForestGameArea gameArea;
 
-  private static final String[] mainGameTextures = {"images/heart.png", "images/energy.png", "images/money.png", "images/piety.png"};
+  private static final String[] mainGameTextures = {"images/heart.png", "images/energy.png", "images/money.png", "images/piety.png", "images/enemy.png"};
   private static final Vector2 CAMERA_POSITION = new Vector2(7.5f, 7.5f);
 
   private static final int HAND_SIZE = 4;
