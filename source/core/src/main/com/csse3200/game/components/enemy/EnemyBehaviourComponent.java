@@ -48,7 +48,7 @@ public class EnemyBehaviourComponent extends Component {
   public EnemyIntent rollIntent() {
     turnNumber++;
 
-    EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
+    CombatStatsComponent stats = entity.getComponent(CombatStatsComponent.class);
     currentIntent = stats == null ? EnemyIntent.unknown() : ai.decide(buildContext(stats));
 
     entity.getEvents().trigger("intentChanged", currentIntent);
@@ -64,7 +64,7 @@ public class EnemyBehaviourComponent extends Component {
    * @param stats the enemy's own combat stats
    * @return a snapshot of the current battle state
    */
-  private EnemyAIContext buildContext(EnemyStatsComponent stats) {
+  private EnemyAIContext buildContext(CombatStatsComponent stats) {
     return new EnemyAIContext(
         UNKNOWN_PLAYER_HEALTH,
         stats.getHealth(),
@@ -97,7 +97,7 @@ public class EnemyBehaviourComponent extends Component {
 
     CombatStatsComponent targetStats = target.getComponent(CombatStatsComponent.class);
 
-    EnemyStatsComponent attackerStats = entity.getComponent(EnemyStatsComponent.class);
+    CombatStatsComponent attackerStats = entity.getComponent(CombatStatsComponent.class);
 
     if (targetStats != null && attackerStats != null) {
       targetStats.hit(attackerStats);
@@ -105,7 +105,7 @@ public class EnemyBehaviourComponent extends Component {
   }
 
   private void defend() {
-    EnemyStatsComponent stats = entity.getComponent(EnemyStatsComponent.class);
+    CombatStatsComponent stats = entity.getComponent(CombatStatsComponent.class);
     if (stats != null) {
       stats.addArmor(currentIntent.getValue());
     }
