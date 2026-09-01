@@ -8,8 +8,8 @@ import com.csse3200.game.entities.Entity;
 public class PlayerBehaviorComponent extends Component {
 
   /**
-   * Attack the target with cardDamage calculation. The damage is multiplied by the player's
-   * modifier and enemy's modifier
+   * Attack the target with cardDamage calculation. The card damage plus player's base attack is
+   * multiplied by the player's modifier and enemy's modifier
    *
    * @param target the entity's being attacked
    * @param cardDamage the base damage value from card
@@ -25,7 +25,7 @@ public class PlayerBehaviorComponent extends Component {
     }
     int damage =
         Math.round(
-            (cardDamage
+            ((cardDamage + playerStats.getBaseAttack())
                 * StatusEffectCalculator.getOutgoingDamageModifier(playerStats)
                 * StatusEffectCalculator.getIncomingDamageModifier(targetStats)));
     targetStats.takeDamage(damage);

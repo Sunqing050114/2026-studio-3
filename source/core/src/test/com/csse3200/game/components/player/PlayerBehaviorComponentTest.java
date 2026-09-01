@@ -23,7 +23,7 @@ class PlayerBehaviorComponentTest {
     playerEntity.create();
     enemyEntity.create();
     behavior.attack(enemyEntity, 5);
-    assertEquals(45, enemyStats.getHealth());
+    assertEquals(40, enemyStats.getHealth()); // 5 card damage + 5 base attack
   }
 
   @Test
