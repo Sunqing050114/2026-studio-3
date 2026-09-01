@@ -24,7 +24,7 @@ public class MapInputHandler {
    *
    * @param actor node actor to listen on
    */
-  public void attach(NodeActor actor) {
+  public void attach(MapNodeActor actor) {
     actor.addListener(
         new InputListener() {
           @Override
@@ -36,11 +36,17 @@ public class MapInputHandler {
           @Override
           public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
             controller.getEvents().trigger("nodeHovered", actor.getNodeId());
+            if (actor.getNode().getState() == NodeState.AVAILABLE) {
+              actor.setHovered(true);
+            }
           }
 
           @Override
           public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
             controller.getEvents().trigger("nodeUnhovered", actor.getNodeId());
+            if (actor.getNode().getState() == NodeState.AVAILABLE) {
+              actor.setHovered(false);
+            }
           }
         });
   }
@@ -50,8 +56,8 @@ public class MapInputHandler {
    *
    * @param actors node actors to listen on
    */
-  public void attachAll(List<NodeActor> actors) {
-    for (NodeActor actor : actors) {
+  public void attachAll(List<MapNodeActor> actors) {
+    for (MapNodeActor actor : actors) {
       attach(actor);
     }
   }

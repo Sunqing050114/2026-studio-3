@@ -31,7 +31,8 @@ public class MapGraphTest {
     Map<Integer, MapNode> nodes =
         NodePoolGenerator.generate(new RoomDistributionConfig(5, 3, 2, 1, 12345L));
 
-    MapGraph graph = new MapGraph(nodes);
+    MapGraph graph = new MapGraph();
+    graph.addNodes(nodes);
 
     assertEquals(nodes.keySet(), graph.getNodes().keySet());
     assertTrue(

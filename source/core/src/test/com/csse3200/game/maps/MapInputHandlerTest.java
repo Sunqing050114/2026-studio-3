@@ -34,7 +34,7 @@ class MapInputHandlerTest {
    *
    * @param actor actor to click
    */
-  private void click(NodeActor actor) {
+  private void click(MapNodeActor actor) {
     InputListener listener = (InputListener) actor.getListeners().get(0);
     listener.touchDown(new InputEvent(), 0, 0, 0, 0);
   }
@@ -73,7 +73,8 @@ class MapInputHandlerTest {
 
   @Test
   void clickingLockedNodeActorFiresNodeLocked() {
-    NodeActor actor = new NodeActor(2, 0, 0, 50, 50);
+    MapNode node = new MapNode(2, RoomType.COMBAT);
+    MapNodeActor actor = new MapNodeActor(node, true);
     inputHandler.attach(actor);
 
     click(actor);
@@ -84,8 +85,10 @@ class MapInputHandlerTest {
 
   @Test
   void attachAllWiresLockedActorCorrectly() {
-    NodeActor available = new NodeActor(1, 0, 0, 50, 50);
-    NodeActor lockedActor = new NodeActor(2, 60, 0, 50, 50);
+    MapNode availableNode = new MapNode(2, RoomType.COMBAT);
+    MapNode lockedNode = new MapNode(2, RoomType.COMBAT);
+    MapNodeActor available = new MapNodeActor(availableNode, true);
+    MapNodeActor lockedActor = new MapNodeActor(lockedNode, true);
     inputHandler.attachAll(List.of(available, lockedActor));
 
     click(lockedActor);
@@ -96,8 +99,8 @@ class MapInputHandlerTest {
   void hoveringActorFiresNodeHovered() {
     AtomicReference<Integer> hovered = new AtomicReference<>();
     controller.getEvents().addListener("nodeHovered", (Integer id) -> hovered.set(id));
-
-    NodeActor actor = new NodeActor(1, 0, 0, 50, 50);
+    MapNode node = new MapNode(1, RoomType.COMBAT);
+    MapNodeActor actor = new MapNodeActor(node, true);
     inputHandler.attach(actor);
 
     InputListener listener = (InputListener) actor.getListeners().get(0);
