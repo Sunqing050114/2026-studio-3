@@ -21,7 +21,7 @@ public class InventoryComponent extends Component {
   /**
    * Returns the player's gold.
    *
-   * @return entity's health
+   * @return entity's gold
    */
   public int getGold() {
     return this.gold;
@@ -45,6 +45,10 @@ public class InventoryComponent extends Component {
   public void setGold(int gold) {
     this.gold = Math.max(gold, 0);
     logger.debug("Setting gold to {}", this.gold);
+
+    if (entity != null) {
+      entity.getEvents().trigger("updateGold", this.gold);
+    }
   }
 
   /**
@@ -54,5 +58,25 @@ public class InventoryComponent extends Component {
    */
   public void addGold(int gold) {
     setGold(this.gold + gold);
+  }
+
+  /**
+   * Subtracts a specific amount of gold from the player's inventory. Checks if the player has
+   * enough gold before subtracting.
+   *
+   * @param amount the amount of gold to subtract
+   * @return true if successful, false if not enough gold or invalid amount
+   */
+  public boolean subtractGold(int amount) {
+    if (amount < 0) {
+      return false;
+    }
+
+    if (!hasGold(amount)) {
+      return false;
+    }
+
+    setGold(this.gold - amount);
+    return true;
   }
 }
