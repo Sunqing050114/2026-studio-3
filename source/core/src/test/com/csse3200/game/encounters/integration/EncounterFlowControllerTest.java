@@ -104,8 +104,7 @@ class EncounterFlowControllerTest {
         new EncounterFlowController(player, transactions, (nodeId, success) -> {});
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> flow.startChance(null, createChanceEncounter()));
+        IllegalArgumentException.class, () -> flow.startChance(null, createChanceEncounter()));
     assertThrows(
         IllegalArgumentException.class,
         () -> flow.startShop("   ", new ShopService(new ShopItem[0])));
@@ -202,8 +201,7 @@ class EncounterFlowControllerTest {
         List.of(new ChanceChoice("risk", "Lose health for gold.", new ChanceOutcome(-10, 25))));
   }
 
-  private static final class RecordingCallback
-      implements com.csse3200.game.maps.EncounterCallback {
+  private static final class RecordingCallback implements com.csse3200.game.maps.EncounterCallback {
     private int count;
     private String nodeId;
     private boolean success;
