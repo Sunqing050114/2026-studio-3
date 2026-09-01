@@ -3,7 +3,7 @@ package com.csse3200.game.components.enemy;
 import com.csse3200.game.components.CombatStatsComponent;
 
 /**
- * Health, attack and armour for an enemy, and the resolution of incoming damage.
+ * Health, attack and armor for an enemy, and the resolution of incoming damage.
  *
  * <p>Damage is currently untyped; typed damage can be added as an overload without breaking
  * callers.
@@ -11,20 +11,18 @@ import com.csse3200.game.components.CombatStatsComponent;
 public class EnemyStatsComponent extends CombatStatsComponent {
   private static final String DEFAULT_DISPLAY_NAME = "Unknown Enemy";
 
-  private final int maxHealth;
   private final String displayName;
-  private int armour;
 
-  public EnemyStatsComponent(int health, int baseAttack, int armour) {
-    this(health, baseAttack, armour, DEFAULT_DISPLAY_NAME);
+  public EnemyStatsComponent(int health, int baseAttack, int armor) {
+    this(health, baseAttack, armor, DEFAULT_DISPLAY_NAME);
   }
 
-  public EnemyStatsComponent(int health, int baseAttack, int armour, String displayName) {
+  public EnemyStatsComponent(int health, int baseAttack, int armor, String displayName) {
     super(health, baseAttack);
-    this.maxHealth = health;
-    this.armour = Math.max(armour, 0);
-    this.displayName =
-        displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
+    super.setArmor(armor);
+    this.displayName = displayName == null || displayName.isBlank()
+            ? DEFAULT_DISPLAY_NAME
+            : displayName;
   }
 
   public String getDisplayName() {
@@ -32,20 +30,20 @@ public class EnemyStatsComponent extends CombatStatsComponent {
   }
 
   public int getMaxHealth() {
-    return maxHealth;
+    return super.getMaxHealth();
   }
 
-  public int getArmour() {
-    return armour;
+  public int getArmor() {
+    return super.getArmor();
   }
 
-  public void setArmour(int armour) {
-    this.armour = Math.max(armour, 0);
+  public void setArmor(int armour) {
+    super.setArmor(armour);
   }
 
   /** Adds armour, for example when a defend intent resolves. */
-  public void addArmour(int armour) {
-    setArmour(this.armour + armour);
+  public void addArmor(int armour) {
+    super.addArmor(armour);
   }
 
   public boolean isAlive() {
@@ -53,7 +51,7 @@ public class EnemyStatsComponent extends CombatStatsComponent {
   }
 
   /**
-   * Applies damage, depleting armour before health.
+   * Applies damage, depleting armor before health.
    *
    * @param damage incoming damage, ignored if not positive
    */
@@ -64,8 +62,8 @@ public class EnemyStatsComponent extends CombatStatsComponent {
 
     int healthBeforeDamage = getHealth();
 
-    int absorbed = Math.min(armour, damage);
-    setArmour(armour - absorbed);
+    int absorbed = Math.min(armor, damage);
+    setArmor(armor - absorbed);
 
     int remaining = damage - absorbed;
     if (remaining > 0) {
