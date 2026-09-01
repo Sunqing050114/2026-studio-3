@@ -20,7 +20,8 @@ public class CardEffectDebugDisplay extends UIComponent {
   private static final float TARGET_COL = 200f;
   private static final float VALUE_COL = 70f;
   private static final float DURATION_COL = 140f;
-  private static final float TABLE_WIDTH = CARD_COL + EFFECT_COL + TARGET_COL + VALUE_COL + DURATION_COL;
+  private static final float TABLE_WIDTH =
+      CARD_COL + EFFECT_COL + TARGET_COL + VALUE_COL + DURATION_COL;
   private static final float ROW_GAP = 4f;
   private static final Color STRIPE_COLOR = new Color(1f, 1f, 1f, 0.06f);
   private static final Color LINE_COLOR = new Color(0f, 0f, 0f, 0.35f);
@@ -108,7 +109,10 @@ public class CardEffectDebugDisplay extends UIComponent {
         rowTable.add(new Label(effect.type().name(), typeStyle)).width(EFFECT_COL).left();
         rowTable.add(new Label(effect.target().name(), skin)).width(TARGET_COL).left();
         rowTable.add(new Label(String.valueOf(effect.value()), typeStyle)).width(VALUE_COL).right();
-        rowTable.add(new Label(String.valueOf(effect.duration()), skin)).width(DURATION_COL).right();
+        rowTable
+            .add(new Label(String.valueOf(effect.duration()), skin))
+            .width(DURATION_COL)
+            .right();
 
         rows.add(rowTable).width(TABLE_WIDTH).left().padBottom(ROW_GAP).row();
         rowIndex++;

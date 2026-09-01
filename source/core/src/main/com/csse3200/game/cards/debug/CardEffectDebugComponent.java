@@ -6,8 +6,8 @@ import com.csse3200.game.components.Component;
 import java.util.List;
 
 /**
- * State tracker for the card effect debug dialog. Holds whether the dialog is open and exposes
- * this turn's resolved card effects for display.
+ * State tracker for the card effect debug dialog. Holds whether the dialog is open and exposes this
+ * turn's resolved card effects for display.
  *
  * <p>This does not own any resolution logic — it only reads from Team 5's {@link
  * CardEffectResolutionService}, the same service used to actually play cards. Attach the same
