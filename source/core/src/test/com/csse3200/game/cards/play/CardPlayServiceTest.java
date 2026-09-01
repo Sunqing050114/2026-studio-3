@@ -151,7 +151,7 @@ class CardPlayServiceTest {
   @Test
   void shouldReturnUnknownCardFailureFromUnifiedEntryPoint() {
     CardLibrary cardLibrary = new CardLibrary();
-    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("missing")));
+    BattleDeck battleDeck = new BattleDeck(new PlayerDeck(List.of("strike")));
     battleDeck.drawOne();
     EnergyComponent energyComponent = new EnergyComponent(3);
     CardPlayService playService = new CardPlayService(cardLibrary, battleDeck, energyComponent);
@@ -162,7 +162,7 @@ class CardPlayServiceTest {
     assertEquals(CardPlayFailureReason.UNKNOWN_CARD, result.failureReason());
     assertEquals(0, result.energyCost());
     assertEquals(3, energyComponent.getCurrentEnergy());
-    assertIterableEquals(List.of("missing"), result.updatedHand());
+    assertIterableEquals(List.of("strike"), result.updatedHand());
   }
 
   @Test
