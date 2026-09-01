@@ -1,58 +1,40 @@
 package com.csse3200.game.components.enemy;
 
 import com.csse3200.game.components.CombatStatsComponent;
+import com.csse3200.game.components.Component;
 
 /**
- * Health, attack and armor for an enemy, and the resolution of incoming damage.
+ * Enemy-specific state and lifecycle event translation.
  *
- * <p>Damage is currently untyped; typed damage can be added as an overload without breaking
- * callers.
+ * <p>Combat stats (health, base attack, armor) live on the entity's {@link CombatStatsComponent} so
+ * that other teams can read them uniformly with {@code getComponent(CombatStatsComponent.class)}.
+ * This component holds only enemy-specific data (currently the display name) and re-emits the enemy
+ * lifecycle events ({@code enemyDamaged}, {@code enemyDefeated}) from the shared {@code
+ * updateHealth} event fired by {@link CombatStatsComponent}.
  */
-public class EnemyStatsComponent extends CombatStatsComponent {
+public class EnemyStatsComponent extends Component {
   private static final String DEFAULT_DISPLAY_NAME = "Unknown Enemy";
 
   private final String displayName;
   private int lastHealth;
 
-  public EnemyStatsComponent(int health, int baseAttack, int armor) {
-    this(health, baseAttack, armor, DEFAULT_DISPLAY_NAME);
+  public EnemyStatsComponent() {
+    this(DEFAULT_DISPLAY_NAME);
   }
 
-  public EnemyStatsComponent(int health, int baseAttack, int armor, String displayName) {
-    super(health, baseAttack);
-    super.setArmor(armor);
+  public EnemyStatsComponent(String displayName) {
     this.displayName =
-            displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
+        displayName == null || displayName.isBlank() ? DEFAULT_DISPLAY_NAME : displayName;
   }
 
   public String getDisplayName() {
     return displayName;
   }
 
-  public int getMaxHealth() {
-    return super.getMaxHealth();
-  }
-
-  public int getArmor() {
-    return super.getArmor();
-  }
-
-  public void setArmor(int armor) {
-    super.setArmor(armor);
-  }
-
-  public void addArmor(int armor) {
-    super.addArmor(armor);
-  }
-
-  public boolean isAlive() {
-    return getHealth() > 0;
-  }
-
   @Override
   public void create() {
-    super.create();
-    lastHealth = getHealth();
+    CombatStatsComponent stats = entity.getComponent(CombatStatsComponent.class);
+    lastHealth = stats == null ? 0 : stats.getHealth();
     entity.getEvents().addListener("updateHealth", this::onHealthUpdated);
   }
 
@@ -66,4 +48,3 @@ public class EnemyStatsComponent extends CombatStatsComponent {
     lastHealth = health;
   }
 }
-

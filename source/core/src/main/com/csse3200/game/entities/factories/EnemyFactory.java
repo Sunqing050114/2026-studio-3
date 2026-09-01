@@ -2,6 +2,7 @@ package com.csse3200.game.entities.factories;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyAnimationController;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
@@ -84,9 +85,12 @@ public class EnemyFactory {
     animator.addAnimation("idle", IDLE_FRAME_DURATION, Animation.PlayMode.LOOP);
     animator.addAnimation("hurt", HURT_FRAME_DURATION, Animation.PlayMode.NORMAL);
 
+    CombatStatsComponent stats = new CombatStatsComponent(config.health, config.baseAttack);
+    stats.setArmor(config.armour);
+
     return new Entity()
-        .addComponent(
-            new EnemyStatsComponent(config.health, config.baseAttack, config.armour, config.name))
+        .addComponent(stats)
+        .addComponent(new EnemyStatsComponent(config.name))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
         .addComponent(animator)
         .addComponent(new EnemyAnimationController());

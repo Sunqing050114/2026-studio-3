@@ -18,7 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(GameExtension.class)
 class EnemyBehaviourComponentTest {
 
-  private static Entity enemyWith(EnemyBehaviourComponent behaviour, EnemyStatsComponent stats) {
+  /** Builds an enemy with the given combat stats, or with no stats component at all. */
+  private static Entity enemyWith(EnemyBehaviourComponent behaviour, CombatStatsComponent stats) {
     Entity enemy = new Entity();
     if (stats != null) {
       enemy.addComponent(stats);
@@ -26,6 +27,11 @@ class EnemyBehaviourComponentTest {
     enemy.addComponent(behaviour);
     enemy.create();
     return enemy;
+  }
+
+  /** Combat stats matching the enemy previously used across these tests. */
+  private static CombatStatsComponent enemyStats() {
+    return new CombatStatsComponent(20, 6);
   }
 
   @Test
@@ -48,7 +54,7 @@ class EnemyBehaviourComponentTest {
   void shouldAttackOnTheFirstTurn() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     EnemyIntent intent = behaviour.rollIntent();
 
@@ -60,7 +66,7 @@ class EnemyBehaviourComponentTest {
   void shouldDefendOnTheSecondTurn() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     behaviour.rollIntent();
     EnemyIntent intent = behaviour.rollIntent();
@@ -72,7 +78,7 @@ class EnemyBehaviourComponentTest {
   void shouldExposeTheRolledIntentAsCurrent() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     EnemyIntent rolled = behaviour.rollIntent();
 
@@ -83,8 +89,10 @@ class EnemyBehaviourComponentTest {
   void shouldTelegraphTheIntentToListeners() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    Entity enemy = enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
-    EventListener1<EnemyIntent> listener = mock(EventListener1.class);
+    Entity enemy = enemyWith(behaviour, enemyStats());
+
+    @SuppressWarnings("unchecked")
+    EventListener1<EnemyIntent> listener = (EventListener1<EnemyIntent>) mock(EventListener1.class);
     enemy.getEvents().addListener("intentChanged", listener);
 
     behaviour.rollIntent();
@@ -106,7 +114,7 @@ class EnemyBehaviourComponentTest {
   @Test
   void shouldFallBackToADefaultBehaviourForUnknownId() {
     EnemyBehaviourComponent behaviour = new EnemyBehaviourComponent("no_such_behaviour");
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     EnemyIntent intent = behaviour.rollIntent();
 
@@ -118,7 +126,7 @@ class EnemyBehaviourComponentTest {
   void shouldGainArmorWhenResolvingDefend() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    EnemyStatsComponent stats = new EnemyStatsComponent(20, 6, 0);
+    CombatStatsComponent stats = enemyStats();
     enemyWith(behaviour, stats);
 
     behaviour.rollIntent();
@@ -132,7 +140,7 @@ class EnemyBehaviourComponentTest {
   void shouldDamageTheTargetWhenResolvingAttack() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     Entity player = new Entity();
     CombatStatsComponent playerStats = new CombatStatsComponent(30, 4);
@@ -149,7 +157,7 @@ class EnemyBehaviourComponentTest {
   void shouldIgnoreAttackAgainstNullTarget() {
     EnemyBehaviourComponent behaviour =
         new EnemyBehaviourComponent(EnemyAIFactory.CYCLE_ATTACK_DEFEND);
-    enemyWith(behaviour, new EnemyStatsComponent(20, 6, 0));
+    enemyWith(behaviour, enemyStats());
 
     behaviour.rollIntent();
 
