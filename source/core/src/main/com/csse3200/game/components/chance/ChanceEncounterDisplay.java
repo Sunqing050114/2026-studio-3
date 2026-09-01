@@ -34,8 +34,8 @@ import java.util.Objects;
  */
 public class ChanceEncounterDisplay extends UIComponent {
   private static final float Z_INDEX = 3f;
-  private static final float PANEL_WIDTH = 720f;
-  private static final float CONTENT_WIDTH = 640f;
+  private static final float PANEL_WIDTH = 1080f;
+  private static final float CONTENT_WIDTH = 980f;
 
   private static final Color BACKDROP_COLOUR = new Color(0.02f, 0.015f, 0.025f, 0.82f);
   private static final Color PANEL_COLOUR = new Color(0.11f, 0.075f, 0.08f, 0.98f);
@@ -126,6 +126,9 @@ public class ChanceEncounterDisplay extends UIComponent {
         new Label(formatTitle(encounter.getId()), createLabelStyle("large", BODY_COLOUR));
     Label descriptionLabel =
         new Label(encounter.getDescription(), createLabelStyle("default", BODY_COLOUR));
+    eyebrowLabel.setFontScale(1.25f);
+    titleLabel.setFontScale(1.4f);
+    descriptionLabel.setFontScale(1.3f);
     descriptionLabel.setWrap(true);
 
     encounterTable.add(eyebrowLabel).center().width(CONTENT_WIDTH);
@@ -138,6 +141,7 @@ public class ChanceEncounterDisplay extends UIComponent {
     encounterTable.row();
 
     Label promptLabel = new Label("CHOOSE YOUR RESPONSE", createLabelStyle("small", MUTED_COLOUR));
+    promptLabel.setFontScale(1.25f);
     encounterTable.add(promptLabel).left().width(CONTENT_WIDTH).padBottom(2f);
     encounterTable.row();
 
@@ -155,6 +159,7 @@ public class ChanceEncounterDisplay extends UIComponent {
     resultLabel =
         new Label(
             "Your decision will determine the outcome.", createLabelStyle("default", MUTED_COLOUR));
+    resultLabel.setFontScale(1.3f);
     resultLabel.setWrap(true);
     resultTable.add(resultLabel).left().width(CONTENT_WIDTH - 36f);
 
@@ -162,6 +167,7 @@ public class ChanceEncounterDisplay extends UIComponent {
     encounterTable.row();
 
     continueButton = new TextButton("Continue", createContinueStyle());
+    continueButton.getLabel().setFontScale(1.3f);
     continueButton.setVisible(false);
     continueButton.addListener(
         new ChangeListener() {
@@ -170,7 +176,7 @@ public class ChanceEncounterDisplay extends UIComponent {
             completeEncounter();
           }
         });
-    encounterTable.add(continueButton).right().width(190f).height(48f).padTop(4f);
+    encounterTable.add(continueButton).right().width(280f).height(70f).padTop(10f);
 
     rootTable.add(encounterTable).width(PANEL_WIDTH);
     stage.addActor(rootTable);
@@ -224,6 +230,7 @@ public class ChanceEncounterDisplay extends UIComponent {
       Table encounterTable, ChanceChoice choice, int choiceNumber, TextButtonStyle choiceStyle) {
     String buttonText = String.format("%d.  %s", choiceNumber, choice.getDescription());
     TextButton choiceButton = new TextButton(buttonText, choiceStyle);
+    choiceButton.getLabel().setFontScale(1.3f);
     choiceButton.getLabel().setWrap(true);
     choiceButton.addListener(
         new ChangeListener() {
@@ -234,7 +241,7 @@ public class ChanceEncounterDisplay extends UIComponent {
         });
 
     choiceButtons.add(choiceButton);
-    encounterTable.add(choiceButton).left().width(CONTENT_WIDTH).minHeight(54f);
+    encounterTable.add(choiceButton).left().width(CONTENT_WIDTH).minHeight(80f);
     encounterTable.row();
   }
 

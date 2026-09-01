@@ -42,8 +42,10 @@ public class ShopDisplay extends UIComponent {
   private static final Logger logger = LoggerFactory.getLogger(ShopDisplay.class);
   private static final String SHOP_CONFIG = "configs/shopItems.json";
   private static final float Z_INDEX = 2f;
-  private static final float PANEL_WIDTH = 920f;
-  private static final float CARD_WIDTH = 230f;
+  private static final float PANEL_WIDTH = 1540f;
+  private static final float CARD_WIDTH = 410f;
+  private static final float CARD_PADDING = 30f;
+  private static final float CARD_CONTENT_WIDTH = CARD_WIDTH - (CARD_PADDING * 2f);
 
   private static final Color BACKDROP_COLOUR = new Color(0.018f, 0.012f, 0.02f, 0.84f);
   private static final Color PANEL_COLOUR = new Color(0.105f, 0.07f, 0.065f, 0.98f);
@@ -188,7 +190,7 @@ public class ShopDisplay extends UIComponent {
 
     Table shopPanel = new Table();
     shopPanel.setBackground(skin.newDrawable("window-w", PANEL_COLOUR));
-    shopPanel.pad(24f, 34f, 26f, 34f);
+    shopPanel.pad(34f, 52f, 36f, 52f);
 
     addHeader(shopPanel);
     shopPanel.row();
@@ -220,16 +222,20 @@ public class ShopDisplay extends UIComponent {
         new Label(
             "Choose carefully. Each offer may be purchased once.",
             createLabelStyle("small", MUTED_COLOUR));
+    eyebrow.setFontScale(1.35f);
+    title.setFontScale(1.55f);
+    subtitle.setFontScale(1.3f);
     titleBlock.add(eyebrow).left();
     titleBlock.row();
-    titleBlock.add(title).left().padTop(2f);
+    titleBlock.add(title).left().padTop(4f);
     titleBlock.row();
-    titleBlock.add(subtitle).left().padTop(4f);
+    titleBlock.add(subtitle).left().padTop(7f);
 
     Table purse = new Table();
     purse.setBackground(skin.newDrawable("white", new Color(0.18f, 0.12f, 0.07f, 1f)));
-    purse.pad(10f, 16f, 10f, 16f);
+    purse.pad(14f, 22f, 14f, 22f);
     goldLabel = new Label("", createLabelStyle("default", GOLD_COLOUR));
+    goldLabel.setFontScale(1.5f);
     purse.add(goldLabel);
 
     shopPanel.add(titleBlock).left().expandX().colspan(2);
@@ -239,7 +245,7 @@ public class ShopDisplay extends UIComponent {
   private void addDivider(Table shopPanel) {
     Table divider = new Table();
     divider.setBackground(skin.newDrawable("white", GOLD_COLOUR));
-    shopPanel.add(divider).height(2f).expandX().fillX().colspan(3).padTop(16f).padBottom(18f);
+    shopPanel.add(divider).height(3f).expandX().fillX().colspan(3).padTop(20f).padBottom(24f);
   }
 
   private void addShopItems(Table shopPanel) {
@@ -247,8 +253,8 @@ public class ShopDisplay extends UIComponent {
     int itemCount = shopEncounter.getItems().size();
     for (ShopItem item : shopEncounter.getItems()) {
       Table card = createItemCard(item);
-      float rightPadding = itemNumber < itemCount - 1 ? 18f : 0f;
-      shopPanel.add(card).top().width(CARD_WIDTH).minHeight(385f).padRight(rightPadding);
+      float rightPadding = itemNumber < itemCount - 1 ? 34f : 0f;
+      shopPanel.add(card).top().width(CARD_WIDTH).minHeight(590f).padRight(rightPadding);
       itemNumber++;
     }
   }
@@ -256,15 +262,18 @@ public class ShopDisplay extends UIComponent {
   private Table createItemCard(ShopItem item) {
     Table card = new Table();
     card.setBackground(skin.newDrawable("white", CARD_COLOUR));
-    card.pad(16f);
+    card.pad(CARD_PADDING);
 
     Label categoryLabel = new Label("CARD OFFER", createLabelStyle("small", MUTED_COLOUR));
     Label nameLabel = new Label(item.getDisplayName(), createLabelStyle("default", BODY_COLOUR));
+    categoryLabel.setFontScale(1.3f);
+    nameLabel.setFontScale(1.45f);
     nameLabel.setWrap(true);
 
     Table artPlaceholder = new Table();
     artPlaceholder.setBackground(skin.newDrawable("white", ART_COLOUR));
     Label artLabel = new Label("CARD ART\nCOMING SOON", createLabelStyle("small", MUTED_COLOUR));
+    artLabel.setFontScale(1.3f);
     artLabel.setAlignment(Align.center);
     artPlaceholder.add(artLabel).center();
 
@@ -275,8 +284,13 @@ public class ShopDisplay extends UIComponent {
         new Label(String.format("%d GOLD", item.price), createLabelStyle("default", GOLD_COLOUR));
     Label stockLabel = new Label("", createLabelStyle("small", MUTED_COLOUR));
     Label stateLabel = new Label("", createLabelStyle("small", AVAILABLE_COLOUR));
+    descriptionLabel.setFontScale(1.35f);
+    priceLabel.setFontScale(1.45f);
+    stockLabel.setFontScale(1.3f);
+    stateLabel.setFontScale(1.3f);
 
     TextButton buyButton = new TextButton("Purchase", availableButtonStyle);
+    buyButton.getLabel().setFontScale(1.42f);
     buyButton.addListener(
         new ChangeListener() {
           @Override
@@ -285,21 +299,21 @@ public class ShopDisplay extends UIComponent {
           }
         });
 
-    card.add(categoryLabel).left().width(CARD_WIDTH - 32f);
+    card.add(categoryLabel).left().width(CARD_CONTENT_WIDTH);
     card.row();
-    card.add(nameLabel).left().width(CARD_WIDTH - 32f).padTop(6f);
+    card.add(nameLabel).left().width(CARD_CONTENT_WIDTH).padTop(8f);
     card.row();
-    card.add(artPlaceholder).width(CARD_WIDTH - 32f).height(105f).padTop(12f);
+    card.add(artPlaceholder).width(CARD_CONTENT_WIDTH).height(210f).padTop(18f);
     card.row();
-    card.add(descriptionLabel).left().top().width(CARD_WIDTH - 32f).height(72f).padTop(12f);
+    card.add(descriptionLabel).left().top().width(CARD_CONTENT_WIDTH).height(120f).padTop(18f);
     card.row();
-    card.add(priceLabel).left().padTop(12f);
+    card.add(priceLabel).left().padTop(16f);
     card.row();
-    card.add(stockLabel).left().padTop(2f);
+    card.add(stockLabel).left().padTop(4f);
     card.row();
-    card.add(stateLabel).left().padTop(6f);
+    card.add(stateLabel).left().padTop(8f);
     card.row();
-    card.add(buyButton).bottom().width(CARD_WIDTH - 32f).height(44f).padTop(12f);
+    card.add(buyButton).bottom().width(CARD_CONTENT_WIDTH).height(78f).padTop(18f);
 
     itemWidgets.put(item.id, new ItemWidgets(card, stateLabel, stockLabel, buyButton));
     return card;
@@ -310,10 +324,12 @@ public class ShopDisplay extends UIComponent {
         new Label(
             "Select an offer to inspect its purchase state.",
             createLabelStyle("small", MUTED_COLOUR));
+    statusLabel.setFontScale(1.3f);
     statusLabel.setWrap(true);
 
     TextButton leaveButton =
         new TextButton("Leave Shop", createButtonStyle(new Color(0.22f, 0.16f, 0.15f, 1f)));
+    leaveButton.getLabel().setFontScale(1.42f);
     leaveButton.addListener(
         new ChangeListener() {
           @Override
@@ -322,8 +338,8 @@ public class ShopDisplay extends UIComponent {
           }
         });
 
-    shopPanel.add(statusLabel).left().expandX().fillX().colspan(2).padTop(20f).padRight(20f);
-    shopPanel.add(leaveButton).right().width(180f).height(46f).padTop(20f);
+    shopPanel.add(statusLabel).left().expandX().fillX().colspan(2).padTop(28f).padRight(28f);
+    shopPanel.add(leaveButton).right().width(310f).height(78f).padTop(28f);
   }
 
   private LabelStyle createLabelStyle(String baseStyle, Color colour) {
