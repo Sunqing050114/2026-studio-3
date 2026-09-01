@@ -68,12 +68,6 @@ public class MapDisplay extends UIComponent {
   }
 
   private void addNodes() {
-    MapNode no2 = new MapNode(11, RoomType.COMBAT);
-    no2.setState(NodeState.CURRENT);
-    mapGraph.addNode(no2);
-    MapNode no3 = new MapNode(12, RoomType.COMBAT);
-    no3.setState(NodeState.COMPLETED);
-    mapGraph.addNode(no3);
     for (MapNode node : mapGraph.getNodes().values()) {
       MapNodeGroup nodeGroup = new MapNodeGroup(node);
       
@@ -98,15 +92,7 @@ public class MapDisplay extends UIComponent {
 
   private void addConnections() {
     for (MapNode node : mapGraph.getNodes().values()) {
-      if (node.getNodeId() == 0) {
 
-        node.addConnection(mapGraph.getNode(1));
-        node.addConnection(mapGraph.getNode(3));
-        node.addConnection(mapGraph.getNode(2));
-        node.addConnection(mapGraph.getNode(4));
-
-      }
-      
       for (MapNode connection : node.getConnections()) {
 
         if (node.getNodeId() >= connection.getNodeId()) {
