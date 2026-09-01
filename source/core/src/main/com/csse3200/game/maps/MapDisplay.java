@@ -20,10 +20,10 @@ public class MapDisplay extends UIComponent {
 
   private Group group;
   private ScrollPane scrollPane;
-  private final float layerHeight = 128f;
-  private final float borderPadding = 256f;
   private final float mapWidth = Gdx.graphics.getWidth();
   private final float mapHeight = Gdx.graphics.getHeight() * 2;
+  private final float nodeWidth = mapWidth / 13f; // default size
+  private final float borderPadding = nodeWidth;
   // to store positions
   private final Map<Integer, Vector2> nodePositions = new HashMap<>();
 
@@ -68,35 +68,45 @@ public class MapDisplay extends UIComponent {
   }
 
   private void addNodes() {
+    MapNode no2 = new MapNode(11, RoomType.COMBAT);
+    no2.setState(NodeState.CURRENT);
+    mapGraph.addNode(no2);
+    MapNode no3 = new MapNode(12, RoomType.COMBAT);
+    no3.setState(NodeState.COMPLETED);
+    mapGraph.addNode(no3);
     for (MapNode node : mapGraph.getNodes().values()) {
       MapNodeGroup nodeGroup = new MapNodeGroup(node);
-      float nodeWidth = nodeGroup.getNodeSize();
-
+      
       float x = getNodeX(node.getNodeId(), nodeWidth);
       float y = getNodeY(node);
 
-      nodePositions.put(node.getNodeId(), new Vector2(x, y).scl(2f / nodeWidth));
+      nodePositions.put(node.getNodeId(), new Vector2(x , y).add(nodeWidth /2f,
+         nodeWidth));
 
       nodeGroup.setPosition(x, y);
       group.addActor(nodeGroup);
     }
   }
 
-  private float getNodeX(int nodeId, float nodeWidth) {
-    return (nodeId & 7) * nodeWidth + getCentrePadding(nodeWidth * 8);
+  private float getNodeX(int nodeId, float nodeWidth ) {
+    return nodeWidth * 1.5f *((nodeId % 7) + 1);
   }
 
   private float getNodeY(MapNode node) {
-
-    return node.getHeight() * layerHeight + borderPadding;
-  }
-
-  private float getCentrePadding(float width) {
-    return mapWidth / 2f - width / 2f;
+    return node.getHeight() * borderPadding + borderPadding;
   }
 
   private void addConnections() {
     for (MapNode node : mapGraph.getNodes().values()) {
+      if (node.getNodeId() == 0) {
+
+        node.addConnection(mapGraph.getNode(1));
+        node.addConnection(mapGraph.getNode(3));
+        node.addConnection(mapGraph.getNode(2));
+        node.addConnection(mapGraph.getNode(4));
+
+      }
+      
       for (MapNode connection : node.getConnections()) {
 
         if (node.getNodeId() >= connection.getNodeId()) {
@@ -105,6 +115,7 @@ public class MapDisplay extends UIComponent {
 
         Vector2 start = nodePositions.get(node.getNodeId());
         Vector2 end = nodePositions.get(connection.getNodeId());
+        end.sub(0, nodeWidth /2f);
         MapConnectionGroup mapConnectionGroup = new MapConnectionGroup(start, end);
 
         group.addActor(mapConnectionGroup);

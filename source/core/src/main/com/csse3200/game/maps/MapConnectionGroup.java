@@ -16,15 +16,18 @@ public class MapConnectionGroup extends Group {
 
     Vector2 difference = end.cpy().sub(start);
     this.length = difference.len();
-    this.angle = difference.angleDeg();
+    this.angle = difference.angleDeg() - 90f;
 
     loadNodeAssets();
     mapConnection =
-        new Image(ServiceLocator.getResourceService().getAsset("nodeLine.png", Texture.class));
+        new Image(ServiceLocator.getResourceService().getAsset("images/nodeLine.png", Texture.class));
 
-    mapConnection.setSize(8, length);
+    mapConnection.setSize(4, length);
+    mapConnection.setOrigin(4, 0);
     mapConnection.setRotation(angle);
-    mapConnection.setPosition(start.x, start.y);
+    setPosition(start.x - 2, start.y);
+    mapConnection.setPosition(0, 0);
+    mapConnection.getColor().a = 0.5f;
 
     addActor(mapConnection);
   }
@@ -34,7 +37,7 @@ public class MapConnectionGroup extends Group {
   }
 
   private void loadNodeAssets() {
-    String[] nodeAssets = {"nodeLine.png"};
+    String[] nodeAssets = {"images/nodeLine.png"};
     ResourceService resourceService = ServiceLocator.getResourceService();
     resourceService.loadTextures(nodeAssets);
     ServiceLocator.getResourceService().loadAll();

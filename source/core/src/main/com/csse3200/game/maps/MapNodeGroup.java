@@ -1,5 +1,6 @@
 package com.csse3200.game.maps;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -14,17 +15,18 @@ public class MapNodeGroup extends Group {
 
   public MapNodeGroup(MapNode node) {
     this.node = node;
-    this.size = 64f;
-
+    float mapWidth = Gdx.graphics.getWidth();
+    this.size = mapWidth / 13f;
     loadNodeAssets();
     nodeIcon =
         new Image(ServiceLocator.getResourceService().getAsset(getNodeIcon(), Texture.class));
 
     nodeIcon.setSize(size, size);
+    checkNodeState();
     addActor(nodeIcon);
   }
 
-  public MapNodeGroup(MapNode node, float size) {
+  public MapNodeGroup(MapNode node, int size) {
     this.node = node;
     this.size = size;
 
@@ -33,6 +35,7 @@ public class MapNodeGroup extends Group {
         new Image(ServiceLocator.getResourceService().getAsset(getNodeIcon(), Texture.class));
 
     nodeIcon.setSize(size, size);
+    checkNodeState();
     addActor(nodeIcon);
   }
 
@@ -45,6 +48,7 @@ public class MapNodeGroup extends Group {
   }
 
   public void setNodeSize(float size) {
+    this.size = size;
     nodeIcon.setSize(size, size);
   }
 
@@ -64,23 +68,26 @@ public class MapNodeGroup extends Group {
   }
 
   private void checkNodeState() {
-    switch (node.getState()) {
-      case LOCKED:
-        nodeIcon.getColor().a = 0.25f;
-        break;
-      case AVAILABLE:
-        nodeIcon.sizeBy(1.25f);
-        break;
-      case COMPLETED:
-        nodeIcon.getColor().a = 0.5f;
-        break;
-      case CURRENT:
-        nodeIcon.sizeBy(1.5f);
-        break;
-      default:
-        break;
-    }
+    float iconSize = size;
+  switch (node.getState()) {
+    case LOCKED:
+      nodeIcon.getColor().a = 0.5f;
+      break;
+    case AVAILABLE:
+      iconSize = 1.25f;
+      break;
+    case COMPLETED:
+      nodeIcon.setColor(0, 255, 0, 0.5f);
+      break;
+    case CURRENT:
+      iconSize = 1.5f;
+      nodeIcon.setColor(255, 255, 0, 1);
+      break;
+    default:
+      break;
   }
+  setNodeSize(iconSize);
+}
 
   private void loadNodeAssets() {
     String[] nodeAssets = {
