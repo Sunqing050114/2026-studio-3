@@ -26,6 +26,7 @@ Incorporated output:
 - [Pull request #69 — complete reviewable diff and discussion](https://github.com/UQcsse3200/2026-studio-3/pull/69)
 - The follow-up disclosure, expanded test plan and controller edge-case tests included in pull
   request #69.
+- [Commit `617d69f` — exact Java-format correction reported by CI](https://github.com/Sunqing050114/2026-studio-3/commit/617d69f92d7e04095362ed779750324270d54d37)
 
 AI output was used to propose/refine the gateway-and-adapter structure, transactional rollback
 behaviour, lifecycle edge-case tests, technical documentation and issue/PR wording. The linked diff
@@ -35,8 +36,9 @@ final reviewed implementation.
 ## Verification and human review
 
 - Reviewed the changed files and cross-team API mappings against the corresponding feature branches.
-- Ran the repository's unit-test and format workflows. PR #69 recorded 257 successful tests and a
-  successful Java format check for the initial commit.
+- Ran the repository's unit-test and format workflows. PR #69 recorded 257 successful tests for the
+  initial revision; the latest code revision's `Run Unit Tests` step and Java Format workflow both
+  passed. Only fork-inaccessible Discord notification steps remained red.
 - Added focused tests for atomic Player/Deck/stock changes, rollback, invalid starts, stale/duplicate
   callbacks and end-to-end Chance -> Shop -> Map behaviour.
 - Kept manual test results explicitly marked `Not run` until they are performed on the final merged

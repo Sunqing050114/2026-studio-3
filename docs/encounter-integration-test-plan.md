@@ -44,10 +44,11 @@ Run from `source/`:
 ./gradlew test spotlessCheck
 ```
 
-For PR #69, the GitHub Actions `Run Unit Tests` job ran 257 tests successfully and the Java format
-check passed. The workflow-level red status was caused only by Discord notification jobs being
-unable to access repository secrets from a fork; it was not a test or format failure. A fresh CI
-run is still required after every follow-up commit and after the final merge to `main`.
+For PR #69, the initial GitHub Actions revision ran 257 tests successfully. On the latest code
+revision (`617d69f`), the `Run Unit Tests` step and the separate Java Format workflow both passed.
+The workflow-level red status was caused only by Discord notification steps being unable to access
+repository secrets from a fork; it was not a test or format failure. A fresh CI run is still required
+after the final merge to `main`.
 
 ## Manual acceptance tests
 
