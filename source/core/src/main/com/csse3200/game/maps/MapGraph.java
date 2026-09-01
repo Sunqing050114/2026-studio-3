@@ -47,7 +47,7 @@ public class MapGraph implements EncounterCallback {
    * for testing.
    *
    */
-  public int generatePathing() {
+  private int generatePathing() {
 
     Random rand = new Random();
     List<MapNode> row = getNodesByHeight(MAP_HEIGHT - 1);
