@@ -6,8 +6,11 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.csse3200.game.files.UserSettings;
+import com.csse3200.game.maps.RunState;
+import com.csse3200.game.screens.EncounterScreen;
 import com.csse3200.game.screens.MainGameScreen;
 import com.csse3200.game.screens.MainMenuScreen;
+import com.csse3200.game.screens.MapScreen;
 import com.csse3200.game.screens.SettingsScreen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +22,13 @@ import org.slf4j.LoggerFactory;
  */
 public class GdxGame extends Game {
   private static final Logger logger = LoggerFactory.getLogger(GdxGame.class);
+
+  // Lives here rather than on a screen, since setScreen() disposes the outgoing screen.
+  private final RunState runState = new RunState();
+
+  public RunState getRunState() {
+    return runState;
+  }
 
   @Override
   public void create() {
@@ -72,6 +82,10 @@ public class GdxGame extends Game {
         return new MainGameScreen(this);
       case SETTINGS:
         return new SettingsScreen(this);
+      case MAP:
+        return new MapScreen(this);
+      case ENCOUNTER:
+        return new EncounterScreen(this);
       default:
         return null;
     }
@@ -80,7 +94,9 @@ public class GdxGame extends Game {
   public enum ScreenType {
     MAIN_MENU,
     MAIN_GAME,
-    SETTINGS
+    SETTINGS,
+    MAP,
+    ENCOUNTER
   }
 
   /** Exit the game. */
