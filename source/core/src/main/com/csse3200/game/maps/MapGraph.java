@@ -2,6 +2,8 @@ package com.csse3200.game.maps;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -13,8 +15,9 @@ public class MapGraph implements EncounterCallback {
   private MapNode currentNode;
 
   public static final int MAP_WIDTH = 7;
-  public static final int MAP_HEIGHT = 15;
+  public static final int MAP_HEIGHT = 10;
   public static final int MAX_NODE_COUNT = MAP_WIDTH * MAP_HEIGHT;
+  public static final int BRANCH_CHANCE = 15;
 
   public MapGraph() {
     nodes = new HashMap<>();
@@ -27,85 +30,152 @@ public class MapGraph implements EncounterCallback {
    */
   public MapGraph(Map<Integer, MapNode> nodes) {
     this.nodes = new HashMap<>(nodes);
+
+    while (generatePathing() != 0) {
+      nodes = NodePoolGenerator.generate(new RoomDistributionConfig(70, 70, 20, 10));
+    }
   }
 
   /**
    * Primary map generation function. The player is able to start from any of the
-   * nodes at height =
-   * 1.
+   * nodes at height = 1.
+   *
+   * Distinct paths are generated and can have a chance to create random branches
+   * if the option is available.
+   * 
    * Should be private and only be called once in constructor. Currently public
    * for testing.
-   * TODO: currently just does a weird bfs with a lot of things randomly shaved
-   * needs more work
-   * and refining branches but they are there and should have some variation
    *
-   * @param void
    */
-  public void generatePathing() {
+  public int generatePathing() {
 
-    MapNode top = nodes.get(MAX_NODE_COUNT);
-    List<MapNode> prevRow, nextRow;
     Random rand = new Random();
+    List<MapNode> row = getNodesByHeight(MAP_HEIGHT - 1);
+    MapNode finalNode = getNode(MAX_NODE_COUNT);
 
-    // set connections to boss/final first
-    int pathCount = rand.nextInt(1, 3);
+    int pathCount = rand.nextInt(3, row.size() - 1);
+    pruneRandomNodes(row, pathCount);
 
-    nextRow = getNodesByHeight(MAP_HEIGHT - 1);
+    Set<MapNode> visited = new HashSet<>();
+    List<MapNode> pathNodes = new ArrayList<>();
 
-    for (int j = 0; j < pathCount; j++) {
+    for (int i = 0; i < row.size(); i++) {
 
-      connectNodes(top, nextRow.get(rand.nextInt(0, MAP_WIDTH)));
+      MapNode child = row.get(i);
+
+      if (child == null) {
+        return -1;
+      }
+
+      connectNodes(finalNode, child);
+      visited.add(child);
+      pathNodes.add(child);
     }
-    pruneUnconnectedNodes(nextRow);
-    prevRow = nextRow;
 
     // begin to loop the bulk of connections down the tree
     for (int i = 2; i < MAP_HEIGHT; i++) {
 
-      nextRow = getNodesByHeight(MAP_HEIGHT - i);
+      row = getNodesByHeight(MAP_HEIGHT - i);
+      List<MapNode> newNodes = new ArrayList<>();
 
-      pathCount = rand.nextInt(3, 5);
-      pruneRandomNodes(nextRow, pathCount);
+      for (MapNode parentNode : pathNodes) {
 
-      for (MapNode parentNode : prevRow) {
-        int minDistance = MAP_WIDTH;
-        for (MapNode childNode : nextRow) {
-          int distance = Math.abs(parentNode.getNodeId() % MAP_WIDTH) - (childNode.getNodeId() % MAP_WIDTH);
-          if (distance < minDistance) {
-            minDistance = distance;
-            if (rand.nextGaussian() < 0.3) {
-              if (parentNode.getConnections().size() < 3) {
-                connectNodes(parentNode, childNode);
-              }
-            } else  {
-              if (parentNode.getConnections().size() < 2) {
-                connectNodes(parentNode, childNode);
-              }
-            }
+        MapNode child = chooseNextNode(parentNode, row, visited);
+        if (child == null) {
+          return -1;
+        }
+
+        connectNodes(parentNode, child);
+
+        visited.add(child);
+        newNodes.add(child);
+
+        if (newNodes.size() < 5 && rand.nextInt(100) < BRANCH_CHANCE) {
+
+          MapNode branch = chooseNextNode(parentNode, row, visited);
+
+          if (branch != null) {
+            connectNodes(parentNode, branch);
+
+            visited.add(branch);
+            newNodes.add(branch);
           }
         }
       }
-      pruneUnconnectedNodes(nextRow);
-      prevRow = nextRow;
+      pathNodes = newNodes;
+    }
+    pruneUnconnectedMapGraphNodes();
+    return 0;
+  }
+
+  /*
+   * Heuristic helper function for map generation. Finds a random node in range
+   * that hasn't already been visited.
+   *
+   * @param parentNode Chosen node where heuristic will be calculated from
+   * 
+   * @param row The row the node must be connected to (can be above or below)
+   * 
+   * @param visited The set of nodes that have already been visited by the
+   * branches
+   */
+  private MapNode chooseNextNode(MapNode parentNode, List<MapNode> row, Set<MapNode> visited) {
+
+    int currentPos = parentNode.getNodeId() % MAP_WIDTH;
+
+    List<MapNode> inRange = getNodesInRange(currentPos, row, 1);
+
+    inRange.removeIf(visited::contains);
+
+    if (inRange.isEmpty()) {
+      return null;
     }
 
-    pruneUnconnectedMapNodes();
+    Random rand = new Random();
+
+    return inRange.get(rand.nextInt(inRange.size()));
+  }
+
+  /*
+   * Returns a list of nodes that are within the given x coordinate range of a
+   * provided node on a neighbouring row.
+   *
+   *
+   * @param nodePos The x-coordinate of the node that is being ranged from.
+   * 
+   * @param row The row the nodes should be trying to reach.
+   * 
+   * @param range The desired range of the nodes to be returned.
+   */
+  private List<MapNode> getNodesInRange(int nodePos, List<MapNode> row, int range) {
+
+    List<MapNode> inRange = new ArrayList<>();
+
+    for (MapNode node : row) {
+
+      int childPos = node.getNodeId() % MAP_WIDTH;
+
+      if (Math.abs(nodePos - childPos) <= range) {
+        inRange.add(node);
+      }
+    }
+    return inRange;
   }
 
   /**
    * Removes all unconnected nodes from the MapGraph. Only called as the final
    * step of generation.
    *
-   * @param void
    */
-  private void pruneUnconnectedMapNodes() {
-    nodes.values().removeIf(node -> node.getConnections().isEmpty());
+  private void pruneUnconnectedMapGraphNodes() {
+    nodes.values().removeIf(node -> node.getConnections().size() == 0);
   }
 
   /**
    * Removes random nodes from a list. Does not remove from MapGraph state.
    *
-   * @param nodelist list of nodes to be pruned
+   * @param nodelist List of nodes to be pruned
+   * @param count    Number of nodes to be pruned
    */
   private void pruneRandomNodes(List<MapNode> nodelist, int count) {
 
@@ -114,17 +184,6 @@ public class MapGraph implements EncounterCallback {
     for (int i = 0; i < count; i++) {
       nodelist.remove(rand.nextInt(0, nodelist.size() - 1));
     }
-  }
-
-  /**
-   * Removes all nodes in a list with no connections. Does not remove from
-   * MapGraph state.
-   *
-   * @param nodelist list of nodes to be pruned
-   */
-  private void pruneUnconnectedNodes(List<MapNode> nodelist) {
-
-    nodelist.removeIf(node -> node.getConnections().isEmpty());
   }
 
   /**
@@ -180,6 +239,13 @@ public class MapGraph implements EncounterCallback {
     return nodes;
   }
 
+  /**
+   * Gets all nodes in the given row of the MapGraph.
+   *
+   * @param height The chosen height/layer from which nodes are retrieved
+   *
+   * @return all map nodes in the given row
+   */
   public List<MapNode> getNodesByHeight(int height) {
 
     List<MapNode> result = new ArrayList<>();
