@@ -1,55 +1,118 @@
 package com.csse3200.game.cards.effects;
 
+import com.csse3200.game.cards.CardService;
+import com.csse3200.game.cards.CardValidator;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.configs.EffectConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Resolves a card's effects without taking ownership of player or enemy state. */
+/** Resolves Team 6 card configs into Team 5 card effect results. */
 public class CardEffectResolver {
+  private final CardService cardService;
   private final EffectExecutor effectExecutor;
 
   public CardEffectResolver() {
-    this(new EffectExecutor());
+    this(null, new EffectExecutor());
+  }
+
+  public CardEffectResolver(CardService cardService) {
+    this(cardService, new EffectExecutor());
   }
 
   public CardEffectResolver(EffectExecutor effectExecutor) {
+    this(null, effectExecutor);
+  }
+
+  public CardEffectResolver(CardService cardService, EffectExecutor effectExecutor) {
     if (effectExecutor == null) {
       throw new IllegalArgumentException("Effect executor cannot be null");
     }
+    this.cardService = cardService;
     this.effectExecutor = effectExecutor;
   }
 
+  /** Resolves a card that has already been retrieved from Team 6's card library. */
+  public CardEffectResolution resolve(CardConfig card, PlayerEffectState playerState) {
+    validate(card, playerState);
+
+    List<ResolvedCardEffect> results = new ArrayList<>();
+    for (int i = 0; i < card.effects.length; i++) {
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, playerState));
+    }
+    return new CardEffectResolution(card.id, results);
+  }
+
   /**
-   * Resolves a prepared card effect request.
+   * Resolves a card using read-only combat state supplied by the unified card-play flow.
    *
-   * <p>The returned list contains only effects that need another system to apply them, currently
-   * enemy-targeting effects. Self effects are sent directly through {@code playerStats}.
+   * <p>This does not mutate Team 5's backwards-compatible {@link PlayerEffectState}. When Team 7 is
+   * the source of truth for player statuses, later Strength values should come from the next
+   * external context instead.
    */
-  public List<ResolvedCardEffect> resolve(
-      CardEffectRequest request, CharacterEffectGateway playerStats) {
-    validate(request, playerStats);
+  public CardEffectResolution resolve(CardConfig card, CardEffectResolutionContext context) {
+    validate(card, context);
 
-    List<ResolvedCardEffect> resolvedEffects = new ArrayList<>();
-    for (CardEffect effect : request.effects()) {
-      resolvedEffects.addAll(
-          effectExecutor.execute(request.cardId(), effect, request.target(), playerStats));
+    List<ResolvedCardEffect> results = new ArrayList<>();
+    for (int i = 0; i < card.effects.length; i++) {
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, context));
     }
-    return List.copyOf(resolvedEffects);
+    return new CardEffectResolution(card.id, results);
   }
 
-  public List<ResolvedCardEffect> resolve(
-      String cardId,
-      TargetType target,
-      List<CardEffect> effects,
-      CharacterEffectGateway playerStats) {
-    return resolve(new CardEffectRequest(cardId, target, effects), playerStats);
+  /** Resolves a card by ID through the Team 6 card service supplied to this resolver. */
+  public CardEffectResolution resolve(String cardId, PlayerEffectState playerState) {
+    if (cardService == null) {
+      throw new IllegalStateException("Card service is required to resolve by card ID");
+    }
+    if (cardId == null || cardId.isBlank()) {
+      throw new IllegalArgumentException("Card ID cannot be null or blank");
+    }
+    CardConfig card =
+        cardService
+            .getCard(cardId)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown card ID: " + cardId));
+    return resolve(card, playerState);
   }
 
-  private void validate(CardEffectRequest request, CharacterEffectGateway playerStats) {
-    if (request == null) {
-      throw new IllegalArgumentException("Card effect request cannot be null");
+  /** Resolves a card by ID using read-only combat state supplied by the caller. */
+  public CardEffectResolution resolve(String cardId, CardEffectResolutionContext context) {
+    if (cardService == null) {
+      throw new IllegalStateException("Card service is required to resolve by card ID");
     }
-    if (playerStats == null) {
-      throw new IllegalArgumentException("Player stats gateway cannot be null");
+    if (cardId == null || cardId.isBlank()) {
+      throw new IllegalArgumentException("Card ID cannot be null or blank");
+    }
+    CardConfig card =
+        cardService
+            .getCard(cardId)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown card ID: " + cardId));
+    return resolve(card, context);
+  }
+
+  private void validate(CardConfig card, PlayerEffectState playerState) {
+    if (playerState == null) {
+      throw new IllegalArgumentException("Player effect state cannot be null");
+    }
+    validateCard(card);
+  }
+
+  private void validate(CardConfig card, CardEffectResolutionContext context) {
+    if (context == null) {
+      throw new IllegalArgumentException("Card effect resolution context cannot be null");
+    }
+    validateCard(card);
+  }
+
+  private void validateCard(CardConfig card) {
+    List<String> errors = CardValidator.validate(card);
+    if (!errors.isEmpty()) {
+      throw new IllegalArgumentException("Invalid card config: " + String.join("; ", errors));
+    }
+    for (EffectConfig effect : card.effects) {
+      if (effect == null) {
+        throw new IllegalArgumentException("Card effects cannot contain null");
+      }
     }
   }
 }

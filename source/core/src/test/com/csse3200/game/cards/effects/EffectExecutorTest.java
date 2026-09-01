@@ -3,130 +3,237 @@ package com.csse3200.game.cards.effects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.List;
+import com.csse3200.game.cards.EffectType;
+import com.csse3200.game.cards.TargetType;
+import com.csse3200.game.cards.configs.EffectConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EffectExecutorTest {
   private EffectExecutor executor;
+  private PlayerEffectState playerState;
 
   @BeforeEach
   void setUp() {
     executor = new EffectExecutor();
+    playerState = new PlayerEffectState();
   }
 
   @Test
-  void shouldResolveEnemyDamageWithPlayerStrength() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway(5);
+  void shouldResolveDamageTargetingEnemyWithStrengthModifier() {
+    playerState.addStrength(5);
 
-    List<ResolvedCardEffect> results =
-        executor.execute(
-            "strike", new CardEffect(EffectType.DAMAGE, 6), TargetType.SINGLE_ENEMY, player);
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike",
+            new EffectConfig(EffectType.DAMAGE, 6),
+            TargetType.SINGLE_ENEMY,
+            0,
+            playerState);
 
     assertEquals(
-        List.of(
-            new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 11, 0)),
-        results);
-    assertEquals(List.of(), player.events);
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 11, 0, 0),
+        result);
   }
 
   @Test
   void shouldClampOutgoingDamageAtZero() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway(-10);
+    PlayerEffectState weakenedPlayer = new PlayerEffectState(-10);
 
-    List<ResolvedCardEffect> results =
-        executor.execute(
-            "weakened_strike",
-            new CardEffect(EffectType.DAMAGE, 6),
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike",
+            new EffectConfig(EffectType.DAMAGE, 6),
             TargetType.SINGLE_ENEMY,
-            player);
+            0,
+            weakenedPlayer);
 
     assertEquals(
-        List.of(
-            new ResolvedCardEffect(
-                "weakened_strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 0, 0)),
-        results);
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 0, 0, 0),
+        result);
   }
 
   @Test
-  void shouldReturnEnemyStatusesForCombatSystemsToApply() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway();
+  void shouldApplyExternalStrengthFeebleAndVulnerableOnce() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(2, 1, 1);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike", new EffectConfig(EffectType.DAMAGE, 6), TargetType.SINGLE_ENEMY, 0, context);
 
     assertEquals(
-        List.of(new ResolvedCardEffect("toxin", EffectType.POISON, TargetType.ALL_ENEMIES, 3, 2)),
-        executor.execute(
-            "toxin", new CardEffect(EffectType.POISON, 3, 2), TargetType.ALL_ENEMIES, player));
-    assertEquals(
-        List.of(
-            new ResolvedCardEffect("expose", EffectType.VULNERABLE, TargetType.SINGLE_ENEMY, 2, 1)),
-        executor.execute(
-            "expose",
-            new CardEffect(EffectType.VULNERABLE, 2, 1),
-            TargetType.SINGLE_ENEMY,
-            player));
-    assertEquals(List.of(), player.events);
+        new ResolvedCardEffect("strike", EffectType.DAMAGE, TargetType.SINGLE_ENEMY, 9, 0, 0),
+        result);
   }
 
   @Test
-  void shouldApplySelfEffectsToPlayerGateway() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway();
+  void shouldRoundModifiedDamageDown() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 1, 1);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "strike", new EffectConfig(EffectType.DAMAGE, 5), TargetType.SINGLE_ENEMY, 0, context);
+
+    assertEquals(5, result.value());
+  }
+
+  @Test
+  void shouldReturnStrengthWithoutMutatingStateWhenResolvingFromExternalContext() {
+    CardEffectResolutionContext context = new CardEffectResolutionContext(0, 0, 0);
+
+    ResolvedCardEffect result =
+        executor.resolve(
+            "inner_focus", new EffectConfig(EffectType.STRENGTH, 2), TargetType.SELF, 0, context);
 
     assertEquals(
-        List.of(),
-        executor.execute("defend", new CardEffect(EffectType.BLOCK, 5), TargetType.SELF, player));
-    assertEquals(
-        List.of(),
-        executor.execute("bandage", new CardEffect(EffectType.HEAL, 4), TargetType.SELF, player));
-    assertEquals(
-        List.of(),
-        executor.execute("focus", new CardEffect(EffectType.STRENGTH, 2), TargetType.SELF, player));
+        new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0),
+        result);
+    assertEquals(0, playerState.getStrength());
+  }
 
-    assertEquals(List.of("BLOCK:5", "HEAL:4", "STRENGTH:2"), player.events);
+  @Test
+  void shouldReturnEveryOngoingEnemyStatusForOtherSystemsToApply() {
+    int sequence = 0;
+    for (EffectType effectType : EffectType.values()) {
+      if (!effectType.usesDuration()) {
+        continue;
+      }
+
+      String cardId = effectType.name().toLowerCase();
+      assertEquals(
+          new ResolvedCardEffect(cardId, effectType, TargetType.SINGLE_ENEMY, 3, 2, sequence),
+          executor.resolve(
+              cardId,
+              new EffectConfig(effectType, 3, 2),
+              TargetType.SINGLE_ENEMY,
+              sequence,
+              playerState));
+      sequence++;
+    }
+  }
+
+  @Test
+  void shouldReturnPlayerEffectsWithoutApplyingExternalPlayerState() {
+    assertEquals(
+        new ResolvedCardEffect("defend", EffectType.BLOCK, TargetType.SELF, 5, 0, 0),
+        executor.resolve(
+            "defend", new EffectConfig(EffectType.BLOCK, 5), TargetType.SELF, 0, playerState));
+    assertEquals(
+        new ResolvedCardEffect("bandage", EffectType.HEAL, TargetType.SELF, 4, 0, 1),
+        executor.resolve(
+            "bandage", new EffectConfig(EffectType.HEAL, 4), TargetType.SELF, 1, playerState));
+  }
+
+  @Test
+  void shouldUpdateTeamFiveStrengthStateWhenResolvingStrength() {
+    ResolvedCardEffect result =
+        executor.resolve(
+            "inner_focus",
+            new EffectConfig(EffectType.STRENGTH, 2),
+            TargetType.SELF,
+            0,
+            playerState);
+
+    assertEquals(
+        new ResolvedCardEffect("inner_focus", EffectType.STRENGTH, TargetType.SELF, 2, 0, 0),
+        result);
+    assertEquals(2, playerState.getStrength());
   }
 
   @Test
   void shouldRejectUnsupportedTargetCombinations() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway();
-
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            executor.execute(
-                "burn", new CardEffect(EffectType.DAMAGE, 1), TargetType.SELF, player));
+            executor.resolve(
+                "self_damage",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SELF,
+                0,
+                playerState));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            executor.execute(
-                "enemy_heal", new CardEffect(EffectType.HEAL, 1), TargetType.SINGLE_ENEMY, player));
+            executor.resolve(
+                "enemy_heal",
+                new EffectConfig(EffectType.HEAL, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
   }
 
   @Test
   void shouldRejectInvalidArguments() {
-    RecordingCharacterEffectGateway player = new RecordingCharacterEffectGateway();
-
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            executor.execute(
-                "", new CardEffect(EffectType.DAMAGE, 1), TargetType.SINGLE_ENEMY, player));
+            executor.resolve(
+                "",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
     assertThrows(
         IllegalArgumentException.class,
-        () -> executor.execute("strike", null, TargetType.SINGLE_ENEMY, player));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> executor.execute("strike", new CardEffect(EffectType.DAMAGE, 1), null, player));
+        () -> executor.resolve("strike", null, TargetType.SINGLE_ENEMY, 0, playerState));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            executor.execute(
-                "strike", new CardEffect(EffectType.DAMAGE, 1), TargetType.SINGLE_ENEMY, null));
+            executor.resolve(
+                "strike", new EffectConfig(EffectType.DAMAGE, 1), null, 0, playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "strike",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                -1,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "strike",
+                new EffectConfig(EffectType.DAMAGE, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                (PlayerEffectState) null));
   }
 
   @Test
-  void shouldValidateRawEffects() {
-    assertThrows(IllegalArgumentException.class, () -> new CardEffect(null, 1));
-    assertThrows(IllegalArgumentException.class, () -> new CardEffect(EffectType.DAMAGE, 0));
-    assertThrows(IllegalArgumentException.class, () -> new CardEffect(EffectType.DAMAGE, 1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new CardEffect(EffectType.POISON, 1));
+  void shouldValidateEffectConfigValues() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad", new EffectConfig(null, 1), TargetType.SINGLE_ENEMY, 0, playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.DAMAGE, 0),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.DAMAGE, 1, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.resolve(
+                "bad",
+                new EffectConfig(EffectType.POISON, 1),
+                TargetType.SINGLE_ENEMY,
+                0,
+                playerState));
   }
 }
