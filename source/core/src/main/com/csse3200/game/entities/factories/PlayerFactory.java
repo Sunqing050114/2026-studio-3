@@ -6,9 +6,6 @@ import com.csse3200.game.components.player.EnergyComponent;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.player.PlayerActions;
 import com.csse3200.game.components.player.PlayerStatsDisplay;
-import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
-import com.csse3200.game.components.spritedisplay.displaying.HealthDisplay;
-import com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.PlayerConfig;
 import com.csse3200.game.files.FileLoader;
@@ -39,9 +36,8 @@ public class PlayerFactory {
             .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack))
             .addComponent(new InventoryComponent(stats.gold))
             .addComponent(inputComponent)
-            .addComponent(new PlayerStatsDisplay())
-            .addComponent(new EnergyComponent(100))
-            .addComponent(new InventoryComponent(10));
+            .addComponent(new EnergyComponent(stats.maxEnergy))
+            .addComponent(new PlayerStatsDisplay());
 
     PhysicsUtils.setScaledCollider(player, 0.6f, 0.3f);
     player.getComponent(ColliderComponent.class).setDensity(1.5f);
