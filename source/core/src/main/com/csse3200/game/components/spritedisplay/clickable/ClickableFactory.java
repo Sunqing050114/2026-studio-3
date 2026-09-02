@@ -7,18 +7,20 @@ import com.csse3200.game.ui.UIComponent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Builds and manages the live {@link Clickable} widgets for a set of {@link ClickableRecord}s:
  * resolves each record's variant, constructs and draws the widget, and disposes it. JSON parsing
- * lives separately in {@link ClickableJsonLoader} — this class only cares about the runtime
- * widget lifecycle, not where the records came from.
+ * lives separately in {@link ClickableJsonLoader} — this class only cares about the runtime widget
+ * lifecycle, not where the records came from.
  */
 public class ClickableFactory extends UIComponent {
 
   private static final String DEFAULT_VARIANT = "Clickable";
+  private static final String HAND_TRIGGER = "playCard";
   private static final Map<String, ClickableSupplier> STATIC_VARIANTS = new HashMap<>();
 
   static {
@@ -33,7 +35,9 @@ public class ClickableFactory extends UIComponent {
     STATIC_VARIANTS.put(name, supplier);
   }
 
-  /** @see ClickableJsonLoader#loadRecordsFromJson(Path) */
+  /**
+   * @see ClickableJsonLoader#loadRecordsFromJson(Path)
+   */
   public static List<ClickableRecord> loadRecordsFromJson(Path file) {
     return ClickableJsonLoader.loadRecordsFromJson(file);
   }
@@ -70,21 +74,50 @@ public class ClickableFactory extends UIComponent {
   public void create() {
     super.create();
     for (ClickableRecord record : records) {
-      ClickableSupplier supplier = resolveVariant(record.variant());
-      if (supplier == null) {
-        Gdx.app.error(
-            "ClickableFactory",
-            "Unknown clickable variant \"" + record.variant() + "\", falling back to default");
-        supplier = STATIC_VARIANTS.get(DEFAULT_VARIANT);
+      clickables.add(buildClickable(record));
+    }
+  }
+
+  private Clickable buildClickable(ClickableRecord record) {
+    ClickableSupplier supplier = resolveVariant(record.variant());
+    if (supplier == null) {
+      Gdx.app.error(
+          "ClickableFactory",
+          "Unknown clickable variant \"" + record.variant() + "\", falling back to default");
+      supplier = STATIC_VARIANTS.get(DEFAULT_VARIANT);
+    }
+
+    Clickable clickable = supplier.create(record);
+    clickable.setEntity(this.entity);
+    clickable.create();
+    stage.addActor(clickable.getBtn());
+
+    // Hand cards should be visible and playable straight away rather than waiting for an "up".
+    if (HAND_TRIGGER.equals(record.trigger())) {
+      clickable.showNow();
+    }
+    return clickable;
+  }
+
+  /**
+   * Rebuilds the on-screen hand: drops every {@code "playCard"} widget and builds fresh ones from
+   * {@code handRecords}, leaving the static UI widgets untouched. Called when the hand changes (a
+   * card played and a replacement drawn), so the new hand — including the drawn card — shows
+   * immediately.
+   *
+   * @param handRecords one record per card currently in the player's hand
+   */
+  public void rebuildHand(List<ClickableRecord> handRecords) {
+    Iterator<Clickable> iterator = clickables.iterator();
+    while (iterator.hasNext()) {
+      Clickable clickable = iterator.next();
+      if (HAND_TRIGGER.equals(clickable.getTrigger())) {
+        clickable.remove();
+        iterator.remove();
       }
-
-      Clickable clickable = supplier.create(record);
-      clickable.setEntity(this.entity);
-
-      clickable.create();
-
-      clickables.add(clickable);
-      stage.addActor(clickable.getBtn());
+    }
+    for (ClickableRecord record : handRecords) {
+      clickables.add(buildClickable(record));
     }
   }
 
@@ -99,7 +132,8 @@ public class ClickableFactory extends UIComponent {
   public void dispose() {
     super.dispose();
     for (Clickable clickable : clickables) {
-      clickable.getBtn().remove();
+      clickable.remove();
     }
+    clickables.clear();
   }
 }

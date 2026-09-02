@@ -1,19 +1,24 @@
 package com.csse3200.game.components.combat;
 
+import com.csse3200.game.cards.CardPlayRequest;
+import com.csse3200.game.cards.deck.BattleDeck;
+import com.csse3200.game.cards.effects.CardPlayResult;
+import com.csse3200.game.cards.effects.CardResolutionService;
+import com.csse3200.game.cards.effects.ResolvedCardEffect;
 import com.csse3200.game.components.CombatStatsComponent;
+import com.csse3200.game.components.StatusEffect;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentType;
-import com.csse3200.game.components.player.PlayerActions;
+import com.csse3200.game.components.player.EnergyComponent;
 import com.csse3200.game.components.player.PlayerIntent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.events.EventHandler;
+import com.csse3200.game.events.listeners.EventListener1;
 import com.csse3200.game.events.listeners.EventListener2;
-import net.dermetfan.gdx.physics.box2d.PositionController;
-import com.csse3200.game.cards.CardPlayRequest;
-import java.lang.ref.SoftReference;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
@@ -34,11 +39,41 @@ public class BattleController {
   private final Entity player;
   private final List<Entity> enemies;
   private static final String PHASE_CHANGED_EVENT = "battlePhaseChanged";
+  private static final String BATTLE_LOG_EVENT = "battleLog";
+  private static final String BATTLE_ENDED_EVENT = "battleEnded";
+  private static final String ENEMY_EFFECTS_EVENT = "enemyEffects";
+  private static final String PLAYER_EFFECTS_EVENT = "playerEffects";
+  private static final String HAND_CHANGED_EVENT = "handChanged";
   private boolean pendingEvent;
   private CardPlayRequest pendingCard;
 
-  public BattleController(Entity player, List<Entity> enemies) throws IllegalArgumentException {
+  /**
+   * Team 5 entry point (currently a Team 3-side stand-in); null when the loop runs without cards.
+   */
+  private final CardResolutionService resolutionService;
 
+  /** Team 5-owned deck state; null when the loop runs without cards. */
+  private final BattleDeck battleDeck;
+
+  public BattleController(Entity player, List<Entity> enemies) throws IllegalArgumentException {
+    this(player, enemies, null, null);
+  }
+
+  /**
+   * @param player the player entity
+   * @param enemies the enemies in the encounter
+   * @param resolutionService the card-play entry point, or {@code null} to run without cards
+   * @param battleDeck the battle deck state, or {@code null} to run without cards
+   */
+  public BattleController(
+      Entity player,
+      List<Entity> enemies,
+      CardResolutionService resolutionService,
+      BattleDeck battleDeck)
+      throws IllegalArgumentException {
+
+    this.resolutionService = resolutionService;
+    this.battleDeck = battleDeck;
     this.player = player;
     if (player == null) {
       throw new IllegalArgumentException("Player cannot be null.");
@@ -187,6 +222,9 @@ public class BattleController {
    */
   public void endPlayerTurn() {
     this.currentPlayerIntent = PlayerIntent.END_PLAYER_TURN;
+    if (canHandle(BattleEvent.PLAYER_END_REQUESTED)) {
+      handle(BattleEvent.PLAYER_END_REQUESTED);
+    }
   }
 
   /**
@@ -195,8 +233,8 @@ public class BattleController {
    */
   public void resetBattle() {
     if (this.pendingEvent) {
-       throw new IllegalStateException("There is an event in progress.");
-     }
+      throw new IllegalStateException("There is an event in progress.");
+    }
 
     // Saving the previous phase to inform the event listeners
     BattlePhase previousPhase = this.currentPhase;
@@ -228,6 +266,67 @@ public class BattleController {
   public void addPhaseChangeListener(EventListener2<BattlePhase, BattlePhase> listener) {
     Objects.requireNonNull(listener, "Listener must not be null.");
     eventHandler.addListener(PHASE_CHANGED_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener for short, human-readable descriptions of what just happened in the battle.
+   * Used by the UI to pop up "you did X" / "the enemy did Y" messages between turns.
+   *
+   * @param listener receives the message text
+   */
+  public void addBattleLogListener(EventListener1<String> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(BATTLE_LOG_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener for the end of the battle. The argument is {@code true} on a win (all enemies
+   * defeated) and {@code false} on a loss (player defeated). This is the hook the UI uses to switch
+   * to the victory or defeat screen.
+   *
+   * @param listener receives the win/loss flag
+   */
+  public void addBattleEndListener(EventListener1<Boolean> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(BATTLE_ENDED_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener that receives the resolved enemy-facing effects of a played card, for Team 1 to
+   * apply. The controller also applies these itself so the encounter still resolves.
+   *
+   * @param listener receives the resolved effects
+   */
+  public void addEnemyEffectsListener(EventListener1<List<ResolvedCardEffect>> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(ENEMY_EFFECTS_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener that receives the resolved player-facing effects of a played card, for Team 7
+   * to apply. The controller also applies these itself so the encounter still resolves.
+   *
+   * @param listener receives the resolved effects
+   */
+  public void addPlayerEffectsListener(EventListener1<List<ResolvedCardEffect>> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(PLAYER_EFFECTS_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener that receives the player's hand (card IDs) after it changes, e.g. once a played
+   * card has moved from hand to discard. The UI uses this to refresh the on-screen hand.
+   *
+   * @param listener receives the updated hand
+   */
+  public void addHandChangedListener(EventListener1<List<String>> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(HAND_CHANGED_EVENT, listener);
+  }
+
+  /** Sends a one-line description of the latest battle action to any log listeners. */
+  private void narrate(String message) {
+    eventHandler.trigger(BATTLE_LOG_EVENT, message);
   }
 
   /**
@@ -311,6 +410,7 @@ public class BattleController {
 
   /**
    * Retrieves the current active enemy instance from the list of available enemies
+   *
    * @return the current active enemy instance in the battle
    */
   private Entity getEnemy() {
@@ -357,30 +457,31 @@ public class BattleController {
   private void cleanUp() {
     this.setCurrentEnemyIndex(-1);
   }
+
   public CardPlayRequest getCardPlayRequest() {
     return this.pendingCard;
   }
+
   public Boolean submitCardPlayRequest(CardPlayRequest cardPlayRequest, PlayerIntent playerIntent) {
-    System.out.println(cardPlayRequest.toString());
-    System.out.println(playerIntent.toString());
     Objects.requireNonNull(cardPlayRequest, "cardPlayRequest cannot be null.");
     Objects.requireNonNull(playerIntent, "playerIntent cannot be null.");
-    BattleEvent event = switch(playerIntent) {
-      case ATTACK -> BattleEvent.PLAYER_ATTACK_SELECTED;
-      case DEFEND -> BattleEvent.PLAYER_DEFEND_SELECTED;
-      case OTHER -> BattleEvent.PLAYER_OTHER_SELECTED;
-      case END_PLAYER_TURN ->
+    BattleEvent event =
+        switch (playerIntent) {
+          case ATTACK -> BattleEvent.PLAYER_ATTACK_SELECTED;
+          case DEFEND -> BattleEvent.PLAYER_DEFEND_SELECTED;
+          case OTHER -> BattleEvent.PLAYER_OTHER_SELECTED;
+          case END_PLAYER_TURN ->
               throw new IllegalArgumentException("End turn is not a card action");
-    };
+        };
     if (!canHandle(event)) {
       return false;
-
     }
     pendingCard = cardPlayRequest;
     currentPlayerIntent = playerIntent;
     handle(event);
     return true;
   }
+
   /*------------------------- Possible Action Branches ----------------------------*/
 
   private void enterSetup() {
@@ -402,8 +503,7 @@ public class BattleController {
 
     // If an enemy is alive set it to the current intent
     if (this.targetNextEnemy()) {
-      this.setEnemyIntent(
-          this.getEnemy().getComponent(EnemyBehaviourComponent.class).getCurrentIntent());
+      this.setEnemyIntent(resolveEnemyIntent(this.getEnemy()));
     } else {
       // If no enemies are alive - remove stale intent
       this.setEnemyIntent(null);
@@ -411,12 +511,41 @@ public class BattleController {
     handle(BattleEvent.INTENTS_REVEALED);
   }
 
+  /**
+   * Reads the enemy's telegraphed intent, falling back to a basic attack when the enemy behaviour
+   * has not decided one yet. This keeps the loop moving until Team 1's intent patterns (#20) land.
+   *
+   * @param enemy the enemy to read an intent from
+   * @return a non-null intent
+   */
+  private EnemyIntent resolveEnemyIntent(Entity enemy) {
+    EnemyBehaviourComponent behaviour = enemy.getComponent(EnemyBehaviourComponent.class);
+    EnemyIntent intent = behaviour != null ? behaviour.getCurrentIntent() : null;
+    if (intent != null && intent.getType() != IntentType.UNKNOWN) {
+      return intent;
+    }
+    int attack = 0;
+    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+    if (stats != null) {
+      attack = stats.getBaseAttack();
+    }
+    return EnemyIntent.attack(attack);
+  }
+
   private void enterPlayerStart() {
     if (this.isBattleOver()) {
       return;
     }
-    // Coordinate start-of-turn operations.
+    // Start-of-turn operations: refill energy for the new player turn.
+    EnergyComponent energy = playerEnergy();
+    if (energy != null) {
+      energy.onTurnStart();
+    }
     handle(BattleEvent.PLAYER_TURN_STARTED);
+  }
+
+  private EnergyComponent playerEnergy() {
+    return this.player.getComponent(EnergyComponent.class);
   }
 
   private void enterPlayerTurn() {
@@ -426,30 +555,165 @@ public class BattleController {
     }
     // wait for ui to submit card or end tyurn
   }
+
   private void finishPlayerCardAction() {
     pendingCard = null;
     currentPlayerIntent = null;
     handle(BattleEvent.PLAYER_ACTION_RESOLVED);
   }
+
   private void enterPlayerAttack() {
-    // Ask the relevant system to execute the submitted attack.
-    // player.getComponent(PlayerActions.class).attack();
-    System.out.println("attack hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
-    finishPlayerCardAction();
+    resolvePlayerCard();
   }
 
   private void enterPlayerDefend() {
-    // Ask the relevant system to execute the submitted defence.
-    // TODO: figure out how much armor is added on / maybe another class takes care of this
-    // player.getComponent(CombatStatsComponent.class).addArmor(0);
-    System.out.println("DEFEND hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
-    finishPlayerCardAction();
+    resolvePlayerCard();
   }
 
   private void enterPlayerOther() {
-    // Ask the relevant system to execute the submitted action.
-    System.out.println("OTHER hit: " + pendingCard.cardID() + " hit enemy " + pendingCard.targetID());
+    resolvePlayerCard();
+  }
+
+  /**
+   * Resolves the card the player submitted: asks the card system for a single {@link
+   * CardPlayResult}, hands the resolved effects to the other systems, applies them so the encounter
+   * still progresses, narrates what happened, then returns control to the player.
+   */
+  private void resolvePlayerCard() {
+    CardPlayRequest request = this.pendingCard;
+    if (request == null) {
+      // FSM driven directly with no card attached (e.g. unit tests). Nothing to resolve.
+      finishPlayerCardAction();
+      return;
+    }
+
+    CardPlayResult result = playCardThroughCardSystem(request);
+    if (result == null) {
+      // Card system not wired in (e.g. unit tests without a resolution service).
+      narrate("You played " + request.cardID() + ".");
+      finishPlayerCardAction();
+      return;
+    }
+
+    if (!result.success()) {
+      // No effects produced; the card stays in hand and the player keeps their turn.
+      narrate("Couldn't play " + request.cardID() + ": " + result.failureReason());
+      finishPlayerCardAction();
+      return;
+    }
+
+    dispatchCardEffects(request, result);
+    narrate(summarise(request, result));
     finishPlayerCardAction();
+  }
+
+  /**
+   * Calls Team 5's single card-play entry point (currently the Team 3-side stand-in).
+   *
+   * @return the result, or {@code null} when no card system is wired in
+   */
+  private CardPlayResult playCardThroughCardSystem(CardPlayRequest request) {
+    if (resolutionService == null || battleDeck == null) {
+      return null;
+    }
+    return resolutionService.play(request, battleDeck, playerEnergy());
+  }
+
+  /**
+   * Passes the resolved effects to the other systems ({@code enemyEffects} to Team 1, {@code
+   * playerEffects} to Team 7) and also applies them directly so the encounter resolves even before
+   * those systems subscribe.
+   */
+  private void dispatchCardEffects(CardPlayRequest request, CardPlayResult result) {
+    List<ResolvedCardEffect> enemyEffects = result.enemyEffects();
+    List<ResolvedCardEffect> playerEffects = result.playerEffects();
+
+    eventHandler.trigger(ENEMY_EFFECTS_EVENT, enemyEffects);
+    eventHandler.trigger(PLAYER_EFFECTS_EVENT, playerEffects);
+
+    applyEnemyEffects(livingEnemyTargets(request), enemyEffects);
+    applyPlayerEffects(playerEffects);
+
+    // The played card has left the hand (see CardResolutionService) — tell the UI to refresh.
+    eventHandler.trigger(HAND_CHANGED_EVENT, result.updatedHand());
+  }
+
+  /**
+   * Chooses which enemies a card's enemy effects hit. Self-targeting cards hit nothing; everything
+   * else hits every living enemy, which covers both the single-enemy encounter and ALL_ENEMIES
+   * cards. Precise single-target selection can be layered on when encounters have several enemies.
+   */
+  private List<Entity> livingEnemyTargets(CardPlayRequest request) {
+    if ("player".equalsIgnoreCase(request.targetID())) {
+      return List.of();
+    }
+    List<Entity> targets = new ArrayList<>();
+    for (Entity enemy : this.enemies) {
+      if (isEnemyAlive(enemy)) {
+        targets.add(enemy);
+      }
+    }
+    return targets;
+  }
+
+  private void applyEnemyEffects(List<Entity> targets, List<ResolvedCardEffect> effects) {
+    for (Entity enemy : targets) {
+      EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+      if (stats == null) {
+        continue;
+      }
+      for (ResolvedCardEffect effect : effects) {
+        switch (effect.type()) {
+          case DAMAGE -> stats.takeDamage(effect.value());
+          case POISON ->
+              stats.applyStatusEffect(
+                  new StatusEffect("poison", effect.value(), effect.duration()));
+          case VULNERABLE ->
+              stats.applyStatusEffect(
+                  new StatusEffect("vulnerable", effect.value(), effect.duration()));
+          default -> {
+            // BLOCK / HEAL / STRENGTH are not enemy-facing.
+          }
+        }
+      }
+    }
+  }
+
+  private void applyPlayerEffects(List<ResolvedCardEffect> effects) {
+    CombatStatsComponent stats = this.player.getComponent(CombatStatsComponent.class);
+    if (stats == null) {
+      return;
+    }
+    for (ResolvedCardEffect effect : effects) {
+      switch (effect.type()) {
+        case BLOCK -> stats.addArmor(effect.value());
+        case HEAL -> stats.heal(effect.value());
+        default -> {
+          // STRENGTH is already folded into the resolver's running player state.
+        }
+      }
+    }
+  }
+
+  private String summarise(CardPlayRequest request, CardPlayResult result) {
+    StringBuilder summary = new StringBuilder("You played ").append(request.cardID());
+    for (ResolvedCardEffect effect : result.enemyEffects()) {
+      summary
+          .append(" - ")
+          .append(effect.type())
+          .append(' ')
+          .append(effect.value())
+          .append(" to enemy");
+    }
+    for (ResolvedCardEffect effect : result.playerEffects()) {
+      summary
+          .append(" - ")
+          .append(effect.type())
+          .append(' ')
+          .append(effect.value())
+          .append(" to you");
+    }
+    return summary.append('.').toString();
   }
 
   public void enterPlayerEnd() {
@@ -480,29 +744,47 @@ public class BattleController {
   }
 
   private void enterEnemyAttack() {
-    // Ask the enemy system to execute its attack intent.
     Entity enemy = getEnemy();
 
-    // execute the intent
-    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
+    EnemyBehaviourComponent behaviour = enemy.getComponent(EnemyBehaviourComponent.class);
+    if (behaviour != null) {
+      behaviour.executeIntent(this.player);
+    }
+
+    // Placeholder until Team 1's executeIntent can reach a player CombatStatsComponent: apply the
+    // telegraphed attack damage to the player here so the loop can actually threaten a defeat.
+    int damage = this.currentEnemyIntent != null ? this.currentEnemyIntent.getValue() : 0;
+    CombatStatsComponent playerStats = this.player.getComponent(CombatStatsComponent.class);
+    if (damage > 0 && playerStats != null) {
+      playerStats.takeDamage(damage);
+    }
+    narrate(
+        "Enemy attacks for "
+            + damage
+            + (playerStats != null ? " (you have " + playerStats.getHealth() + " HP)" : "")
+            + ".");
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyDefend() {
-    // Ask the enemy system to execute its defend intent.
     Entity enemy = getEnemy();
 
-    // execute the intent
-    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
+    EnemyBehaviourComponent behaviour = enemy.getComponent(EnemyBehaviourComponent.class);
+    if (behaviour != null) {
+      behaviour.executeIntent(this.player);
+    }
+    narrate("Enemy braces for the next hit.");
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
   private void enterEnemyOther() {
-    // Ask the enemy system to execute its other intent.
     Entity enemy = getEnemy();
 
-    // execute the intent
-    enemy.getComponent(EnemyBehaviourComponent.class).executeIntent(this.player);
+    EnemyBehaviourComponent behaviour = enemy.getComponent(EnemyBehaviourComponent.class);
+    if (behaviour != null) {
+      behaviour.executeIntent(this.player);
+    }
+    narrate("Enemy makes its move.");
     handle(BattleEvent.ENEMY_ACTION_RESOLVED);
   }
 
@@ -514,8 +796,7 @@ public class BattleController {
 
     // If another enemy is successfully targeted.
     if (this.targetNextEnemy()) {
-      this.setEnemyIntent(
-          this.getEnemy().getComponent(EnemyBehaviourComponent.class).getCurrentIntent());
+      this.setEnemyIntent(resolveEnemyIntent(this.getEnemy()));
       handle(BattleEvent.MORE_ENEMIES);
       return;
     }
@@ -525,12 +806,14 @@ public class BattleController {
   }
 
   private void enterVictory() {
-    // Notify other systems that the battle was won.
     this.cleanUp();
+    narrate("Victory! Every enemy has been defeated.");
+    eventHandler.trigger(BATTLE_ENDED_EVENT, Boolean.TRUE);
   }
 
   private void enterDefeat() {
-    // Notify other systems that the battle was lost.
     this.cleanUp();
+    narrate("Defeat. The player has fallen.");
+    eventHandler.trigger(BATTLE_ENDED_EVENT, Boolean.FALSE);
   }
 }

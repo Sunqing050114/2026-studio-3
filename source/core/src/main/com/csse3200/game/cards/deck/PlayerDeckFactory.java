@@ -13,29 +13,16 @@ public final class PlayerDeckFactory {
 
   private static final List<String> STARTER_DECK_CARD_IDS =
       List.of(
-//          STRIKE,
-//          STRIKE,
-//          STRIKE,
-//          DEFEND,
-//          DEFEND,
-//          DEFEND,
-//          POISON_DAGGER,
-//          EXPOSE,
-//          BANDAGE,
-//          INNER_FOCUS
-
-          STRIKE, //for now will focus on implementing just damaging and healing
           STRIKE,
           STRIKE,
           STRIKE,
-          STRIKE,
-          STRIKE,
+          DEFEND,
+          DEFEND,
+          DEFEND,
+          POISON_DAGGER,
+          EXPOSE,
           BANDAGE,
-          BANDAGE,
-          BANDAGE,
-          BANDAGE
-
-      );
+          INNER_FOCUS);
 
   private PlayerDeckFactory() {
     throw new IllegalStateException("Instantiating utility class");
@@ -52,7 +39,6 @@ public final class PlayerDeckFactory {
   public static PlayerDeck createStarterDeck() {
     return new PlayerDeck(STARTER_DECK_CARD_IDS);
   }
-
 
   /**
    * Returns the card IDs used by the starter deck.

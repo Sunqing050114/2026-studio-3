@@ -49,8 +49,17 @@ public class InOutOnTrigger extends Clickable {
     entity.getEvents().addListener("down", this::slideDown);
   }
 
+  /** Snap straight to the visible resting position, e.g. for a card drawn mid-turn. */
+  @Override
+  public void showNow() {
+    btn.clearActions();
+    isAnimating = false;
+    btn.setVisible(true);
+    btn.setPosition(targetX, targetY);
+  }
+
   private void slideUp() {
-    if (isAnimating) return;
+    if (isAnimating || btn.getStage() == null) return;
 
     if (Math.abs(btn.getY() - targetY) < 1f) {
       return;
@@ -82,6 +91,7 @@ public class InOutOnTrigger extends Clickable {
    * Slides the button out from its target position to off-screen. Triggered by the "down" event.
    */
   protected void slideDown() {
+    if (btn.getStage() == null) return;
     logger.info("down");
     btn.clearActions();
     isAnimating = false; // reset flag

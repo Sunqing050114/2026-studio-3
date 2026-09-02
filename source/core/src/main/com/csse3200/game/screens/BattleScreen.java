@@ -19,16 +19,14 @@ import com.csse3200.game.cards.configs.CardConfig;
 import com.csse3200.game.cards.deck.BattleDeck;
 import com.csse3200.game.cards.deck.PlayerDeck;
 import com.csse3200.game.cards.deck.PlayerDeckFactory;
+import com.csse3200.game.cards.effects.CardResolutionService;
 import com.csse3200.game.components.battle.*;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableFactory;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableRecord;
-import com.csse3200.game.components.spritedisplay.displaying.CardDisplay;
-import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
+import com.csse3200.game.components.spritedisplay.displaying.DisplayingFactory;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
-import com.csse3200.game.entities.configs.EnemyConfig;
-import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.RenderFactory;
 import com.csse3200.game.input.InputDecorator;
 import com.csse3200.game.input.InputService;
@@ -42,7 +40,6 @@ import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import java.nio.file.Path;
 import java.util.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +55,13 @@ public class BattleScreen extends ScreenAdapter {
   private final Renderer renderer;
   private ForestGameArea gameArea;
 
-  private static final String[] mainGameTextures = {"images/heart.png", "images/energy.png", "images/money.png", "images/piety.png", "images/enemy.png"};
+  private static final String[] mainGameTextures = {
+    "images/heart.png",
+    "images/energy.png",
+    "images/money.png",
+    "images/piety.png",
+    "images/enemy.png"
+  };
   private static final Vector2 CAMERA_POSITION = new Vector2(7.5f, 7.5f);
 
   private static final int HAND_SIZE = 4;
@@ -95,8 +98,6 @@ public class BattleScreen extends ScreenAdapter {
 
     loadAssets(); // <-- MOVED UP: load "images/heart.png" before anything uses it
 
-
-
     renderer = RenderFactory.createRenderer();
     renderer.getCamera().getEntity().setPosition(CAMERA_POSITION);
     renderer.getDebug().renderPhysicsWorld(physicsEngine.getWorld());
@@ -108,51 +109,60 @@ public class BattleScreen extends ScreenAdapter {
     ForestGameArea forestGameArea = new ForestGameArea(terrainFactory);
     this.gameArea = forestGameArea;
     forestGameArea.create();
-    controller = new BattleController(forestGameArea.getPlayer(), forestGameArea.getEnemies());
 
+    // Card + deck state has to exist before the controller so it can be handed the single
+    // card-play entry point and the deck it mutates.
+    List<CardConfig> configs = CardConfigLoader.loadCards(); // reads configs/cards.json
+    library = new CardLibrary(configs);
+    ServiceLocator.registerCardLibrary(library);
 
-      createUI();
-      controller.start();
+    PlayerDeck playerDeck = PlayerDeckFactory.createStarterDeck();
+    battleDeck = new BattleDeck(playerDeck);
+    battleDeck.shuffleDrawPile();
+    battleDeck.drawCards(5);
+
+    CardResolutionService resolutionService = new CardResolutionService(library);
+    controller =
+        new BattleController(
+            forestGameArea.getPlayer(), forestGameArea.getEnemies(), resolutionService, battleDeck);
+
+    createUI();
+    controller.start();
   }
 
   public void createUI() {
-    DisplayingRecord cardLabelRecord =
-        DisplayingRecord.builder("Click a card")
-            .position(1000, 1000) // Position on screen
-            .fontName("large") // Use a large font
-            .scale(1.2f) // Scale it up
-            .variant("cardDisplay") // Use CardDisplay
-            .build();
+    // sprites/BattleUi.json holds both the static "Clickable" UI (exit/up/down/end turn) and the
+    // "Displaying" text overlays (the card-label prompt and the between-turns battle log). The card
+    // hand itself is dealt dynamically from the battle deck, so it is merged in below rather than
+    // living in JSON.
+    Path battleUiJson = Path.of("sprites/BattleUi.json");
 
-    // sprites/BattleUi.json defines the static UI (exit/up/down); the card hand itself
-    // is dealt dynamically by CardService each round, so it's merged in here rather than
-    // being hardcoded in JSON.
+    DisplayingFactory displays = new DisplayingFactory(battleUiJson);
 
-    List<CardConfig> configs = CardConfigLoader.loadCards(); // reads configs/cards.json
-      library = new CardLibrary(configs);
-      ServiceLocator.registerCardLibrary(library);
+    staticUiRecords = ClickableFactory.loadRecordsFromJson(battleUiJson);
 
-      PlayerDeck playerDeck = PlayerDeckFactory.createStarterDeck();
-      battleDeck = new BattleDeck(playerDeck);
-      battleDeck.shuffleDrawPile();
-      battleDeck.drawCards(5);
-
-      staticUiRecords = ClickableFactory.loadRecordsFromJson(Path.of("sprites/BattleUi.json"));
-
-
-      uiFactory = new ClickableFactory(buildAllRecords());
-
+    uiFactory = new ClickableFactory(buildAllRecords());
 
     Stage stage = ServiceLocator.getRenderService().getStage();
     Entity battleUi =
         new Entity()
             .addComponent(new InputDecorator(stage, 10))
             .addComponent(uiFactory)
-            .addComponent(new CardDisplay(cardLabelRecord))
+            .addComponent(displays)
             .addComponent(new BattleActions(controller, game, library));
 
     this.battleUi = battleUi;
-      gameArea.displayUI(battleUi);
+
+    // Keep the on-screen hand in sync with the deck: after a card is played (and a replacement
+    // drawn) rebuild the hand widgets from the live deck, so the played card's button is gone and
+    // the drawn card's button appears.
+    battleUi
+        .getEvents()
+        .addListener(
+            BattleActions.HAND_CHANGED_EVENT,
+            (java.util.List<String> hand) -> uiFactory.rebuildHand(buildHandRecords()));
+
+    gameArea.displayUI(battleUi);
   }
 
   public void render(float delta) {
@@ -197,48 +207,46 @@ public class BattleScreen extends ScreenAdapter {
         });
   }
 
+  private List<ClickableRecord> buildAllRecords() {
+    List<ClickableRecord> records = new ArrayList<>(buildHandRecords());
+    records.addAll(staticUiRecords);
+    return records;
+  }
 
-    private List<ClickableRecord> buildAllRecords() {
-        List<ClickableRecord> records = new ArrayList<>(buildHandRecords());
-        records.addAll(staticUiRecords);
-        return records;
+  private List<ClickableRecord> buildHandRecords() {
+    List<ClickableRecord> records = new ArrayList<>();
+    float x = HAND_START_X;
+    for (String cardId : battleDeck.getHand()) {
+      Optional<CardConfig> maybeCard = library.getCard(cardId);
+      if (maybeCard.isEmpty()) {
+        logger.warn("Card ID {} in hand not found in library, skipping", cardId);
+        continue;
+      }
+      CardConfig card = maybeCard.get();
+      boolean selfTarget = card.target == TargetType.SELF;
+      String variant = selfTarget ? "inout" : "drag";
+
+      Skin cardSkin = skinFromTexturePath(card.texturePath);
+
+      ClickableRecord.Builder builder =
+          ClickableRecord.builder("playCard")
+              .label(card.name)
+              .variant(variant)
+              .position(x, HAND_Y)
+              .size(300, 456)
+              .skin(cardSkin);
+
+      if (selfTarget) {
+        // No drop target involved — target is fixed at "player".
+        builder.args(card.id, "player");
+      } else {
+        // Enemy id isn't known yet; EnemyDropTargetComponent appends it at drop-time.
+        builder.args(card.id);
+      }
+
+      records.add(builder.build());
+      x += HAND_SPACING;
     }
-
-    private List<ClickableRecord> buildHandRecords() {
-        List<ClickableRecord> records = new ArrayList<>();
-        float x = HAND_START_X;
-        for (String cardId : battleDeck.getHand()) {
-            Optional<CardConfig> maybeCard = library.getCard(cardId);
-            if (maybeCard.isEmpty()) {
-                logger.warn("Card ID {} in hand not found in library, skipping", cardId);
-                continue;
-            }
-            CardConfig card = maybeCard.get();
-            boolean selfTarget = card.target == TargetType.SELF;
-            String variant = selfTarget ? "inout" : "drag";
-
-            Skin cardSkin = skinFromTexturePath(card.texturePath);
-
-            ClickableRecord.Builder builder =
-                    ClickableRecord.builder("playCard")
-                            .label(card.name)
-                            .variant(variant)
-                            .position(x, HAND_Y)
-                            .size(300, 456)
-                            .skin(cardSkin);
-
-            if (selfTarget) {
-                // No drop target involved — target is fixed at "player".
-                builder.args(card.id, "player");
-            } else {
-                // Enemy id isn't known yet; EnemyDropTargetComponent appends it at drop-time.
-                builder.args(card.id);
-            }
-
-            records.add(builder.build());
-            x += HAND_SPACING;
-        }
-        return records;
-    }
-
+    return records;
+  }
 }

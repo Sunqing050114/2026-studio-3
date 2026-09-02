@@ -12,8 +12,19 @@ import com.csse3200.game.services.ServiceLocator;
 
 public class DragNDrop extends InOutOnTrigger {
 
+  private DragAndDrop.Source dragSource;
+
   public DragNDrop(ClickableRecord record) {
     super(record);
+  }
+
+  /** Also unregister this card's drag source so a removed widget can't still start a drag. */
+  @Override
+  public void remove() {
+    if (dragSource != null) {
+      ServiceLocator.getDragAndDropService().getDragAndDrop().removeSource(dragSource);
+    }
+    super.remove();
   }
 
   /**
@@ -34,7 +45,7 @@ public class DragNDrop extends InOutOnTrigger {
 
     DragAndDrop dragAndDrop = ServiceLocator.getDragAndDropService().getDragAndDrop();
 
-    dragAndDrop.addSource(
+    this.dragSource =
         new DragAndDrop.Source(this.getBtn()) {
           private boolean actuallyHidden = false;
 
@@ -94,7 +105,9 @@ public class DragNDrop extends InOutOnTrigger {
               entity.getEvents().trigger(card.trigger(), card.args()[0], targetId);
             }
           }
-        });
+        };
+
+    dragAndDrop.addSource(this.dragSource);
   }
 
   private Button createDragVisual(Button original) {
