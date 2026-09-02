@@ -176,6 +176,7 @@ public class MapDisplay extends UIComponent {
     return group;
   }
 
+
   @Override
   public void draw(SpriteBatch batch) {
     // draw is handled by the stage

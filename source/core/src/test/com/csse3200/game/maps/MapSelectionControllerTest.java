@@ -48,11 +48,11 @@ class MapSelectionControllerTest {
     mapGraph.addNode(node(3, RoomType.COMBAT, NodeState.LOCKED));
     mapGraph.addNode(node(4, RoomType.FINAL, NodeState.LOCKED));
 
-    mapGraph.connectNodes(0, 1);
-    mapGraph.connectNodes(0, 2);
-    mapGraph.connectNodes(1, 3);
-    mapGraph.connectNodes(2, 3);
-    mapGraph.connectNodes(3, 4);
+    // mapGraph.connectNodes(0, 1);
+    // mapGraph.connectNodes(0, 2);
+    // mapGraph.connectNodes(1, 3);
+    // mapGraph.connectNodes(2, 3);
+    // mapGraph.connectNodes(3, 4);
 
     controller = new MapSelectionController(mapGraph);
 
