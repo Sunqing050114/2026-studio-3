@@ -18,21 +18,53 @@ class ArmorAndStatusEffectTest {
 
   @Test
   void shouldStoreInitialStatusEffectValues() {
-    StatusEffect effect = new StatusEffect("vulnerable", 0.5f, 2);
-    assertEquals("vulnerable", effect.getEffectId());
-    assertEquals(0.5f, effect.getEffectValue());
+    StatusEffect effect = new StatusEffect("VULNERABLE", 2, 2);
+    assertEquals("VULNERABLE", effect.getType());
+    assertEquals(2, effect.getValue());
     assertEquals(2, effect.getDuration());
   }
 
   @Test
   void statusEffectShouldExpireAfterDurationReachesZero() {
-    StatusEffect effect = new StatusEffect("vulnerable", 0.5f, 2);
+    StatusEffect effect = new StatusEffect("VULNERABLE", 2, 2);
     assertFalse(effect.tickAndCheckExpired());
     assertTrue(effect.tickAndCheckExpired());
   }
 
+  @Test
+  void statusEffectWithZeroDurationShouldBePermanent() {
+    // e.g. STRENGTH, which Team 6 defines with duration=0 and lasts the whole combat.
+    StatusEffect effect = new StatusEffect("STRENGTH", 2, 0);
+    assertFalse(effect.tickAndCheckExpired());
+    assertFalse(effect.tickAndCheckExpired());
+    assertEquals(0, effect.getDuration());
+  }
+
+  @Test
+  void shouldSetValueDirectly() {
+    StatusEffect effect = new StatusEffect("POISON", 3, 3);
+    effect.setValue(5);
+    assertEquals(5, effect.getValue());
+  }
+
+  @Test
+  void shouldAddPositiveAmountToValue() {
+    // e.g. stacking more Poison onto an already-active effect
+    StatusEffect effect = new StatusEffect("POISON", 3, 3);
+    effect.addValue(2);
+    assertEquals(5, effect.getValue());
+  }
+
+  @Test
+  void shouldAddNegativeAmountToValue() {
+    // e.g. a card that removes some stacks
+    StatusEffect effect = new StatusEffect("POISON", 5, 3);
+    effect.addValue(-2);
+    assertEquals(3, effect.getValue());
+  }
+
   // -----------------------------------------------------------------
-  // Armor on CombatStatsComponent
+  // Armor on CombatStatsComponent (permanent pool)
   // -----------------------------------------------------------------
 
   @Test
@@ -64,7 +96,6 @@ class ArmorAndStatusEffectTest {
 
   @Test
   void armorShouldAbsorbDamageBeforeHealth() {
-    // Example from the issue: 5 armor, then 8 damage -> armor 0, health -3 from 100 = 97
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
     combat.addArmor(5);
     combat.takeDamage(8);
@@ -82,11 +113,86 @@ class ArmorAndStatusEffectTest {
   }
 
   @Test
-  void damageShouldHitHealthDirectlyWhenNoArmor() {
+  void damageShouldHitHealthDirectlyWhenNoArmorOrBlock() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
     combat.takeDamage(30);
     assertEquals(0, combat.getArmor());
     assertEquals(70, combat.getHealth());
+  }
+
+  // -----------------------------------------------------------------
+  // Block on CombatStatsComponent (per-turn pool)
+  // -----------------------------------------------------------------
+
+  @Test
+  void shouldSetGetBlock() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    assertEquals(0, combat.getBlock());
+    combat.setBlock(10);
+    assertEquals(10, combat.getBlock());
+    combat.setBlock(-5);
+    assertEquals(0, combat.getBlock());
+  }
+
+  @Test
+  void shouldAddBlock() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(5);
+    assertEquals(5, combat.getBlock());
+    combat.addBlock(-100);
+    assertEquals(5, combat.getBlock());
+  }
+
+  @Test
+  void resetBlockShouldClearBlockRegardlessOfValue() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(15);
+    combat.resetBlock();
+    assertEquals(0, combat.getBlock());
+  }
+
+  @Test
+  void blockShouldAbsorbDamageBeforeHealthWhenNoArmor() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(5);
+    combat.takeDamage(8);
+    assertEquals(0, combat.getBlock());
+    assertEquals(97, combat.getHealth());
+  }
+
+  @Test
+  void blockShouldFullyAbsorbDamageWhenSufficient() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(10);
+    combat.takeDamage(6);
+    assertEquals(4, combat.getBlock());
+    assertEquals(100, combat.getHealth());
+  }
+
+  // -----------------------------------------------------------------
+  // Block + Armor combined in takeDamage()
+  // -----------------------------------------------------------------
+
+  @Test
+  void blockShouldAbsorbBeforeArmor() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(3);
+    combat.addArmor(4);
+    combat.takeDamage(10);
+    assertEquals(0, combat.getBlock());
+    assertEquals(0, combat.getArmor());
+    assertEquals(97, combat.getHealth());
+  }
+
+  @Test
+  void blockAndArmorTogetherShouldFullyAbsorbDamageWhenSufficient() {
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.addBlock(5);
+    combat.addArmor(10);
+    combat.takeDamage(8);
+    assertEquals(0, combat.getBlock());
+    assertEquals(7, combat.getArmor());
+    assertEquals(100, combat.getHealth());
   }
 
   // -----------------------------------------------------------------
@@ -96,72 +202,82 @@ class ArmorAndStatusEffectTest {
   @Test
   void shouldApplyAndQueryStatusEffect() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    assertFalse(combat.hasStatusEffect("vulnerable"));
+    assertFalse(combat.hasStatusEffect("VULNERABLE"));
 
-    StatusEffect vulnerable = new StatusEffect("vulnerable", 0.5f, 2);
+    StatusEffect vulnerable = new StatusEffect("VULNERABLE", 2, 2);
     combat.applyStatusEffect(vulnerable);
 
-    assertTrue(combat.hasStatusEffect("vulnerable"));
-    assertEquals(vulnerable, combat.getStatusEffect("vulnerable"));
+    assertTrue(combat.hasStatusEffect("VULNERABLE"));
+    assertEquals(vulnerable, combat.getStatusEffect("VULNERABLE"));
   }
 
   @Test
-  void applyingSameEffectIdShouldOverwritePrevious() {
-    // Design decision: overwrite, not stack. See applyStatusEffect() javadoc -
-    // pending confirmation with Team 5/6 if card design expects stacking instead.
+  void shouldApplyStatusEffectUsingThreeArgOverload() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 5));
+    combat.applyStatusEffect("VULNERABLE", 2, 2);
 
-    assertEquals(5, combat.getStatusEffect("vulnerable").getDuration());
+    assertTrue(combat.hasStatusEffect("VULNERABLE"));
+    assertEquals(2, combat.getStatusEffect("VULNERABLE").getValue());
+    assertEquals(2, combat.getStatusEffect("VULNERABLE").getDuration());
+  }
+
+  @Test
+  void applyingSameTypeShouldOverwritePrevious() {
+    // Design decision: applyStatusEffect() itself overwrites, not stacks, by default.
+    // Callers that want stacking behaviour (e.g. Poison) should read the existing effect via
+    // getStatusEffect() and call addValue() on it themselves before re-applying, or call
+    // addValue() directly on the existing instance.
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
+    combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 5));
+
+    assertEquals(5, combat.getStatusEffect("VULNERABLE").getDuration());
+  }
+
+  @Test
+  void callerCanStackByMutatingExistingEffect() {
+    // Demonstrates how a caller (e.g. the teammate implementing Poison) can achieve stacking
+    // using the mutable value, without CombatStatsComponent needing to know about stacking.
+    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
+    combat.applyStatusEffect(new StatusEffect("POISON", 3, 3));
+
+    StatusEffect existing = combat.getStatusEffect("POISON");
+    existing.addValue(2);
+
+    assertEquals(5, combat.getStatusEffect("POISON").getValue());
   }
 
   @Test
   void shouldExplicitlyRemoveStatusEffect() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
-    combat.removeStatusEffect("vulnerable");
+    combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
+    combat.removeStatusEffect("VULNERABLE");
 
-    assertFalse(combat.hasStatusEffect("vulnerable"));
-    assertNull(combat.getStatusEffect("vulnerable"));
+    assertFalse(combat.hasStatusEffect("VULNERABLE"));
+    assertNull(combat.getStatusEffect("VULNERABLE"));
   }
 
   @Test
   void statusEffectShouldBeAutoRemovedAfterDurationExpires() {
-    // Simulates updateStatusEffects() being called once per turn.
-    // NOTE: actually wiring this to a real turn event depends on Team 3 (not done yet) -
-    // this test only verifies the tick/expire mechanism itself works correctly.
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
+    combat.applyStatusEffect(new StatusEffect("VULNERABLE", 2, 2));
 
     combat.updateStatusEffects();
-    assertTrue(combat.hasStatusEffect("vulnerable"));
+    assertTrue(combat.hasStatusEffect("VULNERABLE"));
 
     combat.updateStatusEffects();
-    assertFalse(combat.hasStatusEffect("vulnerable"));
+    assertFalse(combat.hasStatusEffect("VULNERABLE"));
   }
 
   @Test
-  void vulnerableStatusEffectShouldIncreaseIncomingDamage() {
-    // Example from the issue: 50% incoming-damage modifier.
-    // NOTE: this validates the placeholder example in applyStatusEffectDamageModifiers();
-    // the final calculation rule is still pending confirmation with Team 5/6.
+  void permanentStatusEffectShouldNotBeRemovedByUpdateStatusEffects() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
+    combat.applyStatusEffect(new StatusEffect("STRENGTH", 2, 0));
 
-    combat.takeDamage(10); // 10 * 1.5 = 15 damage, no armor
-    assertEquals(85, combat.getHealth());
-  }
+    combat.updateStatusEffects();
+    assertTrue(combat.hasStatusEffect("STRENGTH"));
 
-  @Test
-  void vulnerableStatusEffectShouldStackWithArmorAbsorption() {
-    CombatStatsComponent combat = new CombatStatsComponent(100, 20);
-    combat.addArmor(5);
-    combat.applyStatusEffect(new StatusEffect("vulnerable", 0.5f, 2));
-
-    // 10 raw damage -> 15 after vulnerable -> armor absorbs 5 -> 10 hits health
-    combat.takeDamage(10);
-    assertEquals(0, combat.getArmor());
-    assertEquals(90, combat.getHealth());
+    combat.updateStatusEffects();
+    assertTrue(combat.hasStatusEffect("STRENGTH"));
   }
 }

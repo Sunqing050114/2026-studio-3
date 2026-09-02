@@ -6,9 +6,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Component used to store information related to combat such as health, attack, armor and status
- * effects. Any entities which engage it combat should have an instance of this class registered.
- * This class can be extended for more specific combat needs.
+ * Component used to store information related to combat such as health, attack, armor, block and
+ * status effects. Any entities which engage it combat should have an instance of this class
+ * registered. This class can be extended for more specific combat needs. SCOPE NOTE: this class
+ * owns the generic mechanics of armor, block and status effects - how they are stored, applied,
+ * queried, removed and expired. It deliberately does NOT own the specific calculation rules for any
+ * individual effect (e.g. exactly how "Vulnerable" or "Strength" changes a number). Those
+ * calculations are owned by whichever system/teammate needs them. ARMOR vs BLOCK: these are two
+ * distinct mechanics, not two names for the same thing. Armor is a permanent damage-reduction pool.
+ * It persists until consumed by incoming damage or explicitly cleared via clearArmor() - it does
+ * not reset automatically at any point in the turn cycle. Block is a per-turn damage-reduction
+ * pool, matching the "Slay the Spire" style block mechanic (Team 6). It is intended to reset to 0
+ * once per turn via resetBlock(), regardless of whether it was consumed. TODO: exact reset timing
+ * (start vs end of turn) is not yet wired up - depends on Team 3's turn/battle-sequence event.
  */
 public class CombatStatsComponent extends Component {
 
@@ -19,10 +29,30 @@ public class CombatStatsComponent extends Component {
   private int baseAttack;
   private int maxHealth;
   private int armor = 0;
+  private int block = 0;
   private final Map<String, StatusEffect> statusEffects = new HashMap<>();
 
+  /**
+   * Entity's base constructor
+   *
+   * @param health entity's health
+   * @param baseAttack entity's base attack
+   */
   public CombatStatsComponent(int health, int baseAttack) {
     setMaxHealth(health);
+    setHealth(health);
+    setBaseAttack(baseAttack);
+  }
+
+  /**
+   * Overload constructor with maxHealth as the third param
+   *
+   * @param health entity's health
+   * @param baseAttack entity's base attack
+   * @param maxHealth entity's max Health
+   */
+  public CombatStatsComponent(int health, int baseAttack, int maxHealth) {
+    setMaxHealth(maxHealth);
     setHealth(health);
     setBaseAttack(baseAttack);
   }
@@ -86,16 +116,21 @@ public class CombatStatsComponent extends Component {
   }
 
   /**
-   * Damage the entity's health. Incoming damage is first modified by any active status effects
-   * (e.g. Vulnerable), then absorbed by armor, and the remainder is applied to health. If health
-   * reaches 0 the entity dies.
+   * Damage the entity's health. Incoming damage is first absorbed by armor, and the remainder is
+   * applied to health. If health reaches 0 the entity dies.
+   *
+   * <p>NOTE: this method does NOT apply any status-effect-based damage modifiers (e.g. Vulnerable).
+   * Callers that need a status effect to change the amount of incoming damage should calculate the
+   * final damage value themselves (e.g. by reading the relevant StatusEffect via getStatusEffect())
+   * before calling this method. This keeps this class limited to armor/status-effect storage and
+   * lifecycle management, not the specific calculation rules for any individual effect type.
    *
    * @param damage damage
    */
   public void takeDamage(int damage) {
     if (damage >= 0 && !isDead()) {
-      int modifiedDamage = applyStatusEffectDamageModifiers(damage);
-      int remainingDamage = absorbDamageWithArmor(modifiedDamage);
+      int afterBlock = absorbDamageWithBlock(damage);
+      int remainingDamage = absorbDamageWithArmor(afterBlock);
       setHealth(Math.max(this.health - remainingDamage, 0));
       if (entity != null && isDead()) {
         entity.getEvents().trigger("entityIsDead");
@@ -154,22 +189,21 @@ public class CombatStatsComponent extends Component {
   }
 
   /**
-   * Returns the entity's base attack damage. Unused will remove in later sprint
+   * Unused will remove in later sprint
    *
-   * @return base attack damage
+   * @param health entity's health
    */
   public void addHealth(int health) {
     setHealth(this.health + health);
   }
 
   /**
-   * Returns the entity's base attack damage. Unused will remove in later sprint
+   * Unused will remove in later sprint
    *
-   * @return base attack damage
+   * @param attacker attacker parameter
    */
   public void hit(CombatStatsComponent attacker) {
-    int newHealth = getHealth() - attacker.getBaseAttack();
-    setHealth(newHealth);
+    takeDamage(attacker.getBaseAttack());
   }
 
   /**
@@ -228,6 +262,67 @@ public class CombatStatsComponent extends Component {
     return incomingDamage - absorbed;
   }
 
+  // Block - per-turn damage reduction pool (Team 6's "Slay the Spire" style block)
+  /**
+   * Returns the entity's current block value.
+   *
+   * @return block
+   */
+  public int getBlock() {
+    return block;
+  }
+
+  /**
+   * Sets the entity's block. Block is clamped to a minimum of 0.
+   *
+   * @param block block value
+   */
+  public void setBlock(int block) {
+    this.block = Math.max(block, 0);
+    if (entity != null) {
+      entity.getEvents().trigger("updateBlock", this.block);
+    }
+  }
+
+  /**
+   * Adds block to the entity. Non-positive amounts are ignored.
+   *
+   * @param amount amount of block to add
+   */
+  public void addBlock(int amount) {
+    if (amount <= 0) {
+      return;
+    }
+    setBlock(this.block + amount);
+  }
+
+  /**
+   * Resets block to 0. Intended to be called once per turn, regardless of whether the block was
+   * consumed. TODO: wire this up to Team 3's turn event, same as updateStatusEffects() - timing
+   * (start vs end of turn) still needs confirmation.
+   */
+  public void resetBlock() {
+    setBlock(0);
+  }
+
+  /**
+   * Uses current block to absorb as much of the incoming damage as possible, reducing block
+   * accordingly, and returns whatever damage remains.
+   *
+   * @param incomingDamage damage to be absorbed
+   * @return damage remaining after block absorption
+   */
+  public int absorbDamageWithBlock(int incomingDamage) {
+    if (incomingDamage <= 0) {
+      return 0;
+    }
+    int absorbed = Math.min(block, incomingDamage);
+    if (absorbed > 0) {
+      setBlock(block - absorbed);
+    }
+    return incomingDamage - absorbed;
+  }
+
   /**
    * Applies a status effect to this entity. If an effect with the same id is already active, it is
    * overwritten by the new one (design choice: overwrite, not stack. To be confirmed with Team 5/6
@@ -239,40 +334,52 @@ public class CombatStatsComponent extends Component {
     if (effect == null) {
       return;
     }
-    statusEffects.put(effect.getEffectId(), effect);
+    statusEffects.put(effect.getType(), effect);
     if (entity != null) {
-      entity.getEvents().trigger("statusEffectApplied", effect.getEffectId());
+      entity.getEvents().trigger("statusEffectApplied", effect.getType());
     }
   }
 
   /**
-   * Returns the active status effect with the given id, or null if not present.
+   * Convenience overload of applyStatusEffect that constructs the StatusEffect internally. Provided
+   * so callers can apply a status effect without constructing a StatusEffect object themselves.
    *
-   * @param effectId status effect identifier
-   * @return active StatusEffect, or null
+   * @param type identifier for the effect, e.g. "VULNERABLE"
+   * @param value magnitude of the effect
+   * @param duration number of turns the effect remains active for; 0 or fewer means permanent
    */
-  public StatusEffect getStatusEffect(String effectId) {
-    return statusEffects.get(effectId);
+  public void applyStatusEffect(String type, int value, int duration) {
+    applyStatusEffect(new StatusEffect(type, value, duration));
   }
 
   /**
-   * Returns true if a status effect with the given id is currently active.
+   * Returns the active status effect with the given type, or null if not present.
    *
-   * @param effectId status effect identifier
+   * @param type status effect type identifier
+   * @return active StatusEffect, or null
+   */
+  public StatusEffect getStatusEffect(String type) {
+    return statusEffects.get(type);
+  }
+
+  /**
+   * Returns true if a status effect with the given type is currently active.
+   *
+   * @param type status effect type identifier
    * @return whether the effect is active
    */
-  public boolean hasStatusEffect(String effectId) {
-    return statusEffects.containsKey(effectId);
+  public boolean hasStatusEffect(String type) {
+    return statusEffects.containsKey(type);
   }
 
   /**
    * Explicitly removes a status effect from this entity, if present.
    *
-   * @param effectId status effect identifier
+   * @param type status effect type identifier
    */
-  public void removeStatusEffect(String effectId) {
-    if (statusEffects.remove(effectId) != null && entity != null) {
-      entity.getEvents().trigger("statusEffectRemoved", effectId);
+  public void removeStatusEffect(String type) {
+    if (statusEffects.remove(type) != null && entity != null) {
+      entity.getEvents().trigger("statusEffectRemoved", type);
     }
   }
 
@@ -294,27 +401,5 @@ public class CombatStatsComponent extends Component {
               }
               return expired;
             });
-  }
-
-  /**
-   * PLACEHOLDER / NOT FINAL: applies incoming-damage modifiers from active status effects to a raw
-   * damage amount, before armor absorption. This currently only demonstrates the mechanism using a
-   * single hard-coded example effect ("vulnerable", +50% incoming damage) so that the
-   * armor+status-effect pipeline in takeDamage() can be built and tested end-to-end. The actual set
-   * of supported status effect types, and how each one's effectValue should be interpreted
-   * (percentage vs flat amount, multiplicative vs additive, etc.), still needs to be confirmed with
-   * Team 5 (card effects) and Team 6 (card data model). This method WILL need to be
-   * rewritten/extended once that is confirmed; do not treat the current formula as final.
-   *
-   * @param rawDamage the un-modified incoming damage
-   * @return damage after status-effect modifiers are applied
-   */
-  private int applyStatusEffectDamageModifiers(int rawDamage) {
-    // Example only - pending confirmation with Team 5/6 on final effect calculation rules.
-    StatusEffect vulnerable = statusEffects.get("vulnerable");
-    if (vulnerable != null) {
-      rawDamage = Math.round(rawDamage * (1 + vulnerable.getEffectValue()));
-    }
-    return rawDamage;
   }
 }

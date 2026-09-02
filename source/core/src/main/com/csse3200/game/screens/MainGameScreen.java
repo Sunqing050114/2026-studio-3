@@ -6,6 +6,15 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.csse3200.game.GdxGame;
 import com.csse3200.game.areas.ForestGameArea;
 import com.csse3200.game.areas.terrain.TerrainFactory;
+import com.csse3200.game.cards.CardConfigLoader;
+import com.csse3200.game.cards.CardLibrary;
+import com.csse3200.game.cards.CardService;
+import com.csse3200.game.cards.configs.CardConfig;
+import com.csse3200.game.cards.debug.CardEffectDebugComponent;
+import com.csse3200.game.cards.debug.CardEffectDebugDisplay;
+import com.csse3200.game.cards.debug.KeyboardCardEffectDebugInputComponent;
+import com.csse3200.game.cards.effects.CardEffectResolutionService;
+import com.csse3200.game.components.cards.CardHandDisplay;
 import com.csse3200.game.components.gamearea.PerformanceDisplay;
 import com.csse3200.game.components.maingame.DebugShortcutInputComponent;
 import com.csse3200.game.components.maingame.MainGameActions;
@@ -25,6 +34,7 @@ import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,13 +144,22 @@ public class MainGameScreen extends ScreenAdapter {
     InputComponent inputComponent =
         ServiceLocator.getInputService().getInputFactory().createForTerminal();
 
+    List<CardConfig> cards = CardConfigLoader.loadCards();
+    CardService cardService = new CardLibrary(cards);
+    CardEffectResolutionService cardEffects = new CardEffectResolutionService(cardService);
+
     Entity ui = new Entity();
     ui.addComponent(new InputDecorator(stage, 10))
         .addComponent(new PerformanceDisplay())
         .addComponent(new MainGameActions(this.game))
         .addComponent(new MainGameExitDisplay())
+        .addComponent(new CardHandDisplay())
         .addComponent(new Terminal())
         .addComponent(inputComponent)
+        .addComponent(new TerminalDisplay())
+        .addComponent(new CardEffectDebugComponent(cardEffects))
+        .addComponent(new KeyboardCardEffectDebugInputComponent())
+        .addComponent(new CardEffectDebugDisplay())
         .addComponent(new TerminalDisplay())
         .addComponent(new DebugShortcutInputComponent(this.game));
 

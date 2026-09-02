@@ -26,6 +26,17 @@ class CombatStatsComponentTest {
   }
 
   @Test
+  void shouldCheckOverloadConstructor() {
+    CombatStatsComponent combat = new CombatStatsComponent(150, 20, 100);
+    assertEquals(100, combat.getHealth());
+    combat.takeDamage(50);
+    assertEquals(50, combat.getHealth());
+    combat.heal(20);
+    assertEquals(70, combat.getHealth());
+    assertEquals(100, combat.getMaxHealth());
+  }
+
+  @Test
   void shouldCheckIsDead() {
     CombatStatsComponent combat = new CombatStatsComponent(100, 20);
     assertFalse(combat.isDead());

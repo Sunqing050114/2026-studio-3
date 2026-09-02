@@ -5,6 +5,7 @@ import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.player.EnergyComponent;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.player.PlayerActions;
+import com.csse3200.game.components.player.PlayerBehaviourComponent;
 import com.csse3200.game.components.player.PlayerStatsDisplay;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.PlayerConfig;
@@ -18,10 +19,21 @@ import com.csse3200.game.physics.components.PhysicsComponent;
 import com.csse3200.game.rendering.TextureRenderComponent;
 import com.csse3200.game.services.ServiceLocator;
 
+/**
+ * Factory to create a player entity.
+ *
+ * <p>Predefined player properties are loaded from a config stored as a json file and should have
+ * the properties stores in 'PlayerConfig'.
+ */
 public class PlayerFactory {
   private static final PlayerConfig stats =
       FileLoader.readClass(PlayerConfig.class, "configs/player.json");
 
+  /**
+   * Create a player entity.
+   *
+   * @return entity
+   */
   public static Entity createPlayer() {
     InputComponent inputComponent =
         ServiceLocator.getInputService().getInputFactory().createForPlayer();
@@ -35,6 +47,7 @@ public class PlayerFactory {
             .addComponent(new PlayerActions())
             .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack))
             .addComponent(new InventoryComponent(stats.gold))
+            .addComponent(new PlayerBehaviourComponent())
             .addComponent(inputComponent)
             .addComponent(new EnergyComponent(stats.maxEnergy))
             .addComponent(new PlayerStatsDisplay());

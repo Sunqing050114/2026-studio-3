@@ -43,6 +43,23 @@ public class CardEffectResolver {
     return new CardEffectResolution(card.id, results);
   }
 
+  /**
+   * Resolves a card using read-only combat state supplied by the unified card-play flow.
+   *
+   * <p>This does not mutate Team 5's backwards-compatible {@link PlayerEffectState}. When Team 7 is
+   * the source of truth for player statuses, later Strength values should come from the next
+   * external context instead.
+   */
+  public CardEffectResolution resolve(CardConfig card, CardEffectResolutionContext context) {
+    validate(card, context);
+
+    List<ResolvedCardEffect> results = new ArrayList<>();
+    for (int i = 0; i < card.effects.length; i++) {
+      results.add(effectExecutor.resolve(card.id, card.effects[i], card.target, i, context));
+    }
+    return new CardEffectResolution(card.id, results);
+  }
+
   /** Resolves a card by ID through the Team 6 card service supplied to this resolver. */
   public CardEffectResolution resolve(String cardId, PlayerEffectState playerState) {
     if (cardService == null) {
@@ -58,10 +75,36 @@ public class CardEffectResolver {
     return resolve(card, playerState);
   }
 
+  /** Resolves a card by ID using read-only combat state supplied by the caller. */
+  public CardEffectResolution resolve(String cardId, CardEffectResolutionContext context) {
+    if (cardService == null) {
+      throw new IllegalStateException("Card service is required to resolve by card ID");
+    }
+    if (cardId == null || cardId.isBlank()) {
+      throw new IllegalArgumentException("Card ID cannot be null or blank");
+    }
+    CardConfig card =
+        cardService
+            .getCard(cardId)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown card ID: " + cardId));
+    return resolve(card, context);
+  }
+
   private void validate(CardConfig card, PlayerEffectState playerState) {
     if (playerState == null) {
       throw new IllegalArgumentException("Player effect state cannot be null");
     }
+    validateCard(card);
+  }
+
+  private void validate(CardConfig card, CardEffectResolutionContext context) {
+    if (context == null) {
+      throw new IllegalArgumentException("Card effect resolution context cannot be null");
+    }
+    validateCard(card);
+  }
+
+  private void validateCard(CardConfig card) {
     List<String> errors = CardValidator.validate(card);
     if (!errors.isEmpty()) {
       throw new IllegalArgumentException("Invalid card config: " + String.join("; ", errors));
