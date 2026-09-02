@@ -17,7 +17,7 @@ public class MapGraph implements EncounterCallback {
   public static final int MAP_WIDTH = 7;
   public static final int MAP_HEIGHT = 10;
   public static final int MAX_NODE_COUNT = MAP_WIDTH * MAP_HEIGHT;
-  public static final int BRANCH_CHANCE = 15;
+  public static final int BRANCH_CHANCE = 10;
 
   public MapGraph() {
     nodes = new HashMap<>();
