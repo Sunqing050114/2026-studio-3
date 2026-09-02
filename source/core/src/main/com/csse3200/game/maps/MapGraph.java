@@ -19,10 +19,6 @@ public class MapGraph implements EncounterCallback {
   public static final int MAX_NODE_COUNT = MAP_WIDTH * MAP_HEIGHT;
   public static final int BRANCH_CHANCE = 10;
 
-  public MapGraph() {
-    nodes = new HashMap<>();
-  }
-
   /**
    * Creates a graph containing an existing node pool.
    *
@@ -32,7 +28,17 @@ public class MapGraph implements EncounterCallback {
     this.nodes = new HashMap<>(nodes);
 
     while (generatePathing() != 0) {
-      this.nodes = NodePoolGenerator.generate(new RoomDistributionConfig(70, 70, 20, 10));
+      clearConnections();
+    }
+  }
+
+  /*
+   * Clears the connections of nodes on the graph.
+   *
+   */
+  private void clearConnections() {
+    for (MapNode node : nodes.values()) {
+      node.getConnections().clear();
     }
   }
 
@@ -157,8 +163,8 @@ public class MapGraph implements EncounterCallback {
    * Removes all unconnected nodes from the MapGraph. Only called as the final step of generation.
    */
   private void pruneUnconnectedMapGraphNodes() {
-    if (!nodes.isEmpty()) {
-      nodes.values().removeIf(node -> node.getConnections().isEmpty());
+    if (!this.nodes.isEmpty()) {
+      this.nodes.values().removeIf(node -> node.getConnections().isEmpty());
     }
   }
 

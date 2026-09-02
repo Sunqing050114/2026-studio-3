@@ -38,7 +38,8 @@ class MapSelectionControllerTest {
 
   @BeforeEach
   void setUp() {
-    mapGraph = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
+    MapGraph mapGraph = new MapGraph(NodePoolGenerator.generate(config));
 
     // 0 (CURRENT) -- 1 (AVAILABLE) -- 3 (LOCKED) -- 4 (LOCKED)
     //             \- 2 (AVAILABLE) -/

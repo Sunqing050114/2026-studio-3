@@ -21,10 +21,7 @@ import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
 import com.csse3200.game.files.FileLoader;
-import com.csse3200.game.maps.MapGraph;
-import com.csse3200.game.maps.MapNode;
-import com.csse3200.game.maps.NodeState;
-import com.csse3200.game.maps.RoomType;
+import com.csse3200.game.maps.*;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.shop.ShopConfig;
@@ -151,7 +148,8 @@ public class ForestGameArea extends GameArea {
   }
 
   private MapGraph createDemoMapGraph() {
-    MapGraph graph = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(70, 70, 20, 10);
+    MapGraph graph = new MapGraph(NodePoolGenerator.generate(config));
     MapNode shopNode = new MapNode(SHOP_NODE_ID, RoomType.SHOP);
     MapNode chanceNode = new MapNode(CHANCE_NODE_ID, RoomType.EVENT);
     MapNode returnNode = new MapNode(RETURN_NODE_ID, RoomType.EVENT);

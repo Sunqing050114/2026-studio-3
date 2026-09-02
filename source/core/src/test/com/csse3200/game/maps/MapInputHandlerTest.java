@@ -41,7 +41,8 @@ class MapInputHandlerTest {
 
   @BeforeEach
   void setUp() {
-    mapGraph = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(70, 70, 20, 10);
+    MapGraph graph = new MapGraph(NodePoolGenerator.generate(config));
 
     mapGraph.addNode(node(0, RoomType.COMBAT, NodeState.CURRENT));
     mapGraph.addNode(node(1, RoomType.COMBAT, NodeState.AVAILABLE));
