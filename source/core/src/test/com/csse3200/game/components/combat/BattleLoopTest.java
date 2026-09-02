@@ -52,7 +52,7 @@ class BattleLoopTest {
             .addComponent(new EnergyComponent(3));
     Entity enemy =
         new Entity()
-            .addComponent(new EnemyStatsComponent(6, 4))
+            .addComponent(new CombatStatsComponent(6, 4))
             .addComponent(new EnemyBehaviourComponent("test"));
 
     // Hand of 1 (strike) with a spare in the draw pile so the played card is replaced by a draw.
@@ -71,7 +71,7 @@ class BattleLoopTest {
 
     assertEquals(BattlePhase.VICTORY, controller.getCurrentPhase());
     assertEquals(Boolean.TRUE, outcome.get());
-    assertEquals(0, enemy.getComponent(EnemyStatsComponent.class).getHealth());
+    assertEquals(0, enemy.getComponent(CombatStatsComponent.class).getHealth());
     assertFalse(deck.getHand().contains("strike"));
     assertTrue(deck.getDiscardPile().contains("strike"));
     assertEquals(List.of("bandage"), deck.getHand()); // played strike replaced by a draw
@@ -86,7 +86,7 @@ class BattleLoopTest {
             .addComponent(new EnergyComponent(3));
     Entity enemy =
         new Entity()
-            .addComponent(new EnemyStatsComponent(200, 25))
+            .addComponent(new CombatStatsComponent(200, 25))
             .addComponent(new EnemyBehaviourComponent("test"));
 
     BattleController controller = new BattleController(player, List.of(enemy));
@@ -110,7 +110,7 @@ class BattleLoopTest {
             .addComponent(new EnergyComponent(3));
     Entity enemy =
         new Entity()
-            .addComponent(new EnemyStatsComponent(200, 3))
+            .addComponent(new CombatStatsComponent(200, 3))
             .addComponent(new EnemyBehaviourComponent("test"));
 
     BattleController controller = new BattleController(player, List.of(enemy));

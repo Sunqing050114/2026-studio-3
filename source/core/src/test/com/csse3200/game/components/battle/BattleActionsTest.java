@@ -40,7 +40,7 @@ class BattleActionsTest {
     player.addComponent(new CombatStatsComponent(20, 0));
     Entity enemy =
         new Entity()
-            .addComponent(new EnemyStatsComponent(20, 1))
+            .addComponent(new CombatStatsComponent(20, 1))
             .addComponent(new EnemyBehaviourComponent("test"));
     controller = new BattleController(player, List.of(enemy));
     GdxGame game = mock(GdxGame.class);
