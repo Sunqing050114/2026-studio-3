@@ -250,6 +250,17 @@ public class MapGraph implements EncounterCallback {
   }
 
   /**
+   * Connects two nodes by id. Kept so callers outside this package can connect nodes without
+   * looking them up first, which the encounter integration relies on.
+   *
+   * @param firstId id of the first node
+   * @param secondId id of the second node
+   */
+  public void connectNodes(Integer firstId, Integer secondId) {
+    connectNodes(nodes.get(firstId), nodes.get(secondId));
+  }
+
+  /**
    * Called after an encounter finishes.
    *
    * @param nodeId completed node id
