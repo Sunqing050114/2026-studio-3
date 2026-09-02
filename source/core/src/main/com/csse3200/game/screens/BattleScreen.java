@@ -153,13 +153,14 @@ public class BattleScreen extends ScreenAdapter {
 
     this.battleUi = battleUi;
 
-    // Keep the on-screen hand in sync with the deck: when a played card leaves the hand, drop its
-    // widget so only cards still in hand are shown. buildHandRecords() reads the live deck.
+    // Keep the on-screen hand in sync with the deck: after a card is played (and a replacement
+    // drawn) rebuild the hand widgets from the live deck, so the played card's button is gone and
+    // the drawn card's button appears.
     battleUi
         .getEvents()
         .addListener(
             BattleActions.HAND_CHANGED_EVENT,
-            (java.util.List<String> hand) -> uiFactory.syncToHand(battleDeck.getHand()));
+            (java.util.List<String> hand) -> uiFactory.rebuildHand(buildHandRecords()));
 
     gameArea.displayUI(battleUi);
   }

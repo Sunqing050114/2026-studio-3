@@ -674,7 +674,7 @@ public class BattleController {
     StringBuilder summary = new StringBuilder("You played ").append(request.cardID());
     for (ResolvedCardEffect effect : result.enemyEffects()) {
       summary
-          .append(" — ")
+          .append(" - ")
           .append(effect.type())
           .append(' ')
           .append(effect.value())
@@ -682,7 +682,7 @@ public class BattleController {
     }
     for (ResolvedCardEffect effect : result.playerEffects()) {
       summary
-          .append(" — ")
+          .append(" - ")
           .append(effect.type())
           .append(' ')
           .append(effect.value())

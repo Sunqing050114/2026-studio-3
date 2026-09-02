@@ -20,6 +20,7 @@ import java.util.Map;
 public class ClickableFactory extends UIComponent {
 
   private static final String DEFAULT_VARIANT = "Clickable";
+  private static final String HAND_TRIGGER = "playCard";
   private static final Map<String, ClickableSupplier> STATIC_VARIANTS = new HashMap<>();
 
   static {
@@ -73,49 +74,50 @@ public class ClickableFactory extends UIComponent {
   public void create() {
     super.create();
     for (ClickableRecord record : records) {
-      ClickableSupplier supplier = resolveVariant(record.variant());
-      if (supplier == null) {
-        Gdx.app.error(
-            "ClickableFactory",
-            "Unknown clickable variant \"" + record.variant() + "\", falling back to default");
-        supplier = STATIC_VARIANTS.get(DEFAULT_VARIANT);
-      }
-
-      Clickable clickable = supplier.create(record);
-      clickable.setEntity(this.entity);
-
-      clickable.create();
-
-      clickables.add(clickable);
-      stage.addActor(clickable.getBtn());
+      clickables.add(buildClickable(record));
     }
   }
 
+  private Clickable buildClickable(ClickableRecord record) {
+    ClickableSupplier supplier = resolveVariant(record.variant());
+    if (supplier == null) {
+      Gdx.app.error(
+          "ClickableFactory",
+          "Unknown clickable variant \"" + record.variant() + "\", falling back to default");
+      supplier = STATIC_VARIANTS.get(DEFAULT_VARIANT);
+    }
+
+    Clickable clickable = supplier.create(record);
+    clickable.setEntity(this.entity);
+    clickable.create();
+    stage.addActor(clickable.getBtn());
+
+    // Hand cards should be visible and playable straight away rather than waiting for an "up".
+    if (HAND_TRIGGER.equals(record.trigger())) {
+      clickable.showNow();
+    }
+    return clickable;
+  }
+
   /**
-   * Refreshes the on-screen hand: removes the widget for every {@code "playCard"} clickable whose
-   * card id is no longer in {@code handCardIds} (one widget per remaining copy), and leaves the
-   * static UI widgets alone. New cards are not added here — the hand only ever shrinks during a
-   * turn.
+   * Rebuilds the on-screen hand: drops every {@code "playCard"} widget and builds fresh ones from
+   * {@code handRecords}, leaving the static UI widgets untouched. Called when the hand changes (a
+   * card played and a replacement drawn), so the new hand — including the drawn card — shows
+   * immediately.
    *
-   * @param handCardIds the card ids currently in the player's hand
+   * @param handRecords one record per card currently in the player's hand
    */
-  public void syncToHand(List<String> handCardIds) {
-    List<String> remaining = new ArrayList<>(handCardIds);
+  public void rebuildHand(List<ClickableRecord> handRecords) {
     Iterator<Clickable> iterator = clickables.iterator();
     while (iterator.hasNext()) {
       Clickable clickable = iterator.next();
-      if (!"playCard".equals(clickable.getTrigger())) {
-        continue;
+      if (HAND_TRIGGER.equals(clickable.getTrigger())) {
+        clickable.remove();
+        iterator.remove();
       }
-      Object[] args = clickable.getArgs();
-      if (args.length == 0 || !(args[0] instanceof String cardId)) {
-        continue;
-      }
-      if (remaining.remove(cardId)) {
-        continue; // still in hand — keep this widget
-      }
-      clickable.remove();
-      iterator.remove();
+    }
+    for (ClickableRecord record : handRecords) {
+      clickables.add(buildClickable(record));
     }
   }
 

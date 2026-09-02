@@ -124,6 +124,16 @@ public abstract class Clickable extends Component {
         btn.remove();
     }
 
+    /**
+     * Put this widget straight into its visible resting state, skipping any intro animation.
+     * Called by {@link ClickableFactory} when a widget is added to an already-live UI (e.g. a card
+     * drawn to replace one that was just played). Default: nothing, since the base widget is always
+     * drawn at its position anyway.
+     */
+    public void showNow() {
+        // no-op by default
+    }
+
     public Button getBtn() {
         return btn;
     }

@@ -75,11 +75,13 @@ public class CardResolutionService {
 
     CardEffectResolution resolution = effectResolver.resolve(card, playerState);
 
-    // Commit: energy first (already checked affordable), then move the card to the discard pile.
+    // Commit: energy first (already checked affordable), then move the card to the discard pile
+    // and draw a replacement so the hand stays topped up.
     if (energy != null) {
       energy.spendEnergy(card.cost);
     }
     deck.playCard(card.id);
+    deck.drawOne();
 
     return CardPlayResult.success(
         card.id,

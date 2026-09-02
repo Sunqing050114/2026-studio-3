@@ -41,7 +41,9 @@ class CardResolutionServiceTest {
                     new EffectConfig(EffectType.HEAL, 6))));
     service = new CardResolutionService(library);
 
-    deck = new BattleDeck(new PlayerDeck(List.of("strike", "bandage")));
+    // Hand of 2 (strike, bandage) with spare cards in the draw pile so playing a card can draw a
+    // replacement.
+    deck = new BattleDeck(new PlayerDeck(List.of("strike", "bandage", "bandage", "bandage")));
     deck.drawCards(2);
   }
 
@@ -72,6 +74,7 @@ class CardResolutionServiceTest {
     assertEquals(1, result.energyCost());
     assertFalse(result.updatedHand().contains("strike"));
     assertTrue(result.updatedDiscardPile().contains("strike"));
+    assertEquals(2, result.updatedHand().size()); // played card replaced by a draw
     assertEquals(2, energy.getCurrentEnergy());
   }
 
