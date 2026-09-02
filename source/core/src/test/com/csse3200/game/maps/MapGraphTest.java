@@ -20,6 +20,19 @@ public class MapGraphTest {
   }
 
   @Test
+  void testMapGeneration() {
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
+    MapGraph map = new MapGraph(NodePoolGenerator.generate(config));
+
+    assertTrue(map.getNodes().size() < MapGraph.MAX_NODE_COUNT);
+    // for (int i = 0; i < MapGraph.MAP_HEIGHT; i++) {
+
+    // assertTrue(map.moveToNode());
+    // }
+
+  }
+
+  @Test
   void getCurrentNodeNull() {
     MapGraph graph = new MapGraph();
 
@@ -29,7 +42,7 @@ public class MapGraphTest {
   @Test
   void createsGraphFromGeneratedNodeMap() {
     Map<Integer, MapNode> nodes =
-        NodePoolGenerator.generate(new RoomDistributionConfig(5, 3, 2, 1, 12345L));
+        NodePoolGenerator.generate(new RoomDistributionConfig(70, 3, 2, 1, 12345L));
 
     MapGraph graph = new MapGraph(nodes);
 
@@ -101,8 +114,8 @@ public class MapGraphTest {
     graph.addNode(connected1);
     graph.addNode(connected2);
 
-    graph.connectNodes(1, 2);
-    graph.connectNodes(1, 3);
+    graph.connectNodes(current, connected1);
+    graph.connectNodes(current, connected2);
 
     graph.completeNode(1, true);
 
@@ -123,8 +136,8 @@ public class MapGraphTest {
     graph.addNode(completed);
     graph.addNode(available);
 
-    graph.connectNodes(1, 2);
-    graph.connectNodes(1, 3);
+    graph.connectNodes(current, completed);
+    graph.connectNodes(current, available);
 
     graph.completeNode(1, true);
 
@@ -141,7 +154,7 @@ public class MapGraphTest {
 
     graph.addNode(current);
     graph.addNode(connected);
-    graph.connectNodes(1, 2);
+    graph.connectNodes(current, connected);
 
     graph.completeNode(1, false);
 

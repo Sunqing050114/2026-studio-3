@@ -15,6 +15,7 @@ import com.csse3200.game.entities.factories.RenderFactory;
 import com.csse3200.game.input.InputComponent;
 import com.csse3200.game.input.InputDecorator;
 import com.csse3200.game.input.InputService;
+import com.csse3200.game.maps.*;
 import com.csse3200.game.physics.PhysicsEngine;
 import com.csse3200.game.physics.PhysicsService;
 import com.csse3200.game.rendering.RenderService;
@@ -131,12 +132,16 @@ public class MainGameScreen extends ScreenAdapter {
         ServiceLocator.getInputService().getInputFactory().createForTerminal();
 
     Entity ui = new Entity();
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 70, 20, 10);
+    MapGraph map = new MapGraph(NodePoolGenerator.generate(config));
+    MapDisplay map22 = new MapDisplay(map);
     ui.addComponent(new InputDecorator(stage, 10))
         .addComponent(new PerformanceDisplay())
         .addComponent(new MainGameActions(this.game))
         .addComponent(new MainGameExitDisplay())
         .addComponent(new Terminal())
         .addComponent(inputComponent)
+        .addComponent(map22) // DELETE JUST FOR TESTING
         .addComponent(new TerminalDisplay());
 
     ServiceLocator.getEntityService().register(ui);
