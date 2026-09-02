@@ -58,13 +58,14 @@ public class EnemyFactory {
    */
   public static Entity create(EnemyConfig config) {
     return new Entity()
-        .addComponent(new TextureRenderComponent("images/enemy.png")) //place holder image
+        .addComponent(new TextureRenderComponent("images/enemy.png")) // place holder image
         .addComponent(new EnemyStatsComponent(config.health, config.baseAttack, config.armour))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
         .addComponent(
             new EnemyDropTargetComponent(
                 ServiceLocator.getDragAndDropService().getDragAndDrop(),
-                ServiceLocator.getCamera(), config.id)); //allow the user to drag a card on it
+                ServiceLocator.getCamera(),
+                config.id)); // allow the user to drag a card on it
   }
 
   /**

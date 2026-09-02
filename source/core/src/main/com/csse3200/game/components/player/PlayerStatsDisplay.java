@@ -60,24 +60,24 @@ public class PlayerStatsDisplay extends UIComponent {
     energyImage =
         new Image(ServiceLocator.getResourceService().getAsset("images/energy.png", Texture.class));
 
-    //Energy text
+    // Energy text
     EnergyComponent energyComponent = entity.getComponent(EnergyComponent.class);
     int energy = energyComponent.getCurrentEnergy();
     CharSequence energyText = String.format("Energy: %d", energy);
     energyLabel = new Label(energyText, skin, "large");
 
-    //Piety image
+    // Piety image
     pietyImage =
         new Image(ServiceLocator.getResourceService().getAsset("images/piety.png", Texture.class));
 
-    //Piety text
+    // Piety text
     pietyLabel = new Label("Level: 1", skin, "large");
 
-    //Money image
+    // Money image
     moneyImage =
         new Image(ServiceLocator.getResourceService().getAsset("images/money.png", Texture.class));
 
-    //Money text
+    // Money text
     InventoryComponent inventoryComponent = entity.getComponent(InventoryComponent.class);
     int money = inventoryComponent.getGold();
     CharSequence moneyText = String.format("Gold: $%d", money);
@@ -126,7 +126,7 @@ public class PlayerStatsDisplay extends UIComponent {
   }
 
   /**
-   s* Updates the player's piety on the ui.
+   * s* Updates the player's piety on the ui.
    *
    * @param piety player piety
    */
@@ -135,7 +135,8 @@ public class PlayerStatsDisplay extends UIComponent {
     pietyLabel.setText(text);
   }
 
-  /** Updates the player's money on the ui.
+  /**
+   * Updates the player's money on the ui.
    *
    * @param money player money
    */
@@ -143,7 +144,6 @@ public class PlayerStatsDisplay extends UIComponent {
     CharSequence text = String.format("Money: %d", money);
     moneyLabel.setText(text);
   }
-
 
   @Override
   public void dispose() {

@@ -14,8 +14,8 @@ import java.util.Map;
 
 /**
  * Parses Clickable JSON files into {@link ClickableRecord}s. Pure data loading — no knowledge of
- * how those records get turned into live widgets (that's {@link ClickableFactory}'s job). Split
- * out so each class has one reason to change: this one changes if the JSON schema changes,
+ * how those records get turned into live widgets (that's {@link ClickableFactory}'s job). Split out
+ * so each class has one reason to change: this one changes if the JSON schema changes,
  * ClickableFactory changes if the runtime widget lifecycle changes.
  */
 final class ClickableJsonLoader {

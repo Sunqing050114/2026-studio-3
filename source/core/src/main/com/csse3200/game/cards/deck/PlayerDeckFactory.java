@@ -40,7 +40,6 @@ public final class PlayerDeckFactory {
     return new PlayerDeck(STARTER_DECK_CARD_IDS);
   }
 
-
   /**
    * Returns the card IDs used by the starter deck.
    *

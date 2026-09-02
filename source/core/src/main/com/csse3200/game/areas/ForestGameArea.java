@@ -1,6 +1,5 @@
 package com.csse3200.game.areas;
 
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
@@ -15,10 +14,9 @@ import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
 import com.csse3200.game.utils.math.GridPoint2Utils;
 import com.csse3200.game.utils.math.RandomUtils;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /** Forest area for the demo game with trees, a player, and some enemies. */
 public class ForestGameArea extends GameArea {
@@ -48,13 +46,14 @@ public class ForestGameArea extends GameArea {
     "images/terrain_iso_grass.atlas", "images/ghost.atlas", "images/ghostKing.atlas"
   };
   private static final String[] forestSounds = {"sounds/Impact4.ogg"};
-  //private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
-  //private static final String[] forestMusic = {backgroundMusic};
+  // private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
+  // private static final String[] forestMusic = {backgroundMusic};
 
   private final TerrainFactory terrainFactory;
 
   private Entity player;
   private Entity enemy;
+
   /**
    * Initialise this ForestGameArea to use the provided TerrainFactory.
    *
@@ -75,7 +74,7 @@ public class ForestGameArea extends GameArea {
     enemy = spawnEnemy();
     player = spawnPlayer();
 
-    //playMusic();
+    // playMusic();
   }
 
   public void displayUI(Entity ui) {
@@ -148,6 +147,7 @@ public class ForestGameArea extends GameArea {
   public List<Entity> getEnemies() {
     return List.of(enemy);
   }
+
   private void spawnGhosts() {
     GridPoint2 minPos = new GridPoint2(0, 0);
     GridPoint2 maxPos = terrain.getMapBounds(0).sub(2, 2);
@@ -168,12 +168,12 @@ public class ForestGameArea extends GameArea {
     spawnEntityAt(ghostKing, randomPos, true, true);
   }
 
-//  private void playMusic() {
-//    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
-//    music.setLooping(true);
-//    music.setVolume(0.3f);
-//    music.play();
-//  }
+  //  private void playMusic() {
+  //    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
+  //    music.setLooping(true);
+  //    music.setVolume(0.3f);
+  //    music.play();
+  //  }
 
   private void loadAssets() {
     logger.debug("Loading assets");
@@ -181,7 +181,7 @@ public class ForestGameArea extends GameArea {
     resourceService.loadTextures(forestTextures);
     resourceService.loadTextureAtlases(forestTextureAtlases);
     resourceService.loadSounds(forestSounds);
-    //resourceService.loadMusic(forestMusic);
+    // resourceService.loadMusic(forestMusic);
 
     while (!resourceService.loadForMillis(10)) {
       // This could be upgraded to a loading screen
@@ -195,13 +195,13 @@ public class ForestGameArea extends GameArea {
     resourceService.unloadAssets(forestTextures);
     resourceService.unloadAssets(forestTextureAtlases);
     resourceService.unloadAssets(forestSounds);
-    //resourceService.unloadAssets(forestMusic);
+    // resourceService.unloadAssets(forestMusic);
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    //ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
+    // ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
     this.unloadAssets();
   }
 }

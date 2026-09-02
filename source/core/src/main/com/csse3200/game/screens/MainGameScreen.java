@@ -27,7 +27,7 @@ import com.csse3200.game.ui.terminal.Terminal;
 import com.csse3200.game.ui.terminal.TerminalDisplay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.csse3200.game.components.maingame.DebugShortcutInputComponent;
+
 /// To test if shortcut works!!!
 /**
  * The game screen containing the main game.
@@ -36,7 +36,9 @@ import com.csse3200.game.components.maingame.DebugShortcutInputComponent;
  */
 public class MainGameScreen extends ScreenAdapter {
   private static final Logger logger = LoggerFactory.getLogger(MainGameScreen.class);
-  private static final String[] mainGameTextures = {"images/heart.png","images/energy.png", "images/piety.png", "images/money.png"};
+  private static final String[] mainGameTextures = {
+    "images/heart.png", "images/energy.png", "images/piety.png", "images/money.png"
+  };
   private static final Vector2 CAMERA_POSITION = new Vector2(7.5f, 7.5f);
 
   private final GdxGame game;
