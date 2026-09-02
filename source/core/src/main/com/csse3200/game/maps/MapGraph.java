@@ -11,7 +11,7 @@ import java.util.Set;
 /** Represents the map graph containing all map nodes. */
 public class MapGraph implements EncounterCallback {
 
-  private final Map<Integer, MapNode> nodes;
+  private Map<Integer, MapNode> nodes;
   private MapNode currentNode;
 
   public static final int MAP_WIDTH = 7;
@@ -32,7 +32,7 @@ public class MapGraph implements EncounterCallback {
     this.nodes = new HashMap<>(nodes);
 
     while (generatePathing() != 0) {
-      nodes = NodePoolGenerator.generate(new RoomDistributionConfig(70, 70, 20, 10));
+      this.nodes = NodePoolGenerator.generate(new RoomDistributionConfig(70, 70, 20, 10));
     }
   }
 
@@ -157,7 +157,9 @@ public class MapGraph implements EncounterCallback {
    * Removes all unconnected nodes from the MapGraph. Only called as the final step of generation.
    */
   private void pruneUnconnectedMapGraphNodes() {
-    nodes.values().removeIf(node -> node.getConnections().isEmpty());
+    if (!nodes.isEmpty()) {
+      nodes.values().removeIf(node -> node.getConnections().isEmpty());
+    }
   }
 
   /**
