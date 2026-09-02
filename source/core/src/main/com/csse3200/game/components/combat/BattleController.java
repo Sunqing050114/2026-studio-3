@@ -150,7 +150,10 @@ public class BattleController {
 
   /*--------------------------- Public Methods -----------------------------*/
 
-  /** Starts the battle encounter. */
+  /**
+   * Starts the battle encounter
+   * @throws IllegalStateException if the battle has already begun
+   */
   public void start() throws IllegalStateException {
     if (this.getCurrentPhase() != BattlePhase.SETUP) {
       throw new IllegalStateException("The battle has already begun!");
@@ -158,22 +161,38 @@ public class BattleController {
     handle(BattleEvent.SETUP_COMPLETE);
   }
 
+  /**
+   * Player intends to attack the enemy on their turn
+   */
   public void selectAttack() {
     this.currentPlayerIntent = PlayerIntent.ATTACK;
   }
 
+  /**
+   * Player intends to defend themselves on their turn
+   */
   public void selectDefend() {
     this.currentPlayerIntent = PlayerIntent.DEFEND;
   }
 
+  /**
+   * Player intends to do other actions on their turn
+   */
   public void selectOther() {
     this.currentPlayerIntent = PlayerIntent.OTHER;
   }
 
+  /**
+   * Player decides to end their turn
+   */
   public void endPlayerTurn() {
     this.currentPlayerIntent = PlayerIntent.END_PLAYER_TURN;
   }
 
+  /**
+   * Resets the current battle to a completely new battle that has no previous player and
+   * enemy turns
+   */
   public void resetBattle() {
     if (this.pendingEvent) {
        throw new IllegalStateException("There is an event in progress.");
@@ -186,11 +205,16 @@ public class BattleController {
     this.eventQueue.clear();
     this.setCurrentEnemyIndex(-1);
     this.setEnemyIntent(null);
+    this.setPlayerIntent(null);
     this.setCurrentPhase(BattlePhase.SETUP);
 
     this.notifyPhaseChange(previousPhase, BattlePhase.SETUP);
   }
 
+  /**
+   * Retrieves the current phase of the battle (e.g. player turn, enemy turn, player attack, etc.)
+   * @return the current phase of the BattleController instance
+   */
   public BattlePhase getCurrentPhase() {
     return this.currentPhase;
   }
@@ -238,6 +262,7 @@ public class BattleController {
   private void setEnemyIntent(EnemyIntent intent) {
     this.currentEnemyIntent = intent;
   }
+  private void setPlayerIntent(PlayerIntent intent) {this.currentPlayerIntent = intent;}
 
   /*------------------------- Helper functions ----------------------------*/
 
