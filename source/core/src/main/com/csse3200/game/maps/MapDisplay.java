@@ -49,7 +49,9 @@ public class MapDisplay extends UIComponent {
     this.mapSelectionController = new MapSelectionController(mapGraph);
     this.mapInputHandler = new MapInputHandler(mapSelectionController);
     this.mapHeight =
-        10 * 1.5f * borderPadding; // this to be changed for a constant in RoomDistributionConfig
+        MapGraph.MAP_HEIGHT
+            * 1.5f
+            * borderPadding; // this to be changed for a constant in RoomDistributionConfig
   }
 
   /**
@@ -175,7 +177,6 @@ public class MapDisplay extends UIComponent {
   public Group getGroup() {
     return group;
   }
-
 
   @Override
   public void draw(SpriteBatch batch) {
