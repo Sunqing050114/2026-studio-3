@@ -5,9 +5,6 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.areas.terrain.TerrainFactory.TerrainType;
-import com.csse3200.game.chance.ChanceEncounterFactory;
-import com.csse3200.game.components.CombatStatsComponent;
-import com.csse3200.game.components.chance.ChanceEncounterDisplay;
 import com.csse3200.game.components.gamearea.GameAreaDisplay;
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.components.shop.ShopDisplay;
@@ -17,6 +14,7 @@ import com.csse3200.game.encounters.integration.FunctionalCardCatalogAdapter;
 import com.csse3200.game.encounters.integration.IntegratedShopTransactionGateway;
 import com.csse3200.game.encounters.integration.InventoryDeckAdapter;
 import com.csse3200.game.entities.Entity;
+import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
@@ -29,6 +27,7 @@ import com.csse3200.game.shop.ShopEncounter;
 import com.csse3200.game.shop.ShopService;
 import com.csse3200.game.utils.math.GridPoint2Utils;
 import com.csse3200.game.utils.math.RandomUtils;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,17 +36,15 @@ public class ForestGameArea extends GameArea {
   private static final Logger logger = LoggerFactory.getLogger(ForestGameArea.class);
   private static final int NUM_TREES = 7;
   private static final int NUM_GHOSTS = 2;
-  private static final Integer SHOP_NODE_ID = 1;
-  private static final Integer CHANCE_NODE_ID = 2;
-  private static final Integer RETURN_NODE_ID = 3;
-  private static final String SHOP_CONFIG = "configs/shopItems.json";
-  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(10, 10);
-  private static final float WALL_WIDTH = 0.1f;
+  private static final GridPoint2 PLAYER_SPAWN = new GridPoint2(5, 20);
+  private static final GridPoint2 ENEMY_SPAWN = new GridPoint2(20, PLAYER_SPAWN.y);
+  private static final float WALL_WIDTH = 3f;
   private static final String[] forestTextures = {
-    "images/box_boy_leaf.png",
+    "images/star_player.png",
     "images/tree.png",
     "images/ghost_king.png",
     "images/ghost_1.png",
+    "images/enemy.png",
     "images/grass_1.png",
     "images/grass_2.png",
     "images/grass_3.png",
@@ -62,14 +59,14 @@ public class ForestGameArea extends GameArea {
     "images/terrain_iso_grass.atlas", "images/ghost.atlas", "images/ghostKing.atlas"
   };
   private static final String[] forestSounds = {"sounds/Impact4.ogg"};
-  private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
-  private static final String[] forestMusic = {backgroundMusic};
+  // private static final String backgroundMusic = "sounds/BGM_03_mp3.mp3";
+  // private static final String[] forestMusic = {backgroundMusic};
 
   private final TerrainFactory terrainFactory;
   private final MapGraph mapGraph;
 
   private Entity player;
-  private EncounterFlowController encounterFlow;
+  private Entity enemy;
 
   /**
    * Initialise this ForestGameArea to use the provided TerrainFactory.
@@ -87,23 +84,16 @@ public class ForestGameArea extends GameArea {
   @Override
   public void create() {
     loadAssets();
-
-    displayUI();
-
     spawnTerrain();
-    spawnTrees();
-    player = spawnPlayer();
-    initialiseEncounterFlow();
-    displayChanceEncounter();
-    spawnGhosts();
-    spawnGhostKing();
 
-    playMusic();
+    enemy = spawnEnemy();
+    player = spawnPlayer();
+
+    // playMusic();
   }
 
-  private void displayUI() {
-    Entity ui = new Entity();
-    ui.addComponent(new GameAreaDisplay("Box Forest"));
+  public void displayUI(Entity ui) {
+    ui.addComponent(new GameAreaDisplay("The Fall of Pantheons"));
     spawnEntity(ui);
   }
 
@@ -210,6 +200,25 @@ public class ForestGameArea extends GameArea {
     return newPlayer;
   }
 
+  /**
+   * Spawns a single enemy into the forest area so it's visible and present in the world. Uses the
+   * roster-driven EnemyFactory, so the enemy id must exist in configs/enemies.json (falls back to a
+   * default config otherwise).
+   */
+  private Entity spawnEnemy() {
+    Entity newEnemy = EnemyFactory.create("bone_crawler");
+    spawnEntityAt(newEnemy, ENEMY_SPAWN, true, true);
+    return newEnemy;
+  }
+
+  public Entity getPlayer() {
+    return player;
+  }
+
+  public List<Entity> getEnemies() {
+    return List.of(enemy);
+  }
+
   private void spawnGhosts() {
     GridPoint2 minPos = new GridPoint2(0, 0);
     GridPoint2 maxPos = terrain.getMapBounds(0).sub(2, 2);
@@ -230,12 +239,12 @@ public class ForestGameArea extends GameArea {
     spawnEntityAt(ghostKing, randomPos, true, true);
   }
 
-  private void playMusic() {
-    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
-    music.setLooping(true);
-    music.setVolume(0.3f);
-    music.play();
-  }
+  //  private void playMusic() {
+  //    Music music = ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class);
+  //    music.setLooping(true);
+  //    music.setVolume(0.3f);
+  //    music.play();
+  //  }
 
   private void loadAssets() {
     logger.debug("Loading assets");
@@ -243,7 +252,7 @@ public class ForestGameArea extends GameArea {
     resourceService.loadTextures(forestTextures);
     resourceService.loadTextureAtlases(forestTextureAtlases);
     resourceService.loadSounds(forestSounds);
-    resourceService.loadMusic(forestMusic);
+    // resourceService.loadMusic(forestMusic);
 
     while (!resourceService.loadForMillis(10)) {
       // This could be upgraded to a loading screen
@@ -257,13 +266,13 @@ public class ForestGameArea extends GameArea {
     resourceService.unloadAssets(forestTextures);
     resourceService.unloadAssets(forestTextureAtlases);
     resourceService.unloadAssets(forestSounds);
-    resourceService.unloadAssets(forestMusic);
+    // resourceService.unloadAssets(forestMusic);
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
+    // ServiceLocator.getResourceService().getAsset(backgroundMusic, Music.class).stop();
     this.unloadAssets();
   }
 }
