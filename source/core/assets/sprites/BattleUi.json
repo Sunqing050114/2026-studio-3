@@ -1,0 +1,47 @@
+{
+  "Clickable": [
+    {
+      "text": "exit",
+      "x": 100,
+      "y": 100,
+      "trigger": "exit"
+    },
+    {
+      "text": "up",
+      "x": 100,
+      "y": 200,
+      "trigger": "up"
+    },
+    {
+      "text": "down",
+      "x": 100,
+      "y": 300,
+      "trigger": "down"
+    },
+    {
+      "text": "EndTurn",
+      "x": 100,
+      "y": 400,
+      "trigger": "endturn"
+
+    }
+  ],
+  "Displaying": [
+    {
+      "text": "Click a card",
+      "x": 1000,
+      "y": 1000,
+      "fontName": "large",
+      "scale": 1.2,
+      "variant": "cardDisplay"
+    },
+    {
+      "text": "",
+      "x": 0,
+      "y": 90,
+      "scale": 1.3,
+      "trigger": "battleLog",
+      "variant": "battleLog"
+    }
+  ]
+}

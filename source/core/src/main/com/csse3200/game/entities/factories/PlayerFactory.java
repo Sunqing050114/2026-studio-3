@@ -1,3 +1,4 @@
+// PlayerFactory.java
 package com.csse3200.game.entities.factories;
 
 import com.csse3200.game.components.CombatStatsComponent;
@@ -39,17 +40,17 @@ public class PlayerFactory {
 
     Entity player =
         new Entity()
-            .addComponent(new TextureRenderComponent("images/box_boy_leaf.png"))
+            .addComponent(new TextureRenderComponent("images/star_player.png"))
             .addComponent(new PhysicsComponent())
             .addComponent(new ColliderComponent())
             .addComponent(new HitboxComponent().setLayer(PhysicsLayer.PLAYER))
             .addComponent(new PlayerActions())
-            .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack, stats.maxHealth))
+            .addComponent(new CombatStatsComponent(stats.health, stats.baseAttack))
             .addComponent(new InventoryComponent(stats.gold))
             .addComponent(new PlayerBehaviourComponent())
             .addComponent(inputComponent)
-            .addComponent(new PlayerStatsDisplay())
-            .addComponent(new EnergyComponent(stats.maxEnergy));
+            .addComponent(new EnergyComponent(stats.maxEnergy))
+            .addComponent(new PlayerStatsDisplay());
 
     PhysicsUtils.setScaledCollider(player, 0.6f, 0.3f);
     player.getComponent(ColliderComponent.class).setDensity(1.5f);

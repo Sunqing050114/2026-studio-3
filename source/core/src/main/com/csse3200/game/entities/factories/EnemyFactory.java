@@ -7,6 +7,7 @@ import com.csse3200.game.components.enemy.EnemyAnimationController;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.enemy.IntentIcons;
+import com.csse3200.game.components.spritedisplay.reactive.EnemyDropTargetComponent;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.configs.EnemyConfig;
 import com.csse3200.game.entities.configs.EnemyConfigs;
@@ -93,7 +94,12 @@ public class EnemyFactory {
         .addComponent(new EnemyStatsComponent(config.name))
         .addComponent(new EnemyBehaviourComponent(config.behaviour))
         .addComponent(animator)
-        .addComponent(new EnemyAnimationController());
+        .addComponent(new EnemyAnimationController())
+        .addComponent(
+                    new EnemyDropTargetComponent(
+                            ServiceLocator.getDragAndDropService().getDragAndDrop(),
+                            ServiceLocator.getCamera(),
+                            config.id)); // allow the user to drag a card on it
   }
 
   /**
