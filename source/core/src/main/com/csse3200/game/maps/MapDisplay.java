@@ -173,6 +173,16 @@ public class MapDisplay extends UIComponent {
    *
    * @return group of Nodes, connections and background
    */
+  /**
+   * Gets the selection controller driving this display, so a screen can listen for node selection
+   * and start the matching encounter.
+   *
+   * @return selection controller for this map
+   */
+  public MapSelectionController getMapSelectionController() {
+    return mapSelectionController;
+  }
+
   public Group getGroup() {
     return group;
   }

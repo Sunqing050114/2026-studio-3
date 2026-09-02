@@ -34,6 +34,17 @@ public class RunState {
     return true;
   }
 
+  /**
+   * Sets the map for the current run without placing the player on it. Used when the map is
+   * generated for display before progression has started.
+   *
+   * @param mapGraph map for this run
+   */
+  public void setMapGraph(MapGraph mapGraph) {
+    this.mapGraph = mapGraph;
+    this.activeNodeId = null;
+  }
+
   public boolean isRunActive() {
     return mapGraph != null;
   }
