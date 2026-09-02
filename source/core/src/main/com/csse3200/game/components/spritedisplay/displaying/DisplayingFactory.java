@@ -24,7 +24,9 @@ public class DisplayingFactory extends UIComponent {
     registerVariant(DEFAULT_VARIANT, record -> new Displaying(record) {});
     registerVariant("health", HealthDisplay::new);
     registerVariant("cardDisplay", CardDisplay::new);
-    // Add more variants here as needed
+    registerVariant("battleLog", BattleLogDisplay::new);
+    registerVariant("endBattle", EndBattleDisplay::new);
+    // Add more variants here as needed.
   }
 
   public static void registerVariant(String name, DisplayingSupplier supplier) {
@@ -32,6 +34,7 @@ public class DisplayingFactory extends UIComponent {
   }
 
   private final List<DisplayingRecord> records = new ArrayList<>();
+  private final List<Displaying> displayings = new ArrayList<>();
   private final Map<String, Skin> skinCache = new HashMap<>();
   private final Map<String, DisplayingSupplier> instanceVariants = new HashMap<>();
 
@@ -99,19 +102,27 @@ public class DisplayingFactory extends UIComponent {
       }
 
       Displaying displaying = supplier.create(record);
-      this.entity.addComponent(displaying);
+      // Factory-managed, not registered as an entity component: it shares this factory's entity so
+      // its event listeners still work, and this factory owns its create/dispose lifecycle (the
+      // entity has already snapshotted its component list by the time this runs). Mirrors
+      // ClickableFactory.
+      displaying.setEntity(this.entity);
+      displaying.create();
+      displayings.add(displaying);
     }
   }
 
   @Override
   protected void draw(SpriteBatch batch) {
-    // All drawing is now handled by each individual Displaying component.
-    // Nothing to do here!
+    // Each Displaying is a UIComponent and draws itself via the render service.
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    // Components are disposed by the entity system automatically.
+    for (Displaying displaying : displayings) {
+      displaying.dispose();
+    }
+    displayings.clear();
   }
 }

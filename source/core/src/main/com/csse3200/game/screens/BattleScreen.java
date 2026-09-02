@@ -24,8 +24,7 @@ import com.csse3200.game.components.battle.*;
 import com.csse3200.game.components.combat.BattleController;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableFactory;
 import com.csse3200.game.components.spritedisplay.clickable.ClickableRecord;
-import com.csse3200.game.components.spritedisplay.displaying.CardDisplay;
-import com.csse3200.game.components.spritedisplay.displaying.DisplayingRecord;
+import com.csse3200.game.components.spritedisplay.displaying.DisplayingFactory;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
 import com.csse3200.game.entities.factories.RenderFactory;
@@ -132,19 +131,15 @@ public class BattleScreen extends ScreenAdapter {
   }
 
   public void createUI() {
-    DisplayingRecord cardLabelRecord =
-        DisplayingRecord.builder("Click a card")
-            .position(1000, 1000) // Position on screen
-            .fontName("large") // Use a large font
-            .scale(1.2f) // Scale it up
-            .variant("cardDisplay") // Use CardDisplay
-            .build();
+    // sprites/BattleUi.json holds both the static "Clickable" UI (exit/up/down/end turn) and the
+    // "Displaying" text overlays (the card-label prompt and the between-turns battle log). The card
+    // hand itself is dealt dynamically from the battle deck, so it is merged in below rather than
+    // living in JSON.
+    Path battleUiJson = Path.of("sprites/BattleUi.json");
 
-    // sprites/BattleUi.json defines the static UI (exit/up/down); the card hand itself
-    // is dealt dynamically by CardService each round, so it's merged in here rather than
-    // being hardcoded in JSON. The card library and battle deck are built in the constructor.
+    DisplayingFactory displays = new DisplayingFactory(battleUiJson);
 
-    staticUiRecords = ClickableFactory.loadRecordsFromJson(Path.of("sprites/BattleUi.json"));
+    staticUiRecords = ClickableFactory.loadRecordsFromJson(battleUiJson);
 
     uiFactory = new ClickableFactory(buildAllRecords());
 
@@ -153,11 +148,19 @@ public class BattleScreen extends ScreenAdapter {
         new Entity()
             .addComponent(new InputDecorator(stage, 10))
             .addComponent(uiFactory)
-            .addComponent(new CardDisplay(cardLabelRecord))
-            .addComponent(new BattleActions(controller, game, library))
-            .addComponent(new BattleLogDisplay());
+            .addComponent(displays)
+            .addComponent(new BattleActions(controller, game, library));
 
     this.battleUi = battleUi;
+
+    // Keep the on-screen hand in sync with the deck: when a played card leaves the hand, drop its
+    // widget so only cards still in hand are shown. buildHandRecords() reads the live deck.
+    battleUi
+        .getEvents()
+        .addListener(
+            BattleActions.HAND_CHANGED_EVENT,
+            (java.util.List<String> hand) -> uiFactory.syncToHand(battleDeck.getHand()));
+
     gameArea.displayUI(battleUi);
   }
 

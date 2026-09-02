@@ -114,6 +114,16 @@ public abstract class Clickable extends Component {
         }
     }
 
+    /**
+     * Detach this clickable's widget from the stage and release anything it registered elsewhere.
+     * Called by {@link ClickableFactory} when a widget is removed at runtime (e.g. a played card
+     * leaving the hand) or the factory is disposed. Subclasses that register drag sources or
+     * listeners override this to also undo those.
+     */
+    public void remove() {
+        btn.remove();
+    }
+
     public Button getBtn() {
         return btn;
     }

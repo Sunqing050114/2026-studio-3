@@ -43,6 +43,7 @@ public class BattleController {
   private static final String BATTLE_ENDED_EVENT = "battleEnded";
   private static final String ENEMY_EFFECTS_EVENT = "enemyEffects";
   private static final String PLAYER_EFFECTS_EVENT = "playerEffects";
+  private static final String HAND_CHANGED_EVENT = "handChanged";
   private boolean pendingEvent;
   private CardPlayRequest pendingCard;
 
@@ -286,6 +287,17 @@ public class BattleController {
   public void addPlayerEffectsListener(EventListener1<List<ResolvedCardEffect>> listener) {
     Objects.requireNonNull(listener, "Listener must not be null.");
     eventHandler.addListener(PLAYER_EFFECTS_EVENT, listener);
+  }
+
+  /**
+   * Adds a listener that receives the player's hand (card IDs) after it changes, e.g. once a played
+   * card has moved from hand to discard. The UI uses this to refresh the on-screen hand.
+   *
+   * @param listener receives the updated hand
+   */
+  public void addHandChangedListener(EventListener1<List<String>> listener) {
+    Objects.requireNonNull(listener, "Listener must not be null.");
+    eventHandler.addListener(HAND_CHANGED_EVENT, listener);
   }
 
   /** Sends a one-line description of the latest battle action to any log listeners. */
@@ -596,6 +608,9 @@ public class BattleController {
 
     applyEnemyEffects(livingEnemyTargets(request), enemyEffects);
     applyPlayerEffects(playerEffects);
+
+    // The played card has left the hand (see CardResolutionService) — tell the UI to refresh.
+    eventHandler.trigger(HAND_CHANGED_EVENT, result.updatedHand());
   }
 
   /**

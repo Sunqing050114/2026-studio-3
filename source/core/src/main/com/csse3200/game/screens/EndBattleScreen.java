@@ -3,7 +3,8 @@ package com.csse3200.game.screens;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.csse3200.game.GdxGame;
-import com.csse3200.game.components.battle.EndBattleDisplay;
+import com.csse3200.game.components.spritedisplay.displaying.DisplayingFactory;
+import com.csse3200.game.components.spritedisplay.displaying.EndBattleDisplay;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.EntityService;
 import com.csse3200.game.entities.factories.RenderFactory;
@@ -13,19 +14,20 @@ import com.csse3200.game.rendering.RenderService;
 import com.csse3200.game.rendering.Renderer;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Terminal screen shown when a battle ends, for either a win or a loss. */
 public class EndBattleScreen extends ScreenAdapter {
   private static final Logger logger = LoggerFactory.getLogger(EndBattleScreen.class);
+
   private final GdxGame game;
-  private final boolean won;
   private final Renderer renderer;
+  private boolean returning = false;
 
   public EndBattleScreen(GdxGame game, boolean won) {
     this.game = game;
-    this.won = won;
 
     logger.debug("Initialising end-of-battle screen (won={})", won);
     ServiceLocator.registerInputService(new InputService());
@@ -34,14 +36,29 @@ public class EndBattleScreen extends ScreenAdapter {
     ServiceLocator.registerRenderService(new RenderService());
 
     renderer = RenderFactory.createRenderer();
-    createUI();
+    createUI(won);
   }
 
-  private void createUI() {
+  private void createUI(boolean won) {
     Stage stage = ServiceLocator.getRenderService().getStage();
-    Entity ui = new Entity();
-    ui.addComponent(new InputDecorator(stage, 10)).addComponent(new EndBattleDisplay(game, won));
+
+    // Heading + "click to continue" hint live in sprites/EndBattle.json; the heading's text is
+    // filled in below once the components are listening.
+    DisplayingFactory displays = new DisplayingFactory(Path.of("sprites/EndBattle.json"));
+
+    Entity ui = new Entity().addComponent(new InputDecorator(stage, 10)).addComponent(displays);
+    ui.getEvents().addListener(EndBattleDisplay.RETURN_TO_MENU_EVENT, this::returnToMenu);
     ServiceLocator.getEntityService().register(ui);
+
+    ui.getEvents().trigger(EndBattleDisplay.RESULT_EVENT, won ? "VICTORY" : "DEFEAT");
+  }
+
+  private void returnToMenu() {
+    if (returning) {
+      return;
+    }
+    returning = true;
+    game.setScreen(GdxGame.ScreenType.MAIN_MENU);
   }
 
   @Override

@@ -7,14 +7,15 @@ import com.csse3200.game.ui.UIComponent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Builds and manages the live {@link Clickable} widgets for a set of {@link ClickableRecord}s:
  * resolves each record's variant, constructs and draws the widget, and disposes it. JSON parsing
- * lives separately in {@link ClickableJsonLoader} — this class only cares about the runtime
- * widget lifecycle, not where the records came from.
+ * lives separately in {@link ClickableJsonLoader} — this class only cares about the runtime widget
+ * lifecycle, not where the records came from.
  */
 public class ClickableFactory extends UIComponent {
 
@@ -33,7 +34,9 @@ public class ClickableFactory extends UIComponent {
     STATIC_VARIANTS.put(name, supplier);
   }
 
-  /** @see ClickableJsonLoader#loadRecordsFromJson(Path) */
+  /**
+   * @see ClickableJsonLoader#loadRecordsFromJson(Path)
+   */
   public static List<ClickableRecord> loadRecordsFromJson(Path file) {
     return ClickableJsonLoader.loadRecordsFromJson(file);
   }
@@ -88,6 +91,34 @@ public class ClickableFactory extends UIComponent {
     }
   }
 
+  /**
+   * Refreshes the on-screen hand: removes the widget for every {@code "playCard"} clickable whose
+   * card id is no longer in {@code handCardIds} (one widget per remaining copy), and leaves the
+   * static UI widgets alone. New cards are not added here — the hand only ever shrinks during a
+   * turn.
+   *
+   * @param handCardIds the card ids currently in the player's hand
+   */
+  public void syncToHand(List<String> handCardIds) {
+    List<String> remaining = new ArrayList<>(handCardIds);
+    Iterator<Clickable> iterator = clickables.iterator();
+    while (iterator.hasNext()) {
+      Clickable clickable = iterator.next();
+      if (!"playCard".equals(clickable.getTrigger())) {
+        continue;
+      }
+      Object[] args = clickable.getArgs();
+      if (args.length == 0 || !(args[0] instanceof String cardId)) {
+        continue;
+      }
+      if (remaining.remove(cardId)) {
+        continue; // still in hand — keep this widget
+      }
+      clickable.remove();
+      iterator.remove();
+    }
+  }
+
   @Override
   protected void draw(SpriteBatch batch) {
     for (Clickable clickable : clickables) {
@@ -99,7 +130,8 @@ public class ClickableFactory extends UIComponent {
   public void dispose() {
     super.dispose();
     for (Clickable clickable : clickables) {
-      clickable.getBtn().remove();
+      clickable.remove();
     }
+    clickables.clear();
   }
 }

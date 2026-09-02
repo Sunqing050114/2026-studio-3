@@ -38,6 +38,9 @@ public class BattleActions extends Component {
   /** Fired on the battle UI entity when the player loses the battle. */
   public static final String BATTLE_LOST_EVENT = "battleLost";
 
+  /** Fired on the battle UI entity with the player's hand after it changes (e.g. a card played). */
+  public static final String HAND_CHANGED_EVENT = "handChanged";
+
   private final BattleController controller;
   private final GdxGame game;
   private final CardLibrary library;
@@ -70,6 +73,7 @@ public class BattleActions extends Component {
     controller.addEnemyEffectsListener(this::onEnemyEffects);
     controller.addPlayerEffectsListener(this::onPlayerEffects);
     controller.addBattleEndListener(this::onBattleEnd);
+    controller.addHandChangedListener(hand -> entity.getEvents().trigger(HAND_CHANGED_EVENT, hand));
   }
 
   private void onEnemyEffects(List<ResolvedCardEffect> effects) {
