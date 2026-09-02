@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.csse3200.game.files.UserSettings;
 import com.csse3200.game.screens.BattleScreen;
+import com.csse3200.game.screens.EndBattleScreen;
 import com.csse3200.game.screens.MainGameScreen;
 import com.csse3200.game.screens.MainMenuScreen;
 import com.csse3200.game.screens.SettingsScreen;
@@ -80,6 +81,10 @@ public class GdxGame extends Game {
         return new SettingsScreen(this);
       case BATTLE_SCREEN:
         return new BattleScreen(this);
+      case VICTORY:
+        return new EndBattleScreen(this, true);
+      case DEFEAT:
+        return new EndBattleScreen(this, false);
       default:
         return null;
     }
@@ -89,7 +94,9 @@ public class GdxGame extends Game {
     MAIN_MENU,
     MAIN_GAME,
     SETTINGS,
-    BATTLE_SCREEN
+    BATTLE_SCREEN,
+    VICTORY,
+    DEFEAT
   }
 
   /** Exit the game. */
