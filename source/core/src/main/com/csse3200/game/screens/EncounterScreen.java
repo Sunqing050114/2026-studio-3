@@ -97,7 +97,7 @@ public class EncounterScreen extends ScreenAdapter {
       return;
     }
 
-    game.setScreen(GdxGame.ScreenType.MAP);
+    game.setScreen(GdxGame.ScreenType.MAIN_GAME);
   }
 
   @Override

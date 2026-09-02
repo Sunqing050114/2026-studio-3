@@ -10,7 +10,6 @@ import com.csse3200.game.maps.RunState;
 import com.csse3200.game.screens.EncounterScreen;
 import com.csse3200.game.screens.MainGameScreen;
 import com.csse3200.game.screens.MainMenuScreen;
-import com.csse3200.game.screens.MapScreen;
 import com.csse3200.game.screens.SettingsScreen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,8 +81,6 @@ public class GdxGame extends Game {
         return new MainGameScreen(this);
       case SETTINGS:
         return new SettingsScreen(this);
-      case MAP:
-        return new MapScreen(this);
       case ENCOUNTER:
         return new EncounterScreen(this);
       default:
@@ -95,7 +92,6 @@ public class GdxGame extends Game {
     MAIN_MENU,
     MAIN_GAME,
     SETTINGS,
-    MAP,
     ENCOUNTER
   }
 
