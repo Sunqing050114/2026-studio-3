@@ -1,17 +1,30 @@
 package com.csse3200.game.areas;
 
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.csse3200.game.areas.terrain.TerrainFactory;
 import com.csse3200.game.areas.terrain.TerrainFactory.TerrainType;
 import com.csse3200.game.components.gamearea.GameAreaDisplay;
+import com.csse3200.game.components.player.InventoryComponent;
+import com.csse3200.game.components.shop.ShopDisplay;
+import com.csse3200.game.encounters.integration.ComponentPlayerStateAdapter;
+import com.csse3200.game.encounters.integration.EncounterFlowController;
+import com.csse3200.game.encounters.integration.FunctionalCardCatalogAdapter;
+import com.csse3200.game.encounters.integration.IntegratedShopTransactionGateway;
+import com.csse3200.game.encounters.integration.InventoryDeckAdapter;
 import com.csse3200.game.entities.Entity;
 import com.csse3200.game.entities.factories.EnemyFactory;
 import com.csse3200.game.entities.factories.NPCFactory;
 import com.csse3200.game.entities.factories.ObstacleFactory;
 import com.csse3200.game.entities.factories.PlayerFactory;
+import com.csse3200.game.files.FileLoader;
+import com.csse3200.game.maps.*;
 import com.csse3200.game.services.ResourceService;
 import com.csse3200.game.services.ServiceLocator;
+import com.csse3200.game.shop.ShopConfig;
+import com.csse3200.game.shop.ShopEncounter;
+import com.csse3200.game.shop.ShopService;
 import com.csse3200.game.utils.math.GridPoint2Utils;
 import com.csse3200.game.utils.math.RandomUtils;
 import java.util.List;
@@ -50,6 +63,7 @@ public class ForestGameArea extends GameArea {
   // private static final String[] forestMusic = {backgroundMusic};
 
   private final TerrainFactory terrainFactory;
+  private final MapGraph mapGraph;
 
   private Entity player;
   private Entity enemy;
@@ -63,6 +77,7 @@ public class ForestGameArea extends GameArea {
   public ForestGameArea(TerrainFactory terrainFactory) {
     super();
     this.terrainFactory = terrainFactory;
+    this.mapGraph = createDemoMapGraph();
   }
 
   /** Create the game area, including terrain, static entities (trees), dynamic entities (player) */
@@ -80,6 +95,62 @@ public class ForestGameArea extends GameArea {
   public void displayUI(Entity ui) {
     ui.addComponent(new GameAreaDisplay("The Fall of Pantheons"));
     spawnEntity(ui);
+  }
+
+  private void displayShop() {
+    ShopService shopService = new ShopService(FileLoader.readClass(ShopConfig.class, SHOP_CONFIG));
+    ShopEncounter shopEncounter = encounterFlow.startShop(SHOP_NODE_ID, shopService);
+    Entity shopUi = new Entity();
+    shopUi.addComponent(new ShopDisplay(shopEncounter));
+    spawnEntity(shopUi);
+  }
+
+  private void displayChanceEncounter() {
+    Entity chanceUi = new Entity();
+    chanceUi.addComponent(
+        new ChanceEncounterDisplay(
+            encounterFlow.startChance(
+                CHANCE_NODE_ID, ChanceEncounterFactory.createInitialEncounters().get(0))));
+    spawnEntity(chanceUi);
+  }
+
+  private void initialiseEncounterFlow() {
+    InventoryComponent inventory = player.getComponent(InventoryComponent.class);
+    ComponentPlayerStateAdapter playerState =
+        new ComponentPlayerStateAdapter(player.getComponent(CombatStatsComponent.class), inventory);
+    IntegratedShopTransactionGateway shopTransactions =
+        new IntegratedShopTransactionGateway(
+            playerState,
+            new FunctionalCardCatalogAdapter(cardId -> true),
+            new InventoryDeckAdapter(inventory));
+
+    encounterFlow =
+        new EncounterFlowController(
+            playerState,
+            shopTransactions,
+            (nodeId, success) -> {
+              mapGraph.onEncounterComplete(nodeId, success);
+              if (success && CHANCE_NODE_ID.equals(nodeId)) {
+                mapGraph.getNode(SHOP_NODE_ID).setState(NodeState.CURRENT);
+                displayShop();
+              }
+            });
+  }
+
+  private MapGraph createDemoMapGraph() {
+    RoomDistributionConfig config = new RoomDistributionConfig(70, 70, 20, 10);
+    MapGraph graph = new MapGraph(NodePoolGenerator.generate(config));
+    MapNode shopNode = new MapNode(SHOP_NODE_ID, RoomType.SHOP);
+    MapNode chanceNode = new MapNode(CHANCE_NODE_ID, RoomType.EVENT);
+    MapNode returnNode = new MapNode(RETURN_NODE_ID, RoomType.EVENT);
+
+    chanceNode.setState(NodeState.CURRENT);
+    graph.addNode(shopNode);
+    graph.addNode(chanceNode);
+    graph.addNode(returnNode);
+    graph.connectNodes(chanceNode.getNodeId(), shopNode.getNodeId());
+    graph.connectNodes(shopNode.getNodeId(), returnNode.getNodeId());
+    return graph;
   }
 
   private void spawnTerrain() {

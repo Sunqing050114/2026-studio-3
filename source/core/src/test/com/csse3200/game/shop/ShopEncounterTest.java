@@ -6,11 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.csse3200.game.components.player.InventoryComponent;
 import com.csse3200.game.extensions.GameExtension;
-import com.csse3200.game.maps.EncounterCallback;
-import com.csse3200.game.maps.MapGraph;
-import com.csse3200.game.maps.MapNode;
-import com.csse3200.game.maps.NodeState;
-import com.csse3200.game.maps.RoomType;
+import com.csse3200.game.maps.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -18,7 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class ShopEncounterTest {
   @Test
   void shouldCompleteMapNodeWhenShopEncounterEnds() {
-    MapGraph graph = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
+    MapGraph graph = new MapGraph(NodePoolGenerator.generate(config));
     MapNode shopNode = new MapNode(1, RoomType.SHOP);
     MapNode nextNode = new MapNode(2, RoomType.EVENT);
     shopNode.setState(NodeState.CURRENT);
@@ -80,7 +77,8 @@ class ShopEncounterTest {
 
   @Test
   void shouldNotUnlockMapNodeWhenShopEncounterFails() {
-    MapGraph graph = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
+    MapGraph graph = new MapGraph(NodePoolGenerator.generate(config));
     MapNode shopNode = new MapNode(1, RoomType.SHOP);
     MapNode nextNode = new MapNode(2, RoomType.EVENT);
     shopNode.setState(NodeState.CURRENT);

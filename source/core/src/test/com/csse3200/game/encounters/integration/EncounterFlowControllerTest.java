@@ -12,10 +12,7 @@ import com.csse3200.game.chance.ChanceOutcome;
 import com.csse3200.game.encounters.integration.mocks.MockCardCatalogGateway;
 import com.csse3200.game.encounters.integration.mocks.MockDeckGateway;
 import com.csse3200.game.encounters.integration.mocks.MockPlayerStateGateway;
-import com.csse3200.game.maps.MapGraph;
-import com.csse3200.game.maps.MapNode;
-import com.csse3200.game.maps.NodeState;
-import com.csse3200.game.maps.RoomType;
+import com.csse3200.game.maps.*;
 import com.csse3200.game.shop.PurchaseResult;
 import com.csse3200.game.shop.ShopEncounter;
 import com.csse3200.game.shop.ShopItem;
@@ -178,7 +175,8 @@ class EncounterFlowControllerTest {
   }
 
   private MapGraph createMap() {
-    MapGraph map = new MapGraph();
+    RoomDistributionConfig config = new RoomDistributionConfig(MapGraph.MAX_NODE_COUNT, 60, 30, 10);
+    MapGraph map = new MapGraph(NodePoolGenerator.generate(config));
     MapNode chance = new MapNode(1, RoomType.EVENT);
     MapNode shop = new MapNode(2, RoomType.SHOP);
     MapNode returnNode = new MapNode(3, RoomType.EVENT);
