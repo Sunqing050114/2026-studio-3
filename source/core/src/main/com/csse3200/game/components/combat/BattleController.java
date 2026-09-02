@@ -428,8 +428,8 @@ public class BattleController {
    * @return True if the enemy is alive, False if not.
    */
   private boolean isEnemyAlive(Entity enemy) {
-    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
-    return stats.isAlive();
+    CombatStatsComponent stats = enemy.getComponent(CombatStatsComponent.class);
+    return !stats.isDead();
   }
 
   /**
@@ -525,7 +525,7 @@ public class BattleController {
       return intent;
     }
     int attack = 0;
-    EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+    CombatStatsComponent stats = enemy.getComponent(CombatStatsComponent.class);
     if (stats != null) {
       attack = stats.getBaseAttack();
     }
@@ -658,7 +658,7 @@ public class BattleController {
 
   private void applyEnemyEffects(List<Entity> targets, List<ResolvedCardEffect> effects) {
     for (Entity enemy : targets) {
-      EnemyStatsComponent stats = enemy.getComponent(EnemyStatsComponent.class);
+      CombatStatsComponent stats = enemy.getComponent(CombatStatsComponent.class);
       if (stats == null) {
         continue;
       }

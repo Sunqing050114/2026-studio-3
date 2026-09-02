@@ -15,7 +15,6 @@ import com.csse3200.game.cards.CardPlayRequest;
 import com.csse3200.game.components.CombatStatsComponent;
 import com.csse3200.game.components.enemy.EnemyBehaviourComponent;
 import com.csse3200.game.components.enemy.EnemyIntent;
-import com.csse3200.game.components.enemy.EnemyStatsComponent;
 import com.csse3200.game.components.player.PlayerActions;
 import com.csse3200.game.components.player.PlayerIntent;
 import com.csse3200.game.entities.Entity;
@@ -221,7 +220,7 @@ class BattleControllerTest {
     EnemyBehaviourComponent attackingBehaviour = new EnemyBehaviourComponent("test");
     setCurrentIntent(attackingBehaviour, EnemyIntent.attack(5));
     Entity enemy =
-        new Entity().addComponent(new EnemyStatsComponent(10, 1)).addComponent(attackingBehaviour);
+        new Entity().addComponent(new CombatStatsComponent(10, 1)).addComponent(attackingBehaviour);
     controller = new BattleController(player, List.of(enemy));
 
     controller.start();
@@ -332,11 +331,11 @@ class BattleControllerTest {
 
   private Entity createDefendingEnemy(EnemyBehaviourComponent behaviour, boolean alive) {
     Entity enemy = mock(Entity.class);
-    EnemyStatsComponent stats = mock(EnemyStatsComponent.class);
+    CombatStatsComponent stats = mock(CombatStatsComponent.class);
     when(enemy.getComponent(EnemyBehaviourComponent.class)).thenReturn(behaviour);
-    when(enemy.getComponent(EnemyStatsComponent.class)).thenReturn(stats);
+    when(enemy.getComponent(CombatStatsComponent.class)).thenReturn(stats);
     when(behaviour.rollIntent()).thenReturn(EnemyIntent.defend(1));
-    when(stats.isAlive()).thenReturn(alive);
+    when(!stats.isDead()).thenReturn(alive);
     return enemy;
   }
 
