@@ -49,8 +49,13 @@ Run from `source/`:
 
 For PR #69, the initial GitHub Actions revision ran 257 tests successfully. On revision `617d69f`,
 the `Run Unit Tests` step and the separate Java Format workflow both passed. The Sprint 2 regression
-class must be run again on its review branch and on the final merged `main`; a test is not recorded
-as passed merely because its source has been added.
+class was then verified on review commit `f2032a4`: all three tests passed in
+[Game Unit Tests run #14](https://github.com/Sunqing050114/2026-studio-3/actions/runs/33870574788),
+and [Java Format run #14](https://github.com/Sunqing050114/2026-studio-3/actions/runs/33870574719)
+and Javadoc passed. The full repository suite remains red because 31 existing Battle, Enemy, Map
+and RunState tests fail on this baseline; none of the three acceptance regressions failed. The
+SonarCloud check on the fork cannot authenticate without the course repository's `SONAR_TOKEN`.
+A final run is still required after the team's integration fixes are merged to `main`.
 
 ## Manual acceptance tests
 
