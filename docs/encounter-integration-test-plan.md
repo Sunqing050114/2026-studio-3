@@ -1,4 +1,4 @@
-# Team 2 Encounter Integration Test Plan
+# Team 2 Encounter Integration and Sprint 2 Acceptance Test Plan
 
 Owner: Guoqing Sun (`@Sunqing050114`)
 
@@ -7,6 +7,8 @@ Related work:
 - [Team 2 feature ticket #6](https://github.com/UQcsse3200/2026-studio-3/issues/6)
 - [Integration subtask #68](https://github.com/UQcsse3200/2026-studio-3/issues/68)
 - [Integration pull request #69](https://github.com/UQcsse3200/2026-studio-3/pull/69)
+
+Sprint 2 acceptance baseline: `main` at `ac6c8ab` (3 September 2026).
 
 ## Scope and quality goals
 
@@ -36,6 +38,7 @@ An integration build is acceptable only when:
 | Invalid starts do not poison controller state | `EncounterFlowControllerTest` | null/blank node and failed construction recovery |
 | Stale or duplicate callbacks cannot advance Map | `EncounterFlowControllerTest` | stale/duplicate callback test |
 | The Map callback may synchronously launch the next encounter | `EncounterFlowControllerTest` | re-entrant next-encounter test |
+| Sprint 2 acceptance regressions remain safe through the public encounter APIs | `EncounterAcceptanceRegressionTest` | duplicate Shop completion, insufficient funds, and rejected Deck update |
 | Existing inventory-backed Shop API remains compatible | `InventoryComponentTest`, `ShopEncounterTest`, `ShopServiceTest` | legacy constructor and purchase behaviour |
 
 Run from `source/`:
@@ -44,11 +47,15 @@ Run from `source/`:
 ./gradlew test spotlessCheck
 ```
 
-For PR #69, the initial GitHub Actions revision ran 257 tests successfully. On the latest code
-revision (`617d69f`), the `Run Unit Tests` step and the separate Java Format workflow both passed.
-The workflow-level red status was caused only by Discord notification steps being unable to access
-repository secrets from a fork; it was not a test or format failure. A fresh CI run is still required
-after the final merge to `main`.
+For PR #69, the initial GitHub Actions revision ran 257 tests successfully. On revision `617d69f`,
+the `Run Unit Tests` step and the separate Java Format workflow both passed. The Sprint 2 regression
+class was then verified on review commit `f2032a4`: all three tests passed in
+[Game Unit Tests run #14](https://github.com/Sunqing050114/2026-studio-3/actions/runs/33870574788),
+and [Java Format run #14](https://github.com/Sunqing050114/2026-studio-3/actions/runs/33870574719)
+and Javadoc passed. The full repository suite remains red because 31 existing Battle, Enemy, Map
+and RunState tests fail on this baseline; none of the three acceptance regressions failed. The
+SonarCloud check on the fork cannot authenticate without the course repository's `SONAR_TOKEN`.
+A final run is still required after the team's integration fixes are merged to `main`.
 
 ## Manual acceptance tests
 
@@ -105,24 +112,37 @@ next encounter starts normally.
 
 | ID | Tester and date | Commit/build | Result | Evidence / defect link |
 | --- | --- | --- | --- | --- |
-| M1 | Pending final integration | Pending `main` merge | Not run | Add screenshot/video or issue link |
-| M2 | Pending final integration | Pending `main` merge | Not run | Add screenshot/video or issue link |
-| M3 | Pending final integration | Pending `main` merge | Not run | Add screenshot/video or issue link |
-| M4 | Pending final integration | Pending `main` merge | Not run | Add screenshot/video or issue link |
-| M5 | Pending final integration | Pending `main` merge | Not run | Add screenshot/video or issue link |
+| M1 | Guoqing Sun — pending | `ac6c8ab` baseline | Blocked | `MapScreen` currently opens the placeholder `EncounterScreen`, not the real Chance UI |
+| M2 | Guoqing Sun — pending | `ac6c8ab` baseline | Blocked | Requires the final Chance UI and Player wiring |
+| M3 | Guoqing Sun — pending | `ac6c8ab` baseline | Blocked | Requires the final Shop UI, CardService and PlayerDeck wiring |
+| M4 | Guoqing Sun — pending | `ac6c8ab` baseline | Blocked | Automated state-invariant coverage exists; manual UI evidence still requires final wiring |
+| M5 | Guoqing Sun — pending | `ac6c8ab` baseline | Blocked | Requires the real encounter screens and final Map return path |
 
 ## Cross-team contract checks
 
-Before the Team 2 branch is merged to `main`, pair with the owning teams and record the relevant PR,
+Before Sprint 2 acceptance is signed off, pair with the owning teams and record the relevant PR,
 issue comment or test evidence for each boundary:
 
-| Owner | Contract to verify | Current Sprint 1 status |
+| Owner | Contract to verify | Current Sprint 2 baseline status |
 | --- | --- | --- |
-| Team 4 Map | node-ID type and `onEncounterComplete` behaviour | Team 2 uses `String`; Team 4 branch uses `Integer`; adapter decision required |
-| Team 5 Deck | add/remove semantics and rollback support | `PlayerDeck#addCard`/`removeCard` adapter prepared; final branch integration required |
-| Team 6 Card Library | canonical ID lookup | `CardService#getCard(String)` mapping prepared; final service wiring required |
-| Team 7 Player/Economy | health and currency setters, limits and failure behaviour | component adapter covered by unit tests; final merged API check required |
-| Team 3 UI/Game Flow | overlay/screen ownership and leave semantics | confirmation and manual lifecycle test required |
+| Team 4 Map | node-ID type and `onEncounterComplete` behaviour | Integer node IDs now align; `MapScreen` still sends every room type to a placeholder screen |
+| Team 5 Deck | add/remove semantics and rollback support | `PlayerDeck` is present on `main`; production Shop wiring and failure semantics remain to be verified |
+| Team 6 Card Library | canonical ID lookup | `CardService#getCard(String)` is present; production Shop lookup wiring remains to be verified |
+| Team 7 Player/Economy | health and currency setters, limits and failure behaviour | component adapter tests exist; the final in-game Player entity wiring remains to be verified |
+| Team 3 UI/Game Flow | screen ownership, completion and leave semantics | real Chance/Shop screen routing and return-to-Map acceptance remain outstanding |
+
+## Sprint 2 known issues and limitations
+
+- The baseline `EncounterScreen` is explicitly a placeholder and does not render the real Chance or
+  Shop interaction.
+- `EncounterFlowController` is covered by automated tests but is not constructed by production
+  screen code on the baseline commit.
+- `InventoryDeckAdapter` is still documented as temporary; the final Shop-to-`PlayerDeck` wiring is
+  owned by the Shop expansion task.
+- M1–M5 cannot be marked Passed until the final feature branches are merged and the manual steps are
+  run against the resulting build with evidence.
+- The acceptance owner may fix small defects found while running M1–M5, but major Map, Player, Card,
+  Deck or screen integration remains with the corresponding Sprint 2 task owner.
 
 ## Changes to the original plan
 
@@ -133,6 +153,5 @@ Chance/Shop rules stable and isolating changes such as Team 4's integer node IDs
 between adding a card and deducting currency. Re-entrant and stale-callback tests were added because
 Map/Game Flow may synchronously launch the next encounter from the completion callback.
 
-The final decision is not complete until the temporary demo adapters are replaced with the merged
-Team 5/6 implementations, the Team 4 node-ID contract is agreed, all manual rows are run, and the
-resulting commit passes CI on `main`.
+The final decision is not complete until the production screens use the merged Team 5/6/7 and Map
+interfaces, all manual rows are run, and the resulting commit passes CI on `main`.
